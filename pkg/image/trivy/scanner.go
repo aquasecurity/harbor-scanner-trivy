@@ -50,16 +50,22 @@ func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error
 
 	log.Printf("Started scanning %s ...", imageToScan)
 
-	cmd := exec.Command("trivy",
-		"-f", "json",
-		"-o", s.GetScanResultFilePath(scanID),
+	executable, err := exec.LookPath("trivy")
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command(executable,
+		"--debug",
+		"--format", "json",
+		"--output", s.GetScanResultFilePath(scanID),
 		imageToScan,
 	)
 
-	cmd.Env = []string{
+	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("TRIVY_USERNAME=%s", s.cfg.RegistryUsername),
 		fmt.Sprintf("TRIVY_PASSWORD=%s", s.cfg.RegistryPassword),
-	}
+	)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -130,12 +136,14 @@ func (s *imageScanner) toHarborScanResult(srs []trivy.ScanResult) (*harbor.ScanR
 
 func (s *imageScanner) toHarborSeverity(severity string) harbor.Severity {
 	switch severity {
-	case "HIGH":
+	case "HIGH", "CRITICAL":
 		return harbor.SevHigh
 	case "MEDIUM":
 		return harbor.SevMedium
 	case "LOW":
 		return harbor.SevLow
+	case "UNKNOWN":
+		return harbor.SevUnknown
 	default:
 		log.Printf("Unknown trivy severity %s", severity)
 		return harbor.SevUnknown
