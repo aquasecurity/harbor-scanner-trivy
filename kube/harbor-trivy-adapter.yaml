@@ -1,5 +1,6 @@
 ---
 apiVersion: extensions/v1beta1
+# TODO Apparently extensions/v1beta1/Deployment is deprecated. Migrate to apps/v1/Deployment.
 kind: Deployment
 metadata:
   name: harbor-trivy-adapter
@@ -9,6 +10,16 @@ spec:
       labels:
         app: harbor-trivy-adapter
     spec:
+      initContainers:
+        - name: init
+          image: aquasec/harbor-trivy-adapter:poc
+          imagePullPolicy: IfNotPresent
+          command:
+            - "trivy"
+            - "--refresh"
+          volumeMounts:
+            - mountPath: /root/.cache
+              name: trivy-cache
       containers:
         - name: main
           image: aquasec/harbor-trivy-adapter:poc
@@ -16,8 +27,21 @@ spec:
           env:
             - name: "ADAPTER_ADDR"
               value: ":8080"
+            - name: "ADAPTER_REGISTRY_URL"
+              value: "core.harbor.domain"
+            - name: "ADAPTER_REGISTRY_USERNAME"
+              value: "admin"
+            - name: "ADAPTER_REGISTRY_PASSWORD"
+              value: "Harbor12345"
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - mountPath: /root/.cache
+              name: trivy-cache
+      volumes:
+        - name: trivy-cache
+          hostPath:
+            path: /data/trivy
 ---
 apiVersion: v1
 kind: Service
