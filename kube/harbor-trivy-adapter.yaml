@@ -16,6 +16,7 @@ spec:
           imagePullPolicy: IfNotPresent
           command:
             - "trivy"
+            - "--debug"
             - "--refresh"
           volumeMounts:
             - mountPath: /root/.cache
