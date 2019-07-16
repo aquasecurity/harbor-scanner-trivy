@@ -2,50 +2,92 @@ package trivy
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/aquasecurity/harbor-trivy-adapter/pkg/etc"
 	"github.com/aquasecurity/harbor-trivy-adapter/pkg/image"
 	"github.com/aquasecurity/harbor-trivy-adapter/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-trivy-adapter/pkg/model/trivy"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 type imageScanner struct {
+	cfg *etc.Config
 }
 
-func NewScanner() (image.Scanner, error) {
+func NewScanner(cfg *etc.Config) (image.Scanner, error) {
+	if cfg == nil {
+		return nil, errors.New("cfg must not be nil")
+	}
 	return &imageScanner{
+		cfg: cfg,
 	}, nil
 }
 
 func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error) {
-	cmd := exec.Command("trivy",
-		"--skip-update",
-		"-f", "json",
-		"-o", "/tmp/trivy/trivyscan.out",
-		"mongo:3.4.21-xenial",
-	)
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
+	scanID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("PID %d", cmd.Process.Pid)
-	log.Printf("ExitCode %d", cmd.ProcessState.ExitCode())
+	log.Printf("RegistryURL: %s", req.RegistryURL)
+	log.Printf("Repository: %s", req.Repository)
+	log.Printf("Tag: %s", req.Tag)
+	log.Printf("Digest: %s", req.Digest)
+	log.Printf("Scan request: %s", scanID.String())
+
+	registryURL := req.RegistryURL
+	if s.cfg.RegistryURL != "" {
+		log.Printf("Overwriting registry URL %s with %s", req.RegistryURL, s.cfg.RegistryURL)
+		registryURL = s.cfg.RegistryURL
+	}
+
+	imageToScan := fmt.Sprintf("%s/%s:%s", registryURL, req.Repository, req.Tag)
+
+	log.Printf("Started scanning %s ...", imageToScan)
+
+	cmd := exec.Command("trivy",
+		"-f", "json",
+		"-o", s.GetScanResultFilePath(scanID),
+		imageToScan,
+	)
+
+	cmd.Env = []string{
+		fmt.Sprintf("TRIVY_USERNAME=%s", s.cfg.RegistryUsername),
+		fmt.Sprintf("TRIVY_PASSWORD=%s", s.cfg.RegistryPassword),
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("running trivy: %v", err)
+	}
+
+	log.Printf("trivy exit code: %d", cmd.ProcessState.ExitCode())
+	log.Printf("Finished scanning %s", imageToScan)
+
 	return &harbor.ScanResponse{
-		// TODO Need to change that to UUID or something.
-		DetailsKey: "ABC",
+		DetailsKey: scanID.String(),
 	}, nil
 }
 
 func (s *imageScanner) GetResult(detailsKey string) (*harbor.ScanResult, error) {
-	file, err := os.Open("/tmp/trivy/trivyscan.out")
+	if detailsKey == "" {
+		return nil, errors.New("detailsKey must not be nil")
+	}
+
+	scanID, err := uuid.Parse(detailsKey)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open(s.GetScanResultFilePath(scanID))
 	if err != nil {
 		return nil, fmt.Errorf("opening scan result file: %v", err)
 	}
@@ -56,6 +98,10 @@ func (s *imageScanner) GetResult(detailsKey string) (*harbor.ScanResult, error) 
 	}
 
 	return s.toHarborScanResult(data)
+}
+
+func (s *imageScanner) GetScanResultFilePath(scanID uuid.UUID) string {
+	return filepath.Join("/tmp/", scanID.String()+".json")
 }
 
 func (s *imageScanner) toHarborScanResult(srs []trivy.ScanResult) (*harbor.ScanResult, error) {
@@ -96,15 +142,38 @@ func (s *imageScanner) toHarborSeverity(severity string) harbor.Severity {
 	}
 }
 
-func (s *imageScanner) toComponentsOverview(sr []trivy.ScanResult) (harbor.Severity, *harbor.ComponentsOverview) {
-	return harbor.SevHigh, &harbor.ComponentsOverview{
-		Total: 24 + 13 + 7 + 1 + 5,
-		Summary: []*harbor.ComponentsOverviewEntry{
-			{Sev: 1, Count: 24},
-			{Sev: 2, Count: 13},
-			{Sev: 3, Count: 7},
-			{Sev: 4, Count: 1},
-			{Sev: 5, Count: 5},
-		},
+func (s *imageScanner) toComponentsOverview(srs []trivy.ScanResult) (harbor.Severity, *harbor.ComponentsOverview) {
+	overallSev := harbor.SevNone
+	total := 0
+	sevToCount := map[harbor.Severity]int{
+		harbor.SevHigh:    0,
+		harbor.SevMedium:  0,
+		harbor.SevLow:     0,
+		harbor.SevUnknown: 0,
+		harbor.SevNone:    0,
+	}
+
+	for _, sr := range srs {
+		for _, vln := range sr.Vulnerabilities {
+			sev := s.toHarborSeverity(vln.Severity)
+			sevToCount[sev]++
+			total++
+			if sev > overallSev {
+				overallSev = sev
+			}
+		}
+	}
+
+	var summary []*harbor.ComponentsOverviewEntry
+	for k, v := range sevToCount {
+		summary = append(summary, &harbor.ComponentsOverviewEntry{
+			Sev:   int(k),
+			Count: v,
+		})
+	}
+
+	return overallSev, &harbor.ComponentsOverview{
+		Total:   total,
+		Summary: summary,
 	}
 }
