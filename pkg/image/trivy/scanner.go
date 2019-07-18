@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/etc"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/image"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/model/trivy"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/image"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/google/uuid"
 	"log"
 	"os"
@@ -19,6 +19,7 @@ type imageScanner struct {
 	cfg *etc.Config
 }
 
+// NewScanner constructs new Scanner with the given Config.
 func NewScanner(cfg *etc.Config) (image.Scanner, error) {
 	if cfg == nil {
 		return nil, errors.New("cfg must not be nil")
@@ -57,15 +58,18 @@ func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error
 
 	cmd := exec.Command(executable,
 		"--debug",
+		"--cache-dir", s.cfg.TrivyCacheDir,
 		"--format", "json",
 		"--output", s.GetScanResultFilePath(scanID),
 		imageToScan,
 	)
 
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("TRIVY_USERNAME=%s", s.cfg.RegistryUsername),
-		fmt.Sprintf("TRIVY_PASSWORD=%s", s.cfg.RegistryPassword),
-	)
+	cmd.Env = os.Environ()
+	if s.cfg.RegistryUsername != "" && s.cfg.RegistryPassword != "" {
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("TRIVY_USERNAME=%s", s.cfg.RegistryUsername),
+			fmt.Sprintf("TRIVY_PASSWORD=%s", s.cfg.RegistryPassword))
+	}
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -107,7 +111,7 @@ func (s *imageScanner) GetResult(detailsKey string) (*harbor.ScanResult, error) 
 }
 
 func (s *imageScanner) GetScanResultFilePath(scanID uuid.UUID) string {
-	return filepath.Join("/tmp/", scanID.String()+".json")
+	return filepath.Join(s.cfg.ScannerDataDir, scanID.String()+".json")
 }
 
 func (s *imageScanner) toHarborScanResult(srs []trivy.ScanResult) (*harbor.ScanResult, error) {

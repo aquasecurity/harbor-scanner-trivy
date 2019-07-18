@@ -1,3 +1,4 @@
+// TODO Move that to harbor-scanner-contract
 package harbor
 
 // Sevxxx is the list of severity of image after scanning.

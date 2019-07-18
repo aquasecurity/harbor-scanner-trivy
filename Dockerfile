@@ -1,9 +1,9 @@
-FROM alpine
+FROM alpine:3.10
 
 RUN apk add --no-cache git bash ca-certificates && update-ca-certificates
 
 ADD trivy /usr/local/bin
 
-ADD bin/trivy-adapter /app/trivy-adapter
+ADD bin/scanner-trivy /app/scanner-trivy
 
-ENTRYPOINT ["/app/trivy-adapter"]
+ENTRYPOINT ["/app/scanner-trivy"]

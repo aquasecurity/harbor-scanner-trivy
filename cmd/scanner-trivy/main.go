@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/etc"
-	v1 "github.com/aquasecurity/harbor-trivy-adapter/pkg/http/api/v1"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/image/trivy"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	api "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/image/trivy"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -14,14 +14,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	log.Printf("Starting harbor-trivy-adapter with config %v", cfg)
+	log.Printf("Starting harbor-scanner-trivy with config %v", cfg)
 
 	scanner, err := trivy.NewScanner(cfg)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 
-	apiHandler := v1.NewAPIHandler(scanner)
+	apiHandler := api.NewAPIHandler(scanner)
 
 	router := mux.NewRouter()
 	v1Router := router.PathPrefix("/api/v1").Subrouter()

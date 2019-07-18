@@ -1,6 +1,6 @@
 package image
 
-import "github.com/aquasecurity/harbor-trivy-adapter/pkg/model/harbor"
+import "github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 
 // Scanner defines methods for scanning container images.
 type Scanner interface {

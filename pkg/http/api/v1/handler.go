@@ -2,8 +2,8 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/image"
-	"github.com/aquasecurity/harbor-trivy-adapter/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/image"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"

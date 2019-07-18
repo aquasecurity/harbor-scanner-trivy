@@ -1,56 +1,70 @@
 ---
-apiVersion: extensions/v1beta1
-# TODO Apparently extensions/v1beta1/Deployment is deprecated. Migrate to apps/v1/Deployment.
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: harbor-trivy-adapter
+  name: harbor-scanner-trivy
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: harbor-scanner-trivy
   template:
     metadata:
       labels:
-        app: harbor-trivy-adapter
+        app: harbor-scanner-trivy
     spec:
       initContainers:
         - name: init
-          image: aquasec/harbor-trivy-adapter:poc
+          image: aquasec/harbor-scanner-trivy:poc
           imagePullPolicy: IfNotPresent
           command:
             - "trivy"
             - "--debug"
+            - "--cache-dir /root/.cache"
             - "--refresh"
           volumeMounts:
             - mountPath: /root/.cache
               name: trivy-cache
       containers:
         - name: main
-          image: aquasec/harbor-trivy-adapter:poc
+          image: aquasec/harbor-scanner-trivy:poc
           imagePullPolicy: IfNotPresent
           env:
-            - name: "ADAPTER_ADDR"
+            - name: "SCANNER_ADDR"
               value: ":8080"
-            - name: "ADAPTER_REGISTRY_URL"
+            - name: "SCANNER_TRIVY_DIR"
+              value: "/root/.cache"
+            - name: "SCANNER_DATA_DIR"
+              value: "/data/scanner"
+            - name: "SCANNER_REGISTRY_URL"
               value: "core.harbor.domain"
-            - name: "ADAPTER_REGISTRY_USERNAME"
+            - name: "SCANNER_REGISTRY_USERNAME"
               value: "admin"
-            - name: "ADAPTER_REGISTRY_PASSWORD"
+            - name: "SCANNER_REGISTRY_PASSWORD"
               value: "Harbor12345"
           ports:
             - containerPort: 8080
+          # TODO Use PersistentVolumeClaim to scale up scanner deployment
           volumeMounts:
             - mountPath: /root/.cache
               name: trivy-cache
+            - mountPath: /data/scanner
+              name: scanner-data
       volumes:
         - name: trivy-cache
           hostPath:
             path: /data/trivy
+        - name: scanner-data
+          hostPath:
+            path: /data/scanner/trivy
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: harbor-trivy-adapter
+  name: harbor-scanner-trivy
 spec:
   selector:
-    app: harbor-trivy-adapter
+    app: harbor-scanner-trivy
   type: LoadBalancer
   ports:
     - protocol: TCP
