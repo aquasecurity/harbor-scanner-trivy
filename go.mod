@@ -1,4 +1,4 @@
-module github.com/aquasecurity/harbor-trivy-adapter
+module github.com/aquasecurity/harbor-scanner-trivy
 
 go 1.12
 
