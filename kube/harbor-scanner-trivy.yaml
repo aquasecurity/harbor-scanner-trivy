@@ -20,7 +20,7 @@ spec:
           command:
             - "trivy"
             - "--debug"
-            - "--cache-dir /root/.cache"
+            - "--cache-dir=/root/.cache"
             - "--refresh"
           volumeMounts:
             - mountPath: /root/.cache
@@ -30,18 +30,20 @@ spec:
           image: aquasec/harbor-scanner-trivy:poc
           imagePullPolicy: IfNotPresent
           env:
-            - name: "SCANNER_ADDR"
+            - name: "SCANNER_API_ADDR"
               value: ":8080"
             - name: "SCANNER_TRIVY_DIR"
               value: "/root/.cache"
             - name: "SCANNER_DATA_DIR"
               value: "/data/scanner"
-            - name: "SCANNER_REGISTRY_URL"
-              value: "core.harbor.domain"
             - name: "SCANNER_REGISTRY_USERNAME"
               value: "admin"
             - name: "SCANNER_REGISTRY_PASSWORD"
               value: "Harbor12345"
+            - name: "SCANNER_STORE_REDIS_URL"
+              value: "redis://harbor-harbor-redis:6379"
+            - name: "SCANNER_JOB_QUEUE_REDIS_URL"
+              value: "redis://harbor-harbor-redis:6379"
           ports:
             - containerPort: 8080
           # TODO Use PersistentVolumeClaim to scale up scanner deployment

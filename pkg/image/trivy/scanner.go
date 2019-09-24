@@ -9,21 +9,20 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/google/uuid"
-	"log"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/xerrors"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
 type imageScanner struct {
-	cfg *etc.Config
+	cfg etc.Config
 }
 
 // NewScanner constructs new Scanner with the given Config.
-func NewScanner(cfg *etc.Config) (image.Scanner, error) {
-	if cfg == nil {
-		return nil, errors.New("cfg must not be nil")
-	}
+func NewScanner(cfg etc.Config) (image.Scanner, error) {
 	return &imageScanner{
 		cfg: cfg,
 	}, nil
@@ -35,21 +34,12 @@ func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error
 		return nil, err
 	}
 
-	log.Printf("RegistryURL: %s", req.RegistryURL)
-	log.Printf("Repository: %s", req.Repository)
-	log.Printf("Tag: %s", req.Tag)
-	log.Printf("Digest: %s", req.Digest)
-	log.Printf("Scan request: %s", scanID.String())
-
-	registryURL := req.RegistryURL
-	if s.cfg.RegistryURL != "" {
-		log.Printf("Overwriting registry URL %s with %s", req.RegistryURL, s.cfg.RegistryURL)
-		registryURL = s.cfg.RegistryURL
+	imageRef, err := s.ToImageRef(req)
+	if err != nil {
+		return nil, fmt.Errorf("getting image ref: %v", err)
 	}
 
-	imageToScan := fmt.Sprintf("%s/%s:%s", registryURL, req.Repository, req.Tag)
-
-	log.Printf("Started scanning %s ...", imageToScan)
+	log.Debugf("Started scanning %s ...", imageRef)
 
 	executable, err := exec.LookPath("trivy")
 	if err != nil {
@@ -59,9 +49,10 @@ func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error
 	cmd := exec.Command(executable,
 		"--debug",
 		"--cache-dir", s.cfg.TrivyCacheDir,
+		"--vuln-type", "os",
 		"--format", "json",
 		"--output", s.GetScanResultFilePath(scanID),
-		imageToScan,
+		imageRef,
 	)
 
 	cmd.Env = os.Environ()
@@ -79,12 +70,22 @@ func (s *imageScanner) Scan(req harbor.ScanRequest) (*harbor.ScanResponse, error
 		return nil, fmt.Errorf("running trivy: %v", err)
 	}
 
-	log.Printf("trivy exit code: %d", cmd.ProcessState.ExitCode())
-	log.Printf("Finished scanning %s", imageToScan)
+	log.Debugf("trivy exit code: %d", cmd.ProcessState.ExitCode())
+	log.Debugf("Finished scanning %s", imageRef)
 
 	return &harbor.ScanResponse{
-		DetailsKey: scanID.String(),
+		ID: scanID.String(),
 	}, nil
+}
+
+// ToImageRef returns Docker image reference for the given ScanRequest.
+// Example: core.harbor.domain/scanners/mysql@sha256:3b00a364fb74246ca119d16111eb62f7302b2ff66d51e373c2bb209f8a1f3b9e
+func (s *imageScanner) ToImageRef(req harbor.ScanRequest) (string, error) {
+	registryURL, err := url.Parse(req.Registry.URL)
+	if err != nil {
+		return "", xerrors.Errorf("parsing registry URL: %w", err)
+	}
+	return fmt.Sprintf("%s/%s@%s", registryURL.Host, req.Artifact.Repository, req.Artifact.Digest), nil
 }
 
 func (s *imageScanner) GetResult(detailsKey string) (*harbor.ScanResult, error) {
@@ -115,16 +116,18 @@ func (s *imageScanner) GetScanResultFilePath(scanID uuid.UUID) string {
 }
 
 func (s *imageScanner) toHarborScanResult(srs []trivy.ScanResult) (*harbor.ScanResult, error) {
-	var vulnerabilities []*harbor.VulnerabilityItem
+	var vulnerabilities []harbor.VulnerabilityItem
 
 	for _, sr := range srs {
 		for _, v := range sr.Vulnerabilities {
-			vulnerabilities = append(vulnerabilities, &harbor.VulnerabilityItem{
+			vulnerabilities = append(vulnerabilities, harbor.VulnerabilityItem{
 				ID:          v.VulnerabilityID,
 				Severity:    s.toHarborSeverity(v.Severity),
 				Pkg:         v.PkgName,
 				Version:     v.InstalledVersion,
+				Fixed:       v.FixedVersion,
 				Description: v.Description,
+				Links:       v.References,
 			})
 		}
 	}
