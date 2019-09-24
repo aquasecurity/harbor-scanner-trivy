@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/image"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -21,22 +21,22 @@ const (
 )
 
 type requestHandler struct {
-	scanner  image.Scanner
-	enqueuer queue.Enqueuer
+	enqueuer  queue.Enqueuer
+	dataStore store.DataStore
 	api.BaseHandler
 }
 
-func NewAPIHandler(scanner image.Scanner, enqueuer queue.Enqueuer) http.Handler {
+func NewAPIHandler(enqueuer queue.Enqueuer, dataStore store.DataStore) http.Handler {
 	handler := &requestHandler{
-		scanner:  scanner,
-		enqueuer: enqueuer,
+		enqueuer:  enqueuer,
+		dataStore: dataStore,
 	}
 
 	router := mux.NewRouter()
 	v1Router := router.PathPrefix(pathAPIPrefix).Subrouter()
 
 	v1Router.Methods(http.MethodPost).Path(pathScan).HandlerFunc(handler.AcceptScanRequest)
-	v1Router.Methods(http.MethodGet).Path(pathScanReport).HandlerFunc(handler.GetScanResult)
+	v1Router.Methods(http.MethodGet).Path(pathScanReport).HandlerFunc(handler.GetScanReport)
 	return router
 }
 
@@ -69,16 +69,7 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 	}
 	log.Debugf("Enqueued scan job: %v", scanJob)
 
-	// TODO This call should go away. I keep it for now so on master we have fully functional adapter.
-	scanResponse, err := h.scanner.Scan(scanRequest)
-	if err != nil {
-		log.WithError(err).Error("Error while scanning")
-		h.WriteJSONError(res, harbor.Error{
-			HTTPCode: http.StatusInternalServerError,
-			Message:  fmt.Sprintf("scanning: %s", err.Error()),
-		})
-		return
-	}
+	scanResponse := harbor.ScanResponse{ID: scanJob.ID}
 
 	h.WriteJSON(res, scanResponse, api.MimeTypeScanResponse, http.StatusAccepted)
 }
@@ -116,22 +107,17 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 	return nil
 }
 
-func (h *requestHandler) GetScanResult(res http.ResponseWriter, req *http.Request) {
+func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	detailsKey, _ := vars[pathVarScanRequestID]
 
-	scanResult, err := h.scanner.GetResult(detailsKey)
+	scanJob, err := h.dataStore.GetScanJob(detailsKey)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(res, "Internal Server Error", 500)
 		return
 	}
 
-	res.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(res).Encode(scanResult)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(res, "Internal Server Error", 500)
-		return
-	}
+	// TODO Check scan job status and inspect Accept header
+	h.WriteJSON(res, scanJob.Reports.HarborScanReport, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
 }

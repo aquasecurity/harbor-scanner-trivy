@@ -31,18 +31,11 @@ type ScanResponse struct {
 
 type ScanResult struct {
 	Severity        Severity            `json:"severity"`
-	Overview        *ComponentsOverview `json:"overview"`
 	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
 }
 
 // Severity represents the severity of a image/component in terms of vulnerability.
 type Severity int64
-
-// ComponentsOverview has the total number and a list of components number of different serverity level.
-type ComponentsOverview struct {
-	Total   int                        `json:"total"`
-	Summary []*ComponentsOverviewEntry `json:"summary"`
-}
 
 // ComponentsOverviewEntry ...
 type ComponentsOverviewEntry struct {

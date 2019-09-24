@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Config struct {
+type WrapperConfig struct {
 	TrivyCacheDir  string
 	ScannerDataDir string
 
@@ -35,7 +35,7 @@ type JobQueueConfig struct {
 	PoolMaxIdle       int    `end:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
 }
 
-func GetConfig() (cfg Config, err error) {
+func GetWrapperConfig() (cfg WrapperConfig, err error) {
 	err = env.Parse(&cfg)
 	return
 }
