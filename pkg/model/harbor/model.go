@@ -1,4 +1,3 @@
-// TODO Move that to harbor-scanner-contract
 package harbor
 
 // Sevxxx is the list of severity of image after scanning.
@@ -11,22 +10,29 @@ const (
 	SevHigh
 )
 
+type Registry struct {
+	URL           string `json:"url"`
+	Authorization string `json:"authorization"`
+}
+
+type Artifact struct {
+	Repository string `json:"repository"`
+	Digest     string `json:"digest"`
+}
+
 type ScanRequest struct {
-	RegistryURL   string `json:"registry_url"`
-	RegistryToken string `json:"registry_token"`
-	Repository    string `json:"repository"`
-	Tag           string `json:"tag"`
-	Digest        string `json:"digest"`
+	Registry Registry `json:"registry"`
+	Artifact Artifact `json:"artifact"`
 }
 
 type ScanResponse struct {
-	DetailsKey string `json:"details_key"`
+	ID string `json:"id"`
 }
 
 type ScanResult struct {
-	Severity        Severity             `json:"severity"`
-	Overview        *ComponentsOverview  `json:"overview"`
-	Vulnerabilities []*VulnerabilityItem `json:"vulnerabilities"`
+	Severity        Severity            `json:"severity"`
+	Overview        *ComponentsOverview `json:"overview"`
+	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
 }
 
 // Severity represents the severity of a image/component in terms of vulnerability.
@@ -51,6 +57,12 @@ type VulnerabilityItem struct {
 	Pkg         string   `json:"package"`
 	Version     string   `json:"version"`
 	Description string   `json:"description"`
-	Link        string   `json:"link"`
+	Links       []string `json:"links"`
 	Fixed       string   `json:"fixedVersion,omitempty"`
+}
+
+// Error holds the information about an error, including metadata about its JSON structure.
+type Error struct {
+	HTTPCode int    `json:"-"`
+	Message  string `json:"message"`
 }
