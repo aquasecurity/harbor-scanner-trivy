@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
 	"github.com/gorilla/mux"
@@ -110,17 +111,63 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 }
 
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
+	log.Debug("Get scan report request received")
 	vars := mux.Vars(req)
-	detailsKey, _ := vars[pathVarScanRequestID]
-
-	scanJob, err := h.dataStore.GetScanJob(detailsKey)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(res, "Internal Server Error", 500)
+	scanJobID, ok := vars[pathVarScanRequestID]
+	if !ok {
+		log.Error("Error while parsing `scan_request_id` path variable")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusBadRequest,
+			Message:  "missing scan_request_id",
+		})
 		return
 	}
 
-	// TODO Check scan job status and inspect Accept header
+	reqLog := log.WithField("scan_job_id", scanJobID)
+
+	scanJob, err := h.dataStore.GetScanJob(scanJobID)
+	if err != nil {
+		reqLog.Error("Error while getting scan job")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusInternalServerError,
+			Message:  fmt.Sprintf("getting scan job: %v", err),
+		})
+		return
+	}
+
+	if scanJob == nil {
+		reqLog.Error("Cannot find scan job")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusNotFound,
+			Message:  fmt.Sprintf("cannot find scan job: %v", scanJobID),
+		})
+		return
+	}
+
+	if scanJob.Status == job.Queued || scanJob.Status == job.Pending {
+		reqLog.WithField("scan_job_status", scanJob.Status).Debug("Scan job has not finished yet")
+		res.WriteHeader(http.StatusFound)
+		return
+	}
+
+	if scanJob.Status == job.Failed {
+		reqLog.WithField(log.ErrorKey, scanJob.Error).Error("Scan job failed")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusInternalServerError,
+			Message:  scanJob.Error,
+		})
+		return
+	}
+
+	if scanJob.Status != job.Finished {
+		reqLog.WithField("scan_job_status", scanJob.Status).Error("Unexpected scan job status")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusInternalServerError,
+			Message:  fmt.Sprintf("unexpected status %v of scan job %v", scanJob.Status, scanJob.ID),
+		})
+		return
+	}
+
 	h.WriteJSON(res, scanJob.Reports.HarborScanReport, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
 }
 
