@@ -18,6 +18,7 @@ type MimeTypeParams map[string]string
 var MimeTypeParamVersion = map[string]string{"version": "1.0"}
 var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeParamVersion}
 var MimeTypeHarborVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.vuln.report.harbor+json", Params: MimeTypeParamVersion}
+var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeParamVersion}
 var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeParamVersion}
 
 type MimeType struct {
