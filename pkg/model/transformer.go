@@ -4,10 +4,11 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 type Transformer interface {
-	Transform(result trivy.ScanResult) harbor.ScanResult
+	Transform(req harbor.ScanRequest, source trivy.ScanResult) harbor.ScanResult
 }
 
 func NewTransformer() Transformer {
@@ -17,7 +18,7 @@ func NewTransformer() Transformer {
 type transformer struct {
 }
 
-func (t *transformer) Transform(source trivy.ScanResult) (target harbor.ScanResult) {
+func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult) (target harbor.ScanResult) {
 	var vulnerabilities []harbor.VulnerabilityItem
 
 	for _, v := range source.Vulnerabilities {
@@ -33,7 +34,14 @@ func (t *transformer) Transform(source trivy.ScanResult) (target harbor.ScanResu
 	}
 
 	target = harbor.ScanResult{
-		Severity:        t.toComponentsOverview(source),
+		GeneratedAt: time.Now(),
+		Scanner: harbor.Scanner{
+			Name:    "Trivy",
+			Vendor:  "Aqua Security",
+			Version: "0.1.4",
+		},
+		Artifact:        req.Artifact,
+		Severity:        t.toHighestSeverity(source),
 		Vulnerabilities: vulnerabilities,
 	}
 	return
@@ -55,7 +63,7 @@ func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
 	}
 }
 
-func (t *transformer) toComponentsOverview(sr trivy.ScanResult) (highest harbor.Severity) {
+func (t *transformer) toHighestSeverity(sr trivy.ScanResult) (highest harbor.Severity) {
 	highest = harbor.SevNone
 
 	for _, vln := range sr.Vulnerabilities {

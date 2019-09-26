@@ -12,8 +12,14 @@ import (
 	"os/exec"
 )
 
+// RegistryAuth wraps registry credentials.
+type RegistryAuth struct {
+	Username string
+	Password string
+}
+
 type Wrapper interface {
-	Run(imageRef string) (trivy.ScanResult, error)
+	Run(imageRef string, auth RegistryAuth) (trivy.ScanResult, error)
 }
 
 type wrapper struct {
@@ -26,7 +32,7 @@ func NewWrapper(config etc.WrapperConfig) Wrapper {
 	}
 }
 
-func (w *wrapper) Run(imageRef string) (report trivy.ScanResult, err error) {
+func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResult, err error) {
 	log.Debugf("Started scanning %s ...", imageRef)
 
 	executable, err := exec.LookPath("trivy")
@@ -57,10 +63,10 @@ func (w *wrapper) Run(imageRef string) (report trivy.ScanResult, err error) {
 	)
 
 	cmd.Env = os.Environ()
-	if w.config.RegistryUsername != "" && w.config.RegistryPassword != "" {
+	if auth.Username != "" && auth.Password != "" {
 		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("TRIVY_USERNAME=%s", w.config.RegistryUsername),
-			fmt.Sprintf("TRIVY_PASSWORD=%s", w.config.RegistryPassword))
+			fmt.Sprintf("TRIVY_USERNAME=%s", auth.Username),
+			fmt.Sprintf("TRIVY_PASSWORD=%s", auth.Password))
 	}
 
 	cmd.Stdout = os.Stdout
