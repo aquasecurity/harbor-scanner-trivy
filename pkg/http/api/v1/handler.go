@@ -18,6 +18,7 @@ const (
 	pathScan             = "/scan"
 	pathScanReport       = "/scan/{scan_request_id}/report"
 	pathVarScanRequestID = "scan_request_id"
+	pathMetadata         = "/metadata"
 )
 
 type requestHandler struct {
@@ -37,6 +38,7 @@ func NewAPIHandler(enqueuer queue.Enqueuer, dataStore store.DataStore) http.Hand
 
 	v1Router.Methods(http.MethodPost).Path(pathScan).HandlerFunc(handler.AcceptScanRequest)
 	v1Router.Methods(http.MethodGet).Path(pathScanReport).HandlerFunc(handler.GetScanReport)
+	v1Router.Methods(http.MethodGet).Path(pathMetadata).HandlerFunc(handler.GetMetadata)
 	return router
 }
 
@@ -120,4 +122,29 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	// TODO Check scan job status and inspect Accept header
 	h.WriteJSON(res, scanJob.Reports.HarborScanReport, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
+}
+
+func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
+	metadata := &harbor.ScannerMetadata{
+		Scanner: harbor.Scanner{
+			Name:    "Trivy",
+			Vendor:  "Aqua Security",
+			Version: "0.1.4",
+		},
+		Capabilities: []harbor.Capability{
+			{
+				ConsumesMIMETypes: []string{
+					"application/vnd.oci.image.manifest.v1+json",
+					"application/vnd.docker.distribution.manifest.v2+json",
+				},
+				ProducesMIMETypes: []string{
+					api.MimeTypeHarborVulnerabilityReport.String(),
+				},
+			},
+		},
+		Properties: map[string]string{
+			"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+		},
+	}
+	h.WriteJSON(res, metadata, api.MimeTypeMetadata, http.StatusOK)
 }
