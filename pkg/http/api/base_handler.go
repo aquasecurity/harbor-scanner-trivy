@@ -13,13 +13,17 @@ const (
 	HeaderContentType = "Content-Type"
 )
 
-var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: map[string]string{"version": "1.0"}}
-var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: map[string]string{"version": "1.0"}}
+type MimeTypeParams map[string]string
+
+var MimeTypeParamVersion = map[string]string{"version": "1.0"}
+var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeParamVersion}
+var MimeTypeHarborVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.vuln.report.harbor+json", Params: MimeTypeParamVersion}
+var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeParamVersion}
 
 type MimeType struct {
 	Type    string
 	Subtype string
-	Params  map[string]string
+	Params  MimeTypeParams
 }
 
 func (mt MimeType) String() string {

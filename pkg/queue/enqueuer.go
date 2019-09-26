@@ -12,6 +12,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	scanArtifactJobName = "scan_artifact"
+	scanRequestJobArg   = "scan_request"
+)
+
 type Enqueuer interface {
 	Enqueue(request harbor.ScanRequest) (job.ScanJob, error)
 }
@@ -45,8 +50,8 @@ func (se *defaultEnqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, err
 		return job.ScanJob{}, fmt.Errorf("marshalling scan request: %v", err)
 	}
 
-	j, err := se.enqueuer.Enqueue("scan_artifact", work.Q{
-		"scan_request": string(b),
+	j, err := se.enqueuer.Enqueue(scanArtifactJobName, work.Q{
+		scanRequestJobArg: string(b),
 	})
 	if err != nil {
 		return job.ScanJob{}, fmt.Errorf("enqueuing scan artifact job: %v", err)

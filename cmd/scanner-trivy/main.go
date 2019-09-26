@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/image/trivy"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"os/signal"
 )
 
 func main() {
@@ -19,13 +20,21 @@ func main() {
 
 	log.Info("Starting harbor-scanner-trivy")
 
+	jobQueueConfig, err := etc.GetJobQueueConfig()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	log.Debugf("Job queue config %v", jobQueueConfig)
+
+	worker := queue.NewWorker(jobQueueConfig)
+
 	apiConfig, err := etc.GetAPIConfig()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 	log.Debugf("API server config: %v", apiConfig)
 
-	apiHandler, err := newAPIHandler()
+	apiHandler, err := newAPIHandler(jobQueueConfig)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -36,24 +45,38 @@ func main() {
 		ReadTimeout:  apiConfig.ReadTimeout,
 		WriteTimeout: apiConfig.WriteTimeout,
 	}
-	err = server.ListenAndServe()
 
-	if err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Error: %v", err)
-	}
+	shutdownComplete := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, os.Kill)
+		captured := <-sigint
+		log.Debugf("Trapped os signal %v", captured)
+
+		log.Debug("Graceful shutdown started")
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.WithError(err).Error("Error while shutting down server")
+		}
+		log.Debug("Graceful shutdown completed")
+
+		log.Debug("Stopping worker started")
+		worker.Stop()
+		log.Debug("Stopping worker completed")
+		close(shutdownComplete)
+	}()
+
+	worker.Start()
+
+	go func() {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("Error: %v", err)
+		}
+		log.Debug("ListenAndServe returned")
+	}()
+	<-shutdownComplete
 }
 
-func newAPIHandler() (apiHandler http.Handler, err error) {
-	cfg, err := etc.GetConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	scanner, err := trivy.NewScanner(cfg)
-	if err != nil {
-		return nil, err
-	}
-
+func newAPIHandler(jobQueueConfig etc.JobQueueConfig) (apiHandler http.Handler, err error) {
 	storeConfig, err := etc.GetRedisStoreConfig()
 	if err != nil {
 		return nil, err
@@ -61,14 +84,8 @@ func newAPIHandler() (apiHandler http.Handler, err error) {
 	log.Debugf("Redis store config: %v", storeConfig)
 
 	dataStore := redis.NewDataStore(storeConfig)
-
-	jobQueueConfig, err := etc.GetJobQueueConfig()
-	if err != nil {
-		return nil, err
-	}
-	log.Debugf("Job queue config %v", jobQueueConfig)
-
 	enqueuer := queue.NewEnqueuer(jobQueueConfig, dataStore)
-	apiHandler = v1.NewAPIHandler(scanner, enqueuer)
+
+	apiHandler = v1.NewAPIHandler(enqueuer, dataStore)
 	return
 }

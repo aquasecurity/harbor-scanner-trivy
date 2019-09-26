@@ -1,4 +1,4 @@
-package trivy
+package scan
 
 import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestImageScanner_ToImageRef(t *testing.T) {
+func TestController_ToImageRef(t *testing.T) {
 	testCases := []struct {
 		Request  harbor.ScanRequest
 		ImageRef string
@@ -49,7 +49,7 @@ func TestImageScanner_ToImageRef(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		s := imageScanner{}
+		s := controller{}
 		imageRef, err := s.ToImageRef(tc.Request)
 		require.NoError(t, err)
 		assert.Equal(t, tc.ImageRef, imageRef)
