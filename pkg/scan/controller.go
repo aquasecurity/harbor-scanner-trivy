@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
@@ -10,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
 	"net/url"
+	"strings"
 )
 
 type Controller interface {
@@ -59,14 +61,19 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		return err
 	}
 
-	scanReport, err := c.wrapper.Run(imageRef)
+	auth, err := c.ToRegistryAuth(req.Registry.Authorization)
+	if err != nil {
+		return err
+	}
+
+	scanReport, err := c.wrapper.Run(imageRef, auth)
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
 
 	err = c.dataStore.UpdateReports(scanJobID, job.ScanReports{
 		TrivyScanReport:  scanReport,
-		HarborScanReport: c.transformer.Transform(scanReport),
+		HarborScanReport: c.transformer.Transform(req, scanReport),
 	})
 
 	if err != nil {
@@ -89,4 +96,29 @@ func (c *controller) ToImageRef(req harbor.ScanRequest) (string, error) {
 		return "", xerrors.Errorf("parsing registry URL: %w", err)
 	}
 	return fmt.Sprintf("%s/%s@%s", registryURL.Host, req.Artifact.Repository, req.Artifact.Digest), nil
+}
+
+func (c *controller) ToRegistryAuth(authorization string) (auth trivy.RegistryAuth, err error) {
+	tokens := strings.Split(authorization, " ")
+	if len(tokens) != 2 {
+		return auth, xerrors.Errorf("parsing authorization: expected <type> <credentials> got %s", authorization)
+	}
+	switch tokens[0] {
+	case "Basic":
+		return c.encodeBasicAuth(tokens[1])
+	}
+	return auth, xerrors.Errorf("unrecognized authorization type: %s", tokens[0])
+}
+
+func (c *controller) encodeBasicAuth(value string) (auth trivy.RegistryAuth, err error) {
+	creds, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return auth, err
+	}
+	tokens := strings.Split(string(creds), ":")
+	auth = trivy.RegistryAuth{
+		Username: tokens[0],
+		Password: tokens[1],
+	}
+	return
 }

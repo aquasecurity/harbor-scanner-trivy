@@ -8,10 +8,6 @@ import (
 type WrapperConfig struct {
 	TrivyCacheDir  string
 	ScannerDataDir string
-
-	// TODO Those two are just a workaround for Trivy returning 401 error even for public Harbor repository.
-	RegistryUsername string `env:"SCANNER_REGISTRY_USERNAME"`
-	RegistryPassword string `env:"SCANNER_REGISTRY_PASSWORD"`
 }
 
 type APIConfig struct {
