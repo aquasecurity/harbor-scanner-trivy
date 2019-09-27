@@ -38,7 +38,7 @@ func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult)
 		Scanner: harbor.Scanner{
 			Name:    "Trivy",
 			Vendor:  "Aqua Security",
-			Version: "0.1.4",
+			Version: "0.1.6",
 		},
 		Artifact:        req.Artifact,
 		Severity:        t.toHighestSeverity(source),
