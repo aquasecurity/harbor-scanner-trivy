@@ -176,7 +176,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		Scanner: harbor.Scanner{
 			Name:    "Trivy",
 			Vendor:  "Aqua Security",
-			Version: "0.1.4",
+			Version: "0.1.6",
 		},
 		Capabilities: []harbor.Capability{
 			{
