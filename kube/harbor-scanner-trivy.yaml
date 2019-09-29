@@ -32,10 +32,8 @@ spec:
           env:
             - name: "SCANNER_API_ADDR"
               value: ":8080"
-            - name: "SCANNER_TRIVY_DIR"
+            - name: "SCANNER_TRIVY_CACHE_DIR"
               value: "/root/.cache"
-            - name: "SCANNER_DATA_DIR"
-              value: "/data/scanner"
             - name: "SCANNER_STORE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
             - name: "SCANNER_JOB_QUEUE_REDIS_URL"

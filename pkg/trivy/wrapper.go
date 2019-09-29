@@ -40,7 +40,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 		return report, err
 	}
 
-	reportFile, err := ioutil.TempFile(w.config.ScannerDataDir, "report-*.json")
+	reportFile, err := ioutil.TempFile("", "trivy-scan-report-*.json")
 	if err != nil {
 		return report, err
 	}

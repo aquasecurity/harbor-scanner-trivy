@@ -6,8 +6,7 @@ import (
 )
 
 type WrapperConfig struct {
-	TrivyCacheDir  string
-	ScannerDataDir string
+	TrivyCacheDir string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache"`
 }
 
 type APIConfig struct {
