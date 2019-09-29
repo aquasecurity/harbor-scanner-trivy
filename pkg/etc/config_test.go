@@ -5,6 +5,29 @@ import (
 	"testing"
 )
 
+func TestGetWrapperConfig(t *testing.T) {
+	testCases := []struct {
+		Name           string
+		Envs           map[string]string
+		ExpectedError  error
+		ExpectedConfig WrapperConfig
+	}{
+		{
+			Name: "Should return default config",
+			ExpectedConfig: WrapperConfig{
+				TrivyCacheDir: "/root/.cache",
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			config, err := GetWrapperConfig()
+			assert.Equal(t, tc.ExpectedError, err)
+			assert.Equal(t, tc.ExpectedConfig, config)
+		})
+	}
+}
+
 func TestGetRedisStoreConfig(t *testing.T) {
 	testCases := []struct {
 		Name           string
