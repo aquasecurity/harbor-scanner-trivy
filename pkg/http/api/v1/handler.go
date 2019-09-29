@@ -146,6 +146,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	if scanJob.Status == job.Queued || scanJob.Status == job.Pending {
 		reqLog.WithField("scan_job_status", scanJob.Status).Debug("Scan job has not finished yet")
+		res.Header().Add("Location", req.URL.String())
 		res.WriteHeader(http.StatusFound)
 		return
 	}
@@ -172,7 +173,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
-	metadata := &harbor.ScannerMetadata{
+	metadata := &harbor.ScannerAdapterMetadata{
 		Scanner: harbor.Scanner{
 			Name:    "Trivy",
 			Vendor:  "Aqua Security",
@@ -181,8 +182,8 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		Capabilities: []harbor.Capability{
 			{
 				ConsumesMIMETypes: []string{
-					"application/vnd.oci.image.manifest.v1+json",
-					"application/vnd.docker.distribution.manifest.v2+json",
+					api.MimeTypeOCIImageManifest.String(),
+					api.MimeTypeDockerImageManifest.String(),
 				},
 				ProducesMIMETypes: []string{
 					api.MimeTypeHarborVulnerabilityReport.String(),

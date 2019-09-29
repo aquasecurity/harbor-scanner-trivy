@@ -15,11 +15,15 @@ const (
 
 type MimeTypeParams map[string]string
 
-var MimeTypeParamVersion = map[string]string{"version": "1.0"}
-var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeParamVersion}
-var MimeTypeHarborVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.vuln.report.harbor+json", Params: MimeTypeParamVersion}
-var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeParamVersion}
-var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeParamVersion}
+var MimeTypeVersion = map[string]string{"version": "1.0"}
+
+var MimeTypeOCIImageManifest = MimeType{Type: "application", Subtype: "vnd.oci.image.manifest.v1+json"}
+var MimeTypeDockerImageManifest = MimeType{Type: "application", Subtype: "vnd.docker.distribution.manifest.v2+json"}
+
+var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeVersion}
+var MimeTypeHarborVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.vuln.report.harbor+json", Params: MimeTypeVersion}
+var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeVersion}
+var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeVersion}
 
 type MimeType struct {
 	Type    string

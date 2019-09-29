@@ -24,10 +24,10 @@ func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult)
 	for _, v := range source.Vulnerabilities {
 		vulnerabilities = append(vulnerabilities, harbor.VulnerabilityItem{
 			ID:          v.VulnerabilityID,
-			Severity:    t.toHarborSeverity(v.Severity),
 			Pkg:         v.PkgName,
 			Version:     v.InstalledVersion,
-			Fixed:       v.FixedVersion,
+			FixVersion:  v.FixedVersion,
+			Severity:    t.toHarborSeverity(v.Severity),
 			Description: v.Description,
 			Links:       v.References,
 		})
@@ -49,7 +49,9 @@ func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult)
 
 func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
 	switch severity {
-	case "HIGH", "CRITICAL":
+	case "CRITICAL":
+		return harbor.SevCritical
+	case "HIGH":
 		return harbor.SevHigh
 	case "MEDIUM":
 		return harbor.SevMedium
