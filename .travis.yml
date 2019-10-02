@@ -1,0 +1,31 @@
+language: go
+go:
+  - "1.12"
+
+git:
+  depth: 1
+
+services:
+  - docker
+
+script:
+  - make test
+  - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
+  - docker image ls
+
+after_success:
+  - curl -sL https://codecov.io/bash | bash
+  # docker login is required to push docker images to Docker Hub.
+  # DOCKERHUB_USER and DOCKERHUB_TOKEN should be set as secrets in this .travis.yml configuration file.
+  - test -n "$TRAVIS_TAG" && docker login -u="$DOCKERHUB_USER" -p="$DOCKERHUB_TOKEN"
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
+
+notifications:
+  email: false
