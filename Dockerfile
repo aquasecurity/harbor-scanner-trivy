@@ -4,6 +4,6 @@ RUN apk add --no-cache rpm git bash ca-certificates && update-ca-certificates
 
 ADD trivy /usr/local/bin
 
-ADD bin/scanner-trivy /app/scanner-trivy
+ADD scanner-trivy /app/scanner-trivy
 
 ENTRYPOINT ["/app/scanner-trivy"]

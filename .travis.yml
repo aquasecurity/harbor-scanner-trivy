@@ -1,0 +1,37 @@
+language: go
+go:
+  # TODO Upgrade to 1.13 https://github.com/aquasecurity/harbor-scanner-trivy/issues/24
+  - "1.12"
+
+git:
+  depth: 1
+
+services:
+  - docker
+
+env:
+  global:
+    - secure: "VdoZrMbSGn8EEXcdw3bi0LF+5+0YZGb2zyR6iaKxkN88R3nRMBcEHSBaryOS6c8w8fXzoFG9hwE58+kDbHogVewupHxseivAuWdmND9vmF0pllifEtO7T4KGWcLvaWCNoxUiWQpGGp44qTx/2q9IbT5GTKxRQAc8/ZwUkdQ6sC4/tWux212qfoUFQadqBpduhP7MSPPnRfe9jUXBU/7HY2k944Zt0vRqOAUujawA6vLC1VyVaMdF/70EuGNjSnQgC0mlaj33z9ZN5qPLqbd/UWEeDNzZHbOrP7JB9/VNpeVIar2QKgiZTjQzKx48qA1MuNHMnVQJkJCzNYThy8PkF5tITw7U+OloS+Kn4IVEk/aKdZupsjmsDzlXUtePMEPE9QJNMDWpQt3K5+LFf7/VIsTxWgOofobMqnwZszr1qoav4G0EV+x3RG+5TTyNbqXZoIaMpDQUf4xcVamJhoo7vFpAjFpan2u4Cveu+2xa7l8kvphkwVSlf1brP6Z/FbhCLWnSvRyH8VRx1IoGL+a/9Iae9kGHe9sfojjvUaAuWo2jyURtdDMVcbgYb5YyPlYAdWvqlViSBdwM0sxb6pwQ2BHNdxbd558uRFz1DCjOAtECmQ+2iulhu4RYFguUWSm45VcBN4iyRrXnJv5mwi+NsQSsZdgOKgqRTEgPACBeBek="
+    - secure: "qPeleb8zRcnJEtcKWsdE13g6eamKoqxqTPqdVKsv3n+2zE9GLUMOS/eOUQSYLqvYxoiASyknN3Knd97M/Ll8FvXv4f2eGf9PYozVO1UnB/5KU9jm7yA0uG+uYotkJS5SStfIPupXX6wCNWsR3wBVTOYYzfM5uWFM/Rq05xLd0S+GT2DzIgH8SAANkL1c8zdJFlua3wWmB/gO8MtOJRq/vRHnMESr+FnQ5Ix4q5WBDaBsf5UMZJ+0vd5TU8YCLpKk6iMRLF+QllZD+m7BbVvHO5RCcNbCucyYLF3HNnVeHdW4bPt03nv2icoZNPqt0xJdNy+4nU8lsRJ2Waa5d/miDJOfee2SdIpa7+B+vSU4a/6/33iav6j3fSZXXJZbAX7AdfmRGm/FdyHQmfGTkxuVtr+3ipuayrbweRY6RxCkMYiG8j1xyIktb6xdkFj+1YHUky+YLRaK+055JjF4fg9omFhJhAqw57oZfUnVgmWY8t/4VwX1FtGOhnsB/1abvtGiQ+Dy44ciwi4AKt+mWLGWLnQeWKTyl/novz31QNvzGHlNHSSBQA2FWuF0+bUBuSvfiBFFhMMIBb8NyAH7j2eVkbkld30RHScAZhhBSOuNzSrhN8bkIu+0jBGO095KmIOUQQPAqvlTZnabZl0FEIKjJaFTZffN9CWmaZkuBU8kQZ4="
+    - secure: "Y1J3i4AT0pzpdr9lWaWW1IdI/tNhy0v8wQ1AVuSy7dGjGYu3stMLZMmqBEKlFGdR34T8+jqwaKeSVxc05P+Ljqb2Rvwtbbr243xioHI80AVtRdzSVR5hrn5G45yDuDzFh07RkKV2KRGFUtyaxW5EFMlnI80rrwZQin49U5tjNaXxZlauMwQ2CHn7gCu3N8lQeTX9jNrLmPaw0z36f5zxDBzv5OLoRzlulsC+ddnrSTPEs2kAYb+CuvR2TvIC/fG4zBXbM2YZu0JxuSVKjn5HijnSkWH8uME5DOPmXi6DuJS4cgWAROSVSE9GqqVybp0FJqIH5lump68uftRib/9OdoChxiBD1hScOrVUGPJVEv4EPSdCS60JiFp+1jrHx+gFWd6QskaLeVvye2sEjgDwGfasNjj2lXI0mTSpb9fNIpFakEebGSvlvm/VnpBxeJsY43nOoIhnBLKho6OAlMys/0joTXNk/bNNIGi9x7m7Q5/s4FSv7LQolULGSDGt+Y0k+NkQ1RDNx6/xW2n3VT0jiCTx3uUkuDVUohM+E1BfldXOsAd7DwkkicWBwzamrMEJopirYqe4a1y6z0SQN5N+iwYFPwq1iXyxJu8Q2uv8wl4nxbK3Sj/2sYBlUR+v5/9HO7tjoPFol7OOTZe6MkLBDFVjCul45BhJzAGIq6/ouDg="
+
+script:
+  - make test
+  - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
+
+after_success:
+  - curl -sL https://codecov.io/bash | bash
+  # docker login is required to push docker images to Docker Hub.
+  # DOCKERHUB_USER and DOCKERHUB_TOKEN should be set as secrets in this .travis.yml configuration file.
+  - test -n "$TRAVIS_TAG" && docker login -u="$DOCKERHUB_USER" -p="$DOCKERHUB_TOKEN"
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
+
+notifications:
+  email: false
