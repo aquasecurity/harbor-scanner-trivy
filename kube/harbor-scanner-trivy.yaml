@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init
-          image: aquasec/harbor-scanner-trivy:poc
+          image: aquasec/harbor-scanner-trivy:dev
           imagePullPolicy: IfNotPresent
           command:
             - "trivy"
@@ -27,7 +27,7 @@ spec:
               name: trivy-cache
       containers:
         - name: main
-          image: aquasec/harbor-scanner-trivy:poc
+          image: aquasec/harbor-scanner-trivy:dev
           imagePullPolicy: IfNotPresent
           env:
             - name: "SCANNER_API_ADDR"

@@ -12,13 +12,24 @@ import (
 	"os/signal"
 )
 
+var (
+	// Default wise GoReleaser sets three ldflags:
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 	log.SetReportCaller(false)
 	log.SetFormatter(&log.JSONFormatter{})
 
-	log.Info("Starting harbor-scanner-trivy")
+	log.WithFields(log.Fields{
+		"version":  version,
+		"commit":   commit,
+		"built_at": date,
+	}).Info("Starting harbor-scanner-trivy")
 
 	jobQueueConfig, err := etc.GetJobQueueConfig()
 	if err != nil {
@@ -51,17 +62,17 @@ func main() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, os.Kill)
 		captured := <-sigint
-		log.Debugf("Trapped os signal %v", captured)
+		log.WithField("signal", captured.String()).Debug("Trapped os signal")
 
-		log.Debug("Graceful shutdown started")
+		log.Debug("API server shutdown started")
 		if err := server.Shutdown(context.Background()); err != nil {
 			log.WithError(err).Error("Error while shutting down server")
 		}
-		log.Debug("Graceful shutdown completed")
+		log.Debug("API server shutdown completed")
 
-		log.Debug("Stopping worker started")
+		log.Debug("Job queue shutdown started")
 		worker.Stop()
-		log.Debug("Stopping worker completed")
+		log.Debug("Job queue shutdown completed")
 		close(shutdownComplete)
 	}()
 
