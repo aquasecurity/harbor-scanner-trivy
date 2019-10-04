@@ -1,9 +1,9 @@
-FROM alpine:3.10
+FROM alpine:3.10.2
 
-RUN apk add --no-cache rpm git bash ca-certificates && update-ca-certificates
+RUN apk update && apk add --no-cache rpm git bash ca-certificates && update-ca-certificates
 
-ADD trivy /usr/local/bin
+COPY trivy /usr/local/bin
 
-ADD scanner-trivy /app/scanner-trivy
+COPY scanner-trivy /app/scanner-trivy
 
 ENTRYPOINT ["/app/scanner-trivy"]

@@ -1,4 +1,17 @@
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harbor-scanner-trivy
+spec:
+  selector:
+    app: harbor-scanner-trivy
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +43,8 @@ spec:
           image: aquasec/harbor-scanner-trivy:dev
           imagePullPolicy: IfNotPresent
           env:
+            - name: "SCANNER_LOG_LEVEL"
+              value: "info"
             - name: "SCANNER_API_SERVER_ADDR"
               value: ":8080"
             - name: "SCANNER_TRIVY_CACHE_DIR"
@@ -41,7 +56,24 @@ spec:
             - name: "SCANNER_JOB_QUEUE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
           ports:
-            - containerPort: 8080
+            - name: api-server-port
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /probe/healthy
+              port: api-server-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /probe/ready
+              port: api-server-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
           # TODO Use PersistentVolumeClaim to scale up scanner deployment
           volumeMounts:
             - mountPath: /root/.cache
@@ -55,16 +87,3 @@ spec:
         - name: scanner-data
           hostPath:
             path: /data/scanner/trivy
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: harbor-scanner-trivy
-spec:
-  selector:
-    app: harbor-scanner-trivy
-  type: LoadBalancer
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080

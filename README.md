@@ -33,6 +33,7 @@ curl -v http://localhost:8080/api/v1/metadata
 
 | Name | Default Value | Description |
 |------|---------------|-------------|
+| `SCANNER_LOG_LEVEL` | `info` | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it. |
 | `SCANNER_API_SERVER_ADDR`          | `:8080` | Binding address for the API server. |
 | `SCANNER_API_SERVER_READ_TIMEOUT`  | `15s`   | The maximum duration for reading the entire request, including the body. |
 | `SCANNER_API_SERVER_WRITE_TIMEOUT` | `15s`   | The maximum duration before timing out writes of the response. |
