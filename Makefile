@@ -8,6 +8,9 @@ build: $(BINARY)
 test: build
 	GO111MODULE=on go test -short -race -coverprofile=coverage.txt -covermode=atomic ./...
 
+test-integration: build
+	GO111MODULE=on go test -tags=integration ./...
+
 $(BINARY): $(SOURCES)
 	GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
 
