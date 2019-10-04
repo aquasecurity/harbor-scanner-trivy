@@ -33,7 +33,7 @@ func NewWrapper(config etc.WrapperConfig) Wrapper {
 }
 
 func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResult, err error) {
-	log.Debugf("Started scanning %s ...", imageRef)
+	log.WithField("image_ref", imageRef).Debug("Started scanning")
 
 	executable, err := exec.LookPath("trivy")
 	if err != nil {
@@ -44,9 +44,9 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 	if err != nil {
 		return report, err
 	}
-	log.Debugf("Writing scan report to file %s", reportFile.Name())
+	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
-		log.Debugf("Removing scan report file %s", reportFile.Name())
+		log.WithField("path", reportFile.Name()).Debug("Removing scan report tmp file")
 		err := os.Remove(reportFile.Name())
 		if err != nil {
 			log.WithError(err).Warn("Error while removing scan report file")
@@ -54,7 +54,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 	}()
 
 	cmd := exec.Command(executable,
-		"--debug",
+		"--quiet",
 		"--cache-dir", w.config.TrivyCacheDir,
 		"--vuln-type", "os",
 		"--format", "json",

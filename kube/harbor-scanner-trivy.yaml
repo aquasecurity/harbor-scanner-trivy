@@ -30,12 +30,14 @@ spec:
           image: aquasec/harbor-scanner-trivy:dev
           imagePullPolicy: IfNotPresent
           env:
-            - name: "SCANNER_API_ADDR"
+            - name: "SCANNER_API_SERVER_ADDR"
               value: ":8080"
             - name: "SCANNER_TRIVY_CACHE_DIR"
               value: "/root/.cache"
             - name: "SCANNER_STORE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
+            - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"
+              value: "1h"
             - name: "SCANNER_JOB_QUEUE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
           ports:

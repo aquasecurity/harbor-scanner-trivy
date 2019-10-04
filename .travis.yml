@@ -17,6 +17,7 @@ env:
 
 script:
   - make test
+  - make test-integration
   - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 
 after_success:

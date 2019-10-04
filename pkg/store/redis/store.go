@@ -9,16 +9,17 @@ import (
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
+	"time"
 )
 
 type redisStore struct {
-	namespace string
-	pool      redis.Pool
+	cfg  etc.RedisStoreConfig
+	pool redis.Pool
 }
 
 func NewDataStore(cfg etc.RedisStoreConfig) store.DataStore {
 	return &redisStore{
-		namespace: cfg.Namespace,
+		cfg: cfg,
 		pool: redis.Pool{
 			Dial: func() (redis.Conn, error) {
 				return redis.DialURL(cfg.RedisURL)
@@ -40,7 +41,52 @@ func (rs *redisStore) SaveScanJob(scanJob job.ScanJob) error {
 	}
 
 	key := rs.getKeyForScanJob(scanJob.ID)
+
+	log.WithFields(log.Fields{
+		"scan_job_id":     scanJob.ID,
+		"scan_job_status": scanJob.Status.String(),
+		"redis_key":       key,
+	}).Debug("Saving scan job")
+
 	_, err = conn.Do("SET", key, string(bytes))
+	if err != nil {
+		return xerrors.Errorf("saving scan job: %w", err)
+	}
+
+	return nil
+}
+
+func (rs *redisStore) saveScanJobWithExpire(scanJob job.ScanJob, expire time.Duration) error {
+	conn := rs.pool.Get()
+	defer rs.close(conn)
+
+	bytes, err := json.Marshal(scanJob)
+	if err != nil {
+		return xerrors.Errorf("marshalling scan job: %w", err)
+	}
+
+	key := rs.getKeyForScanJob(scanJob.ID)
+
+	log.WithFields(log.Fields{
+		"scan_job_id":     scanJob.ID,
+		"scan_job_status": scanJob.Status.String(),
+		"expire":          expire.String(),
+		"redis_key":       key,
+	}).Debug("Saving scan job with expire")
+
+	err = conn.Send("MULTI")
+	if err != nil {
+		return err
+	}
+	err = conn.Send("SET", key, string(bytes))
+	if err != nil {
+		return err
+	}
+	err = conn.Send("EXPIRE", key, int(expire.Seconds()))
+	if err != nil {
+		return err
+	}
+	_, err = conn.Do("EXEC")
 	if err != nil {
 		return xerrors.Errorf("saving scan job: %w", err)
 	}
@@ -86,6 +132,10 @@ func (rs *redisStore) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus
 		scanJob.Error = error[0]
 	}
 
+	if newStatus == job.Finished || newStatus == job.Failed {
+		return rs.saveScanJobWithExpire(*scanJob, rs.cfg.ScanJobTTL)
+	}
+
 	return rs.SaveScanJob(*scanJob)
 }
 
@@ -104,7 +154,7 @@ func (rs *redisStore) UpdateReports(scanJobID string, reports job.ScanReports) e
 }
 
 func (rs *redisStore) getKeyForScanJob(scanJobID string) string {
-	return fmt.Sprintf("%s:scan-job:%s", rs.namespace, scanJobID)
+	return fmt.Sprintf("%s:scan-job:%s", rs.cfg.Namespace, scanJobID)
 }
 
 func (rs *redisStore) close(conn redis.Conn) {

@@ -2,13 +2,18 @@ package etc
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
+	"time"
 )
+
+type Envs map[string]string
 
 func TestGetWrapperConfig(t *testing.T) {
 	testCases := []struct {
 		Name           string
-		Envs           map[string]string
+		Envs           Envs
 		ExpectedError  error
 		ExpectedConfig WrapperConfig
 	}{
@@ -28,10 +33,50 @@ func TestGetWrapperConfig(t *testing.T) {
 	}
 }
 
+func TestGetAPIConfig(t *testing.T) {
+	testCases := []struct {
+		Name           string
+		Envs           Envs
+		ExpectedError  error
+		ExpectedConfig APIConfig
+	}{
+		{
+			Name: "Should return default config",
+			ExpectedConfig: APIConfig{
+				Addr:         ":8080",
+				ReadTimeout:  parseDuration(t, "15s"),
+				WriteTimeout: parseDuration(t, "15s"),
+			},
+		},
+		{
+			Name: "Should overwrite default config with environment variables",
+			Envs: Envs{
+				"SCANNER_API_SERVER_ADDR":          ":4200",
+				"SCANNER_API_SERVER_READ_TIMEOUT":  "1h",
+				"SCANNER_API_SERVER_WRITE_TIMEOUT": "2m",
+			},
+			ExpectedConfig: APIConfig{
+				Addr:         ":4200",
+				ReadTimeout:  parseDuration(t, "1h"),
+				WriteTimeout: parseDuration(t, "2m"),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			setenvs(t, tc.Envs)
+			config, err := GetAPIConfig()
+			assert.Equal(t, tc.ExpectedError, err)
+			assert.Equal(t, tc.ExpectedConfig, config)
+		})
+	}
+}
+
 func TestGetRedisStoreConfig(t *testing.T) {
 	testCases := []struct {
 		Name           string
-		Envs           map[string]string
+		Envs           Envs
 		ExpectedError  error
 		ExpectedConfig RedisStoreConfig
 	}{
@@ -42,12 +87,31 @@ func TestGetRedisStoreConfig(t *testing.T) {
 				Namespace:     "harbor.scanner.trivy:data-store",
 				PoolMaxActive: 5,
 				PoolMaxIdle:   5,
+				ScanJobTTL:    parseDuration(t, "1h"),
+			},
+		},
+		{
+			Name: "Should overwrite default config with environment variables",
+			Envs: Envs{
+				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
+				"SCANNER_STORE_REDIS_NAMESPACE":       "test.namespace",
+				"SCANNER_STORE_REDIS_POOL_MAX_ACTIVE": "3",
+				"SCANNER_STORE_REDIS_POOL_MAX_IDLE":   "7",
+				"SCANNER_STORE_REDIS_SCAN_JOB_TTL":    "2h45m15s",
+			},
+			ExpectedConfig: RedisStoreConfig{
+				RedisURL:      "redis://harbor-harbor-redis:6379",
+				Namespace:     "test.namespace",
+				PoolMaxActive: 3,
+				PoolMaxIdle:   7,
+				ScanJobTTL:    parseDuration(t, "2h45m15s"),
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			setenvs(t, tc.Envs)
 			config, err := GetRedisStoreConfig()
 			assert.Equal(t, tc.ExpectedError, err)
 			assert.Equal(t, tc.ExpectedConfig, config)
@@ -58,7 +122,7 @@ func TestGetRedisStoreConfig(t *testing.T) {
 func TestGetJobQueueConfig(t *testing.T) {
 	testCases := []struct {
 		Name           string
-		Envs           map[string]string
+		Envs           Envs
 		ExpectedError  error
 		ExpectedConfig JobQueueConfig
 	}{
@@ -81,4 +145,20 @@ func TestGetJobQueueConfig(t *testing.T) {
 			assert.Equal(t, tc.ExpectedConfig, config)
 		})
 	}
+}
+
+func setenvs(t *testing.T, envs Envs) {
+	t.Helper()
+	os.Clearenv()
+	for k, v := range envs {
+		err := os.Setenv(k, v)
+		require.NoError(t, err)
+	}
+}
+
+func parseDuration(t *testing.T, s string) time.Duration {
+	t.Helper()
+	duration, err := time.ParseDuration(s)
+	require.NoError(t, err)
+	return duration
 }
