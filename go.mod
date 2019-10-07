@@ -1,6 +1,6 @@
 module github.com/aquasecurity/harbor-scanner-trivy
 
-go 1.12
+go 1.13
 
 require (
 	github.com/Microsoft/hcsshim v0.8.6 // indirect
