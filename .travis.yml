@@ -1,7 +1,6 @@
 language: go
 go:
-  # TODO Upgrade to 1.13 https://github.com/aquasecurity/harbor-scanner-trivy/issues/24
-  - "1.12"
+  - "1.13"
 
 git:
   depth: 1
