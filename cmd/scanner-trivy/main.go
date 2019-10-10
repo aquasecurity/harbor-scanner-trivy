@@ -21,7 +21,7 @@ var (
 
 func main() {
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(etc.GetLogLevel())
 	log.SetReportCaller(false)
 	log.SetFormatter(&log.JSONFormatter{})
 

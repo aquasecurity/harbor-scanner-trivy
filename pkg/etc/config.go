@@ -2,6 +2,8 @@ package etc
 
 import (
 	"github.com/caarlos0/env/v6"
+	"github.com/sirupsen/logrus"
+	"os"
 	"time"
 )
 
@@ -29,6 +31,17 @@ type JobQueueConfig struct {
 	WorkerConcurrency int    `env:"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY" envDefault:"1"`
 	PoolMaxActive     int    `env:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
 	PoolMaxIdle       int    `end:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+}
+
+func GetLogLevel() logrus.Level {
+	if value, ok := os.LookupEnv("SCANNER_LOG_LEVEL"); ok {
+		level, err := logrus.ParseLevel(value)
+		if err != nil {
+			return logrus.InfoLevel
+		}
+		return level
+	}
+	return logrus.InfoLevel
 }
 
 func GetWrapperConfig() (cfg WrapperConfig, err error) {

@@ -1,6 +1,7 @@
 package etc
 
 import (
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -9,6 +10,40 @@ import (
 )
 
 type Envs map[string]string
+
+func TestGetLogLevel(t *testing.T) {
+	testCases := []struct {
+		Name             string
+		Envs             Envs
+		ExpectedLogLevel logrus.Level
+	}{
+		{
+			Name:             "Should return default log level when env is not set",
+			ExpectedLogLevel: logrus.InfoLevel,
+		},
+		{
+			Name: "Should return default log level when env has invalid value",
+			Envs: Envs{
+				"SCANNER_LOG_LEVEL": "unknown_level",
+			},
+			ExpectedLogLevel: logrus.InfoLevel,
+		},
+		{
+			Name: "Should return log level set as env",
+			Envs: Envs{
+				"SCANNER_LOG_LEVEL": "trace",
+			},
+			ExpectedLogLevel: logrus.TraceLevel,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			setenvs(t, tc.Envs)
+			assert.Equal(t, tc.ExpectedLogLevel, GetLogLevel())
+		})
+	}
+}
 
 func TestGetWrapperConfig(t *testing.T) {
 	testCases := []struct {

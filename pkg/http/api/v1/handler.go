@@ -15,11 +15,7 @@ import (
 )
 
 const (
-	pathAPIPrefix        = "/api/v1"
-	pathScan             = "/scan"
-	pathScanReport       = "/scan/{scan_request_id}/report"
 	pathVarScanRequestID = "scan_request_id"
-	pathMetadata         = "/metadata"
 )
 
 type requestHandler struct {
@@ -35,12 +31,25 @@ func NewAPIHandler(enqueuer queue.Enqueuer, dataStore store.DataStore) http.Hand
 	}
 
 	router := mux.NewRouter()
-	v1Router := router.PathPrefix(pathAPIPrefix).Subrouter()
+	router.Use(handler.logRequest)
 
-	v1Router.Methods(http.MethodPost).Path(pathScan).HandlerFunc(handler.AcceptScanRequest)
-	v1Router.Methods(http.MethodGet).Path(pathScanReport).HandlerFunc(handler.GetScanReport)
-	v1Router.Methods(http.MethodGet).Path(pathMetadata).HandlerFunc(handler.GetMetadata)
+	apiV1Router := router.PathPrefix("/api/v1").Subrouter()
+	apiV1Router.Methods(http.MethodPost).Path("/scan").HandlerFunc(handler.AcceptScanRequest)
+	apiV1Router.Methods(http.MethodGet).Path("/scan/{scan_request_id}/report").HandlerFunc(handler.GetScanReport)
+	apiV1Router.Methods(http.MethodGet).Path("/metadata").HandlerFunc(handler.GetMetadata)
+
+	probeRouter := router.PathPrefix("/probe").Subrouter()
+	probeRouter.Methods(http.MethodGet).Path("/healthy").HandlerFunc(handler.GetHealthy)
+	probeRouter.Methods(http.MethodGet).Path("/ready").HandlerFunc(handler.GetReady)
+
 	return router
+}
+
+func (h *requestHandler) logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Tracef("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Request) {
@@ -111,7 +120,6 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 }
 
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
-	log.Debug("Get scan report request received")
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
@@ -195,4 +203,12 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		},
 	}
 	h.WriteJSON(res, metadata, api.MimeTypeMetadata, http.StatusOK)
+}
+
+func (h *requestHandler) GetHealthy(res http.ResponseWriter, req *http.Request) {
+	res.WriteHeader(http.StatusOK)
+}
+
+func (h *requestHandler) GetReady(res http.ResponseWriter, req *http.Request) {
+	res.WriteHeader(http.StatusOK)
 }
