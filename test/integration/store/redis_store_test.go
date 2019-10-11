@@ -1,6 +1,6 @@
 // +build integration
 
-package redis
+package store
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
@@ -17,9 +18,10 @@ import (
 	"time"
 )
 
-func TestRedisStore_CRUD(t *testing.T) {
+// TestRedisStore is an integration test for the Redis store adapter.
+func TestRedisStore(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skipping an integration test")
+		t.Skip("An integration test")
 	}
 
 	ctx := context.Background()
@@ -36,7 +38,7 @@ func TestRedisStore_CRUD(t *testing.T) {
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
-	dataStore := NewDataStore(etc.RedisStoreConfig{
+	dataStore := redis.NewDataStore(etc.RedisStoreConfig{
 		RedisURL:      redisURL,
 		Namespace:     "harbor.scanner.trivy:store",
 		PoolMaxActive: 5,
