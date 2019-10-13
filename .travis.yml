@@ -17,7 +17,8 @@ env:
 script:
   - make test
   - make test-integration
-  - make test-component
+  # TODO Uncomment component tests runner after resolving https://github.com/aquasecurity/harbor-scanner-trivy/issues/38
+  # - make test-component
   - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 
 after_success:
