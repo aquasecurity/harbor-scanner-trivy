@@ -73,7 +73,7 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 
 	err = c.dataStore.UpdateReports(scanJobID, job.ScanReports{
 		TrivyScanReport:  scanReport,
-		HarborScanReport: c.transformer.Transform(req, scanReport),
+		HarborScanReport: c.transformer.Transform(req.Artifact, scanReport),
 	})
 
 	if err != nil {

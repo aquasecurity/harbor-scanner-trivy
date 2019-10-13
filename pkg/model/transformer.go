@@ -7,18 +7,37 @@ import (
 	"time"
 )
 
-type Transformer interface {
-	Transform(req harbor.ScanRequest, source trivy.ScanResult) harbor.ScanResult
+// Clock wraps the Now method. Introduced to allow replacing the global state with fixed clocks to facilitate testing.
+// Now returns the current time.
+type Clock interface {
+	Now() time.Time
 }
 
-func NewTransformer() Transformer {
-	return &transformer{}
+type SystemClock struct {
+}
+
+func (c *SystemClock) Now() time.Time {
+	return time.Now()
+}
+
+// Transformer wraps the Transform method.
+// Transform transforms Trivy's scan report into Harbor's packages vulnerabilities report.
+type Transformer interface {
+	Transform(artifact harbor.Artifact, source trivy.ScanResult) harbor.ScanResult
 }
 
 type transformer struct {
+	clock Clock
 }
 
-func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult) (target harbor.ScanResult) {
+// NewTransformer constructs a Transformer with the given Clock.
+func NewTransformer(clock Clock) Transformer {
+	return &transformer{
+		clock: clock,
+	}
+}
+
+func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanResult) (target harbor.ScanResult) {
 	var vulnerabilities []harbor.VulnerabilityItem
 
 	for _, v := range source.Vulnerabilities {
@@ -29,22 +48,29 @@ func (t *transformer) Transform(req harbor.ScanRequest, source trivy.ScanResult)
 			FixVersion:  v.FixedVersion,
 			Severity:    t.toHarborSeverity(v.Severity),
 			Description: v.Description,
-			Links:       v.References,
+			Links:       t.toLinks(v.References),
 		})
 	}
 
 	target = harbor.ScanResult{
-		GeneratedAt: time.Now(),
+		GeneratedAt: t.clock.Now(),
 		Scanner: harbor.Scanner{
 			Name:    "Trivy",
 			Vendor:  "Aqua Security",
 			Version: "0.1.6",
 		},
-		Artifact:        req.Artifact,
+		Artifact:        artifact,
 		Severity:        t.toHighestSeverity(source),
 		Vulnerabilities: vulnerabilities,
 	}
 	return
+}
+
+func (t *transformer) toLinks(references []string) []string {
+	if references == nil {
+		return []string{}
+	}
+	return references
 }
 
 func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
@@ -60,13 +86,13 @@ func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
 	case "UNKNOWN":
 		return harbor.SevUnknown
 	default:
-		log.Printf("Unknown trivy severity %s", severity)
+		log.WithField("severity", severity).Warn("Unknown trivy severity")
 		return harbor.SevUnknown
 	}
 }
 
 func (t *transformer) toHighestSeverity(sr trivy.ScanResult) (highest harbor.Severity) {
-	highest = harbor.SevNone
+	highest = harbor.SevUnknown
 
 	for _, vln := range sr.Vulnerabilities {
 		sev := t.toHarborSeverity(vln.Severity)
