@@ -9,8 +9,8 @@ spec:
   type: LoadBalancer
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 8443
+      targetPort: 8443
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -46,7 +46,11 @@ spec:
             - name: "SCANNER_LOG_LEVEL"
               value: "info"
             - name: "SCANNER_API_SERVER_ADDR"
-              value: ":8080"
+              value: ":8443"
+            - name: "SCANNER_API_SERVER_TLS_CERTIFICATE"
+              value: "/certs/tls.crt"
+            - name: "SCANNER_API_SERVER_TLS_KEY"
+              value: "/certs/tls.key"
             - name: "SCANNER_TRIVY_CACHE_DIR"
               value: "/root/.cache"
             - name: "SCANNER_STORE_REDIS_URL"
@@ -57,9 +61,10 @@ spec:
               value: "redis://harbor-harbor-redis:6379"
           ports:
             - name: api-server-port
-              containerPort: 8080
+              containerPort: 8443
           livenessProbe:
             httpGet:
+              scheme: HTTPS
               path: /probe/healthy
               port: api-server-port
             initialDelaySeconds: 5
@@ -68,6 +73,7 @@ spec:
             failureThreshold: 10
           readinessProbe:
             httpGet:
+              scheme: HTTPS
               path: /probe/ready
               port: api-server-port
             initialDelaySeconds: 5
@@ -80,6 +86,9 @@ spec:
               name: trivy-cache
             - mountPath: /data/scanner
               name: scanner-data
+            - mountPath: /certs
+              name: certs
+              readOnly: true
       volumes:
         - name: trivy-cache
           hostPath:
@@ -87,3 +96,6 @@ spec:
         - name: scanner-data
           hostPath:
             path: /data/scanner/trivy
+        - name: certs
+          secret:
+            secretName: harbor-scanner-trivy-tls
