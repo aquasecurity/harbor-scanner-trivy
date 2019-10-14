@@ -12,7 +12,6 @@ type Severity int64
 // Sevxxx is the list of severity of image after scanning.
 const (
 	_ Severity = iota
-	SevNone
 	SevUnknown
 	SevLow
 	SevMedium
@@ -25,7 +24,6 @@ func (s Severity) String() string {
 }
 
 var severityToString = map[Severity]string{
-	SevNone:     "None",
 	SevUnknown:  "Unknown",
 	SevLow:      "Low",
 	SevMedium:   "Medium",
@@ -34,7 +32,6 @@ var severityToString = map[Severity]string{
 }
 
 var stringToSeverity = map[string]Severity{
-	"None":     SevNone,
 	"Unknown":  SevUnknown,
 	"Low":      SevLow,
 	"Medium":   SevMedium,

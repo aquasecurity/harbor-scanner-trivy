@@ -82,7 +82,7 @@ func (s *workerContext) controller() (controller scan.Controller, err error) {
 	}
 	dataStore := store.NewDataStore(storeConfig)
 
-	controller = scan.NewController(dataStore, wrapper, model.NewTransformer())
+	controller = scan.NewController(dataStore, wrapper, model.NewTransformer(&model.SystemClock{}))
 	return
 }
 
