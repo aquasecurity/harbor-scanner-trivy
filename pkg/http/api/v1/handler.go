@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
@@ -182,11 +183,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
 	metadata := &harbor.ScannerAdapterMetadata{
-		Scanner: harbor.Scanner{
-			Name:    "Trivy",
-			Vendor:  "Aqua Security",
-			Version: "0.1.6",
-		},
+		Scanner: etc.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
 			{
 				ConsumesMIMETypes: []string{

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	log "github.com/sirupsen/logrus"
@@ -53,12 +54,8 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanResul
 	}
 
 	target = harbor.ScanResult{
-		GeneratedAt: t.clock.Now(),
-		Scanner: harbor.Scanner{
-			Name:    "Trivy",
-			Vendor:  "Aqua Security",
-			Version: "0.1.6",
-		},
+		GeneratedAt:     t.clock.Now(),
+		Scanner:         etc.GetScannerMetadata(),
 		Artifact:        artifact,
 		Severity:        t.toHighestSeverity(source),
 		Vulnerabilities: vulnerabilities,

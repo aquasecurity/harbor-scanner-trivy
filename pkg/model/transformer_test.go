@@ -1,11 +1,9 @@
 package model
 
 import (
-	"encoding/json"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 	"time"
 )
@@ -149,6 +147,4 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 		},
 	}, hr)
-
-	json.NewEncoder(os.Stdout).Encode(hr)
 }

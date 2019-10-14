@@ -1,6 +1,7 @@
 package etc
 
 import (
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/caarlos0/env/v6"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -62,4 +63,13 @@ func GetRedisStoreConfig() (cfg RedisStoreConfig, err error) {
 func GetJobQueueConfig() (cfg JobQueueConfig, err error) {
 	err = env.Parse(&cfg)
 	return
+}
+
+func GetScannerMetadata() harbor.Scanner {
+	return harbor.Scanner{
+		Name:   "Trivy",
+		Vendor: "Aqua Security",
+		// This version corresponds to the version of the trivy binary that we add as a layer to the docker image.
+		Version: "0.1.6",
+	}
 }
