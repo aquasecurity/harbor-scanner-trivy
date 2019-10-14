@@ -40,7 +40,7 @@ spec:
               name: trivy-cache
       containers:
         - name: main
-          image: aquasec/harbor-scanner-trivy:dev
+          image: docker.io/aquasec/harbor-scanner-trivy:0.1.0-alpha.1
           imagePullPolicy: IfNotPresent
           env:
             - name: "SCANNER_LOG_LEVEL"
