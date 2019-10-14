@@ -17,7 +17,7 @@ Harbor registry as part of its vulnerability scan feature.
 - [Getting started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Build](#build)
-  - [Running on minikube](#running-on-minikubeminikube-url)
+  - [Running on minikube](#running-on-minikube)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
