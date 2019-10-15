@@ -19,6 +19,9 @@ Harbor registry as part of its vulnerability scan feature.
   - [Build](#build)
   - [Running on minikube](#running-on-minikube)
 - [Testing](#testing)
+  - [Unit testing](#unit-testing)
+  - [Integration testing](#integration-testing)
+  - [Component testing](#component-testing)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
@@ -66,11 +69,20 @@ make container
 4. Update deployment's image to `aquasec/harbor-scanner-trivy:dev`.
    ```
    $ kubectl set image deployment harbor-scanner-trivy \
-     main=aquasec/harbor-scanner-trivy:poc
+     main=aquasec/harbor-scanner-trivy:dev
    ```
    > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
 
 ## Testing
+
+Unit testing alone doesn't provide guarantees about the behaviour of the adapter. To verify that each Go module
+correctly interacts with its collaborators, more coarse grained testing is required as described in
+[Testing Strategies in a Microservice Architecture][fowler-testing-strategies].
+
+### Unit testing
+
+> A *unit test* exercises the smallest piece of testable software in the application to determine whether it behaves
+> as expected.
 
 Run `make test` to run all unit tests:
 
@@ -78,10 +90,29 @@ Run `make test` to run all unit tests:
 make test
 ```
 
+### Integration testing
+
+> An *integration* test verifies the communication paths and interactions between components to detect interface defects.
+
 Run `make test-integration` to run integration tests:
 
 ```
 make test-integration
+```
+
+### Component testing
+
+> A *component test* limits the scope of the exercised software to a portion of the system under test, manipulating the
+> system through internal code interfaces and using test doubles to isolate the code under test from other components.
+> In a microservice architecture, the components are the services themselves.
+
+Running out of process component tests is not fully automated yet (see [#38][issue-38]). However, you can run them
+as follows:
+
+```
+docker-compose -f test/component/docker-compose.yaml
+make test-component
+docker-compose -f test/component/docker-compose.yaml
 ```
 
 ## Deployment
@@ -155,3 +186,5 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [image-vulnerability-scanning-proposal]: https://github.com/goharbor/community/pull/98
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
+[fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
+[issue-38]: https://github.com/aquasecurity/harbor-scanner-trivy/issues/38
