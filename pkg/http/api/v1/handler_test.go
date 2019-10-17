@@ -396,3 +396,42 @@ func TestRequestHandler_GetReady(t *testing.T) {
 	enqueuer.AssertExpectations(t)
 	store.AssertExpectations(t)
 }
+
+func TestRequestHandler_GetMetadata(t *testing.T) {
+	enqueuer := mock.NewEnqueuer()
+	store := mock.NewStore()
+
+	rr := httptest.NewRecorder()
+
+	r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
+	require.NoError(t, err)
+
+	NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+
+	rs := rr.Result()
+
+	assert.Equal(t, http.StatusOK, rs.StatusCode)
+	assert.JSONEq(t, `{
+  "scanner": {
+    "name": "Trivy",
+    "vendor": "Aqua Security",
+    "version": "0.1.6"
+  },
+  "capabilities": [
+    {
+      "consumes_mime_types": [
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.docker.distribution.manifest.v2+json"
+      ],
+      "produces_mime_types": [
+        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+      ]
+    }
+  ],
+  "properties": {
+    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability"
+  }
+}`, rr.Body.String())
+	enqueuer.AssertExpectations(t)
+	store.AssertExpectations(t)
+}
