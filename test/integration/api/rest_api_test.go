@@ -85,7 +85,7 @@ func TestRestApi(t *testing.T) {
 				Scanner: harbor.Scanner{
 					Name:    "Trivy",
 					Vendor:  "Aqua Security",
-					Version: "0.1.6",
+					Version: "Unknown",
 				},
 				Severity: harbor.SevCritical,
 				Vulnerabilities: []harbor.VulnerabilityItem{
@@ -124,7 +124,7 @@ func TestRestApi(t *testing.T) {
   "scanner": {
     "name": "Trivy",
     "vendor": "Aqua Security",
-    "version": "0.1.6"
+    "version": "Unknown"
   },
   "severity": "Critical",
   "vulnerabilities": [
@@ -155,7 +155,7 @@ func TestRestApi(t *testing.T) {
   "scanner": {
     "name": "Trivy",
     "vendor": "Aqua Security",
-    "version": "0.1.6"
+    "version": "Unknown"
   },
   "capabilities": [
     {

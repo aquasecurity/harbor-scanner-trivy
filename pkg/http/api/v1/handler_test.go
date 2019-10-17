@@ -435,7 +435,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
   "scanner": {
     "name": "Trivy",
     "vendor": "Aqua Security",
-    "version": "0.1.6"
+    "version": "Unknown"
   },
   "capabilities": [
     {

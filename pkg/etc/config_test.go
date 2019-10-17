@@ -1,6 +1,7 @@
 package etc
 
 import (
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -178,6 +179,30 @@ func TestGetJobQueueConfig(t *testing.T) {
 			config, err := GetJobQueueConfig()
 			assert.Equal(t, tc.ExpectedError, err)
 			assert.Equal(t, tc.ExpectedConfig, config)
+		})
+	}
+}
+
+func TestGetScannerMetadata(t *testing.T) {
+	testCases := []struct {
+		name            string
+		envs            Envs
+		expectedScanner harbor.Scanner
+	}{
+		{
+			name:            "Should return version set via env",
+			envs:            Envs{"TRIVY_VERSION": "0.1.6"},
+			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.6"},
+		},
+		{
+			name:            "Should return unknown version when it is not set via env",
+			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "Unknown"},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			setenvs(t, tc.envs)
+			assert.Equal(t, tc.expectedScanner, GetScannerMetadata())
 		})
 	}
 }

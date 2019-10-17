@@ -72,10 +72,13 @@ func GetJobQueueConfig() (cfg JobQueueConfig, err error) {
 }
 
 func GetScannerMetadata() harbor.Scanner {
+	version, ok := os.LookupEnv("TRIVY_VERSION")
+	if !ok {
+		version = "Unknown"
+	}
 	return harbor.Scanner{
-		Name:   "Trivy",
-		Vendor: "Aqua Security",
-		// This version corresponds to the version of the trivy binary that we add as a layer to the docker image.
-		Version: "0.1.6",
+		Name:    "Trivy",
+		Vendor:  "Aqua Security",
+		Version: version,
 	}
 }

@@ -1,6 +1,7 @@
 package trivy
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
@@ -69,16 +70,27 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 			fmt.Sprintf("TRIVY_PASSWORD=%s", auth.Password))
 	}
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	stderrBuffer := bytes.Buffer{}
 
-	err = cmd.Run()
+	cmd.Stderr = &stderrBuffer
+
+	stdout, err := cmd.Output()
 	if err != nil {
-		return report, xerrors.Errorf("running trivy: %v", err)
+		log.WithFields(log.Fields{
+			"image_ref": imageRef,
+			"exit_code": cmd.ProcessState.ExitCode(),
+			"std_err":   stderrBuffer.String(),
+			"std_out":   string(stdout),
+		}).Error("Running trivy failed")
+		return report, xerrors.Errorf("running trivy: %v: %v", err, stderrBuffer.String())
 	}
 
-	log.Debugf("trivy exit code: %d", cmd.ProcessState.ExitCode())
-	log.Debugf("Finished scanning %s", imageRef)
+	log.WithFields(log.Fields{
+		"image_ref": imageRef,
+		"exit_code": cmd.ProcessState.ExitCode(),
+		"std_err":   stderrBuffer.String(),
+		"std_out":   string(stdout),
+	}).Debug("Running trivy finished")
 
 	var data []trivy.ScanResult
 	err = json.NewDecoder(reportFile).Decode(&data)
