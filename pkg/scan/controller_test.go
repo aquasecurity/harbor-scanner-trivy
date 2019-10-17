@@ -1,59 +1,138 @@
 package scan
 
 import (
+	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
+	model "github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 	"testing"
 )
 
-func TestController_ToImageRef(t *testing.T) {
+func TestController_Scan(t *testing.T) {
+	artifact := harbor.Artifact{
+		Repository: "library/mongo",
+		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+	}
+	trivyReport := model.ScanResult{}
+	harborReport := harbor.ScanReport{}
+
 	testCases := []struct {
-		Request  harbor.ScanRequest
-		ImageRef string
+		name string
+
+		scanJobID              string
+		scanRequest            harbor.ScanRequest
+		storeExpectation       []*mock.Expectation
+		wrapperExpectation     *mock.Expectation
+		transformerExpectation *mock.Expectation
+
+		expectedError error
 	}{
 		{
-			Request: harbor.ScanRequest{
+			name:      fmt.Sprintf("Should update job status to %s when everything is fine", job.Finished.String()),
+			scanJobID: "job:123",
+			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
-					URL: "https://core.harbor.domain",
+					URL:           "https://core.harbor.domain",
+					Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
 				},
-				Artifact: harbor.Artifact{
-					Repository: "library/mongo",
-					Digest:     "test:ABC",
+				Artifact: artifact,
+			},
+			storeExpectation: []*mock.Expectation{
+				{
+					Method:     "UpdateStatus",
+					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					ReturnArgs: []interface{}{nil},
+				},
+				{
+					Method:     "UpdateReport",
+					Args:       []interface{}{"job:123", harborReport},
+					ReturnArgs: []interface{}{nil},
+				},
+				{
+					Method:     "UpdateStatus",
+					Args:       []interface{}{"job:123", job.Finished, []string(nil)},
+					ReturnArgs: []interface{}{nil},
 				},
 			},
-			ImageRef: "core.harbor.domain/library/mongo@test:ABC",
+			wrapperExpectation: &mock.Expectation{
+				Method: "Run",
+				Args: []interface{}{
+					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+					trivy.RegistryAuth{Username: "user", Password: "password"},
+				},
+				ReturnArgs: []interface{}{
+					trivyReport,
+					nil,
+				},
+			},
+			transformerExpectation: &mock.Expectation{
+				Method: "Transform",
+				Args: []interface{}{
+					artifact,
+					trivyReport,
+				},
+				ReturnArgs: []interface{}{
+					harborReport,
+				},
+			},
 		},
 		{
-			Request: harbor.ScanRequest{
+			name:      fmt.Sprintf("Should update job status to %s when Trivy wrapper fails", job.Failed.String()),
+			scanJobID: "job:123",
+			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
-					URL: "https://core.harbor.domain:443",
+					URL:           "https://core.harbor.domain",
+					Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
 				},
-				Artifact: harbor.Artifact{Repository: "library/nginx",
-					Digest: "test:DEF",
+				Artifact: artifact,
+			},
+			storeExpectation: []*mock.Expectation{
+				{
+					Method:     "UpdateStatus",
+					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					ReturnArgs: []interface{}{nil},
+				},
+				{
+					Method:     "UpdateStatus",
+					Args:       []interface{}{"job:123", job.Failed, []string{"running trivy wrapper: out of memory"}},
+					ReturnArgs: []interface{}{nil},
 				},
 			},
-			ImageRef: "core.harbor.domain:443/library/nginx@test:DEF",
-		},
-		{
-			Request: harbor.ScanRequest{
-				Registry: harbor.Registry{
-					URL: "http://harbor-harbor-registry:5000",
+			wrapperExpectation: &mock.Expectation{
+				Method: "Run",
+				Args: []interface{}{
+					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+					trivy.RegistryAuth{Username: "user", Password: "password"},
 				},
-				Artifact: harbor.Artifact{
-					Repository: "scanners/mongo",
-					Digest:     "test:GHI",
+				ReturnArgs: []interface{}{
+					model.ScanResult{},
+					xerrors.New("out of memory"),
 				},
 			},
-			ImageRef: "harbor-harbor-registry:5000/scanners/mongo@test:GHI",
 		},
 	}
+
 	for _, tc := range testCases {
-		c := controller{}
-		imageRef, err := c.ToImageRef(tc.Request)
-		require.NoError(t, err)
-		assert.Equal(t, tc.ImageRef, imageRef)
+		t.Run(tc.name, func(t *testing.T) {
+			store := mock.NewStore()
+			wrapper := mock.NewWrapper()
+			transformer := mock.NewTransformer()
+
+			mock.ApplyExpectations(t, store, tc.storeExpectation...)
+			mock.ApplyExpectations(t, wrapper, tc.wrapperExpectation)
+			mock.ApplyExpectations(t, transformer, tc.transformerExpectation)
+
+			err := NewController(store, wrapper, transformer).Scan(tc.scanJobID, tc.scanRequest)
+			assert.Equal(t, tc.expectedError, err)
+
+			store.AssertExpectations(t)
+			wrapper.AssertExpectations(t)
+			transformer.AssertExpectations(t)
+		})
 	}
 }
 
@@ -79,11 +158,13 @@ func TestController_ToRegistryAuth(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		c := controller{}
-		auth, err := c.ToRegistryAuth(tc.Authorization)
-		if tc.ExpectedError != "" {
-			assert.EqualError(t, err, tc.ExpectedError)
-		}
-		assert.Equal(t, tc.ExpectedAuth, auth)
+		t.Run(tc.Name, func(t *testing.T) {
+			c := controller{}
+			auth, err := c.ToRegistryAuth(tc.Authorization)
+			if tc.ExpectedError != "" {
+				assert.EqualError(t, err, tc.ExpectedError)
+			}
+			assert.Equal(t, tc.ExpectedAuth, auth)
+		})
 	}
 }

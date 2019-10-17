@@ -54,7 +54,7 @@ func (c *Client) RequestScan(request harbor.ScanRequest) (scanResp harbor.ScanRe
 }
 
 // GetScanReport polls for ScanReport associated with the given ScanRequest ID.
-func (c *Client) GetScanReport(scanRequestID string) (report harbor.ScanResult, err error) {
+func (c *Client) GetScanReport(scanRequestID string) (report harbor.ScanReport, err error) {
 	res, err := c.doGetScanReport(scanRequestID)
 	for err == nil && res.StatusCode == http.StatusFound {
 		time.Sleep(10 * time.Second)

@@ -80,7 +80,7 @@ func TestTransformer_Transform(t *testing.T) {
 			},
 		},
 	})
-	assert.Equal(t, harbor.ScanResult{
+	assert.Equal(t, harbor.ScanReport{
 		GeneratedAt: fixedTime,
 		Artifact: harbor.Artifact{
 			Repository: "library/mongo",
