@@ -15,6 +15,7 @@ env:
     - secure: "Y1J3i4AT0pzpdr9lWaWW1IdI/tNhy0v8wQ1AVuSy7dGjGYu3stMLZMmqBEKlFGdR34T8+jqwaKeSVxc05P+Ljqb2Rvwtbbr243xioHI80AVtRdzSVR5hrn5G45yDuDzFh07RkKV2KRGFUtyaxW5EFMlnI80rrwZQin49U5tjNaXxZlauMwQ2CHn7gCu3N8lQeTX9jNrLmPaw0z36f5zxDBzv5OLoRzlulsC+ddnrSTPEs2kAYb+CuvR2TvIC/fG4zBXbM2YZu0JxuSVKjn5HijnSkWH8uME5DOPmXi6DuJS4cgWAROSVSE9GqqVybp0FJqIH5lump68uftRib/9OdoChxiBD1hScOrVUGPJVEv4EPSdCS60JiFp+1jrHx+gFWd6QskaLeVvye2sEjgDwGfasNjj2lXI0mTSpb9fNIpFakEebGSvlvm/VnpBxeJsY43nOoIhnBLKho6OAlMys/0joTXNk/bNNIGi9x7m7Q5/s4FSv7LQolULGSDGt+Y0k+NkQ1RDNx6/xW2n3VT0jiCTx3uUkuDVUohM+E1BfldXOsAd7DwkkicWBwzamrMEJopirYqe4a1y6z0SQN5N+iwYFPwq1iXyxJu8Q2uv8wl4nxbK3Sj/2sYBlUR+v5/9HO7tjoPFol7OOTZe6MkLBDFVjCul45BhJzAGIq6/ouDg="
 
 script:
+  - make lint
   - make test
   - make test-integration
   # TODO Uncomment component tests runner after resolving https://github.com/aquasecurity/harbor-scanner-trivy/issues/38

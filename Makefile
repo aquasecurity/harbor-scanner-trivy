@@ -22,3 +22,7 @@ container: build
 
 container-run: container
 	docker run --name scanner-trivy --rm -d -p 8080:8080 $(IMAGE)
+
+lint:
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(GOPATH)/bin v1.21.0
+	golangci-lint run -v
