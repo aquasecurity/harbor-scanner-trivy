@@ -109,5 +109,38 @@ func TestSeverity_MarshalJSON(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, `"`+tc.expectedSeverity.String()+`"`, string(b))
 	}
+}
+
+func TestSeverity_UnmarshalJSON(t *testing.T) {
+	testCases := []struct {
+		inputSeverityJSON string
+		expectedSeverity  string
+		expectedError     string
+	}{
+		{
+			inputSeverityJSON: `"Unknown"`,
+			expectedSeverity:  "Unknown",
+		},
+		{
+			inputSeverityJSON: `"Medium"`,
+			expectedSeverity:  "Medium",
+		},
+		{
+			inputSeverityJSON: `invalid json input`,
+			expectedError:     "invalid character 'i' looking for beginning of value",
+		},
+	}
+
+	for _, tc := range testCases {
+		var s Severity
+		err := s.UnmarshalJSON([]byte(tc.inputSeverityJSON))
+		switch {
+		case tc.expectedError != "":
+			assert.Equal(t, tc.expectedError, err.Error())
+		default:
+			assert.NoError(t, err)
+		}
+		assert.Equal(t, tc.expectedSeverity, s.String())
+	}
 
 }
