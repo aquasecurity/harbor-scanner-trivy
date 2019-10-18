@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
 	"github.com/gomodule/redigo/redis"
@@ -139,7 +140,7 @@ func (rs *redisStore) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus
 	return rs.SaveScanJob(*scanJob)
 }
 
-func (rs *redisStore) UpdateReports(scanJobID string, reports job.ScanReports) error {
+func (rs *redisStore) UpdateReport(scanJobID string, report harbor.ScanReport) error {
 	log.WithFields(log.Fields{
 		"scan_job_id": scanJobID,
 	}).Debug("Updating reports for scan job")
@@ -149,7 +150,7 @@ func (rs *redisStore) UpdateReports(scanJobID string, reports job.ScanReports) e
 		return err
 	}
 
-	scanJob.Reports = reports
+	scanJob.Report = report
 	return rs.SaveScanJob(*scanJob)
 }
 

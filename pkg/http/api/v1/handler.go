@@ -178,7 +178,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	h.WriteJSON(res, scanJob.Reports.HarborScanReport, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
+	h.WriteJSON(res, scanJob.Report, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {

@@ -8,7 +8,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,31 +71,22 @@ func TestRedisStore(t *testing.T) {
 			Status: job.Pending,
 		}, j)
 
-		scanReports := job.ScanReports{
-			HarborScanReport: harbor.ScanResult{
-				Severity: harbor.SevHigh,
-				Vulnerabilities: []harbor.VulnerabilityItem{
-					{
-						ID: "CVE-2013-1400",
-					},
-				},
-			},
-			TrivyScanReport: trivy.ScanResult{
-				Vulnerabilities: []trivy.Vulnerability{
-					{
-						VulnerabilityID: "CVE-2013-1400",
-					},
+		scanReport := harbor.ScanReport{
+			Severity: harbor.SevHigh,
+			Vulnerabilities: []harbor.VulnerabilityItem{
+				{
+					ID: "CVE-2013-1400",
 				},
 			},
 		}
 
-		err = dataStore.UpdateReports(scanJobID, scanReports)
+		err = dataStore.UpdateReport(scanJobID, scanReport)
 		require.NoError(t, err, "updating scan job reports should not fail")
 
 		j, err = dataStore.GetScanJob(scanJobID)
 		require.NoError(t, err, "retrieving scan job should not fail")
 		require.NotNil(t, j, "retrieved scan job must not be nil")
-		assert.Equal(t, scanReports, j.Reports)
+		assert.Equal(t, scanReport, j.Report)
 
 		err = dataStore.UpdateStatus(scanJobID, job.Finished)
 		require.NoError(t, err)

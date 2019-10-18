@@ -16,5 +16,4 @@ require (
 	github.com/testcontainers/testcontainers-go v0.0.8
 	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
-	gotest.tools v0.0.0-20181223230014-1083505acf35
 )

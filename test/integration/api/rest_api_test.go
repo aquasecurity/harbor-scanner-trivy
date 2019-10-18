@@ -76,30 +76,28 @@ func TestRestApi(t *testing.T) {
 		store.On("GetScanJob", "job:123").Return(&job.ScanJob{
 			ID:     "job:123",
 			Status: job.Finished,
-			Reports: job.ScanReports{
-				HarborScanReport: harbor.ScanResult{
-					GeneratedAt: now,
-					Artifact: harbor.Artifact{
-						Repository: "library/mongo",
-						Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
-					},
-					Scanner: harbor.Scanner{
-						Name:    "Trivy",
-						Vendor:  "Aqua Security",
-						Version: "0.1.6",
-					},
-					Severity: harbor.SevCritical,
-					Vulnerabilities: []harbor.VulnerabilityItem{
-						{
-							ID:          "CVE-2019-1111",
-							Pkg:         "openssl",
-							Version:     "2.0-rc1",
-							FixVersion:  "2.1",
-							Severity:    harbor.SevCritical,
-							Description: "You'd better upgrade your server",
-							Links: []string{
-								"http://cve.com?id=CVE-2019-1111",
-							},
+			Report: harbor.ScanReport{
+				GeneratedAt: now,
+				Artifact: harbor.Artifact{
+					Repository: "library/mongo",
+					Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
+				},
+				Scanner: harbor.Scanner{
+					Name:    "Trivy",
+					Vendor:  "Aqua Security",
+					Version: "0.1.6",
+				},
+				Severity: harbor.SevCritical,
+				Vulnerabilities: []harbor.VulnerabilityItem{
+					{
+						ID:          "CVE-2019-1111",
+						Pkg:         "openssl",
+						Version:     "2.0-rc1",
+						FixVersion:  "2.1",
+						Severity:    harbor.SevCritical,
+						Description: "You'd better upgrade your server",
+						Links: []string{
+							"http://cve.com?id=CVE-2019-1111",
 						},
 					},
 				},

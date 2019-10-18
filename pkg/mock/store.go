@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,7 +29,7 @@ func (s *Store) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus, erro
 	return args.Error(0)
 }
 
-func (s *Store) UpdateReports(scanJobID string, reports job.ScanReports) error {
-	args := s.Called(scanJobID, reports)
+func (s *Store) UpdateReport(scanJobID string, report harbor.ScanReport) error {
+	args := s.Called(scanJobID, report)
 	return args.Error(0)
 }

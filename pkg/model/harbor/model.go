@@ -3,6 +3,9 @@ package harbor
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"golang.org/x/xerrors"
+	"net/url"
 	"time"
 )
 
@@ -74,11 +77,21 @@ type ScanRequest struct {
 	Artifact Artifact `json:"artifact"`
 }
 
+// GetImageRef returns Docker image reference for this ScanRequest.
+// Example: core.harbor.domain/scanners/mysql@sha256:3b00a364fb74246ca119d16111eb62f7302b2ff66d51e373c2bb209f8a1f3b9e
+func (c ScanRequest) GetImageRef() (string, error) {
+	registryURL, err := url.Parse(c.Registry.URL)
+	if err != nil {
+		return "", xerrors.Errorf("parsing registry URL: %w", err)
+	}
+	return fmt.Sprintf("%s/%s@%s", registryURL.Host, c.Artifact.Repository, c.Artifact.Digest), nil
+}
+
 type ScanResponse struct {
 	ID string `json:"id"`
 }
 
-type ScanResult struct {
+type ScanReport struct {
 	GeneratedAt     time.Time           `json:"generated_at"`
 	Artifact        Artifact            `json:"artifact"`
 	Scanner         Scanner             `json:"scanner"`

@@ -24,7 +24,7 @@ func (c *SystemClock) Now() time.Time {
 // Transformer wraps the Transform method.
 // Transform transforms Trivy's scan report into Harbor's packages vulnerabilities report.
 type Transformer interface {
-	Transform(artifact harbor.Artifact, source trivy.ScanResult) harbor.ScanResult
+	Transform(artifact harbor.Artifact, source trivy.ScanResult) harbor.ScanReport
 }
 
 type transformer struct {
@@ -38,7 +38,7 @@ func NewTransformer(clock Clock) Transformer {
 	}
 }
 
-func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanResult) (target harbor.ScanResult) {
+func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanResult) (target harbor.ScanReport) {
 	var vulnerabilities []harbor.VulnerabilityItem
 
 	for _, v := range source.Vulnerabilities {
@@ -53,7 +53,7 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanResul
 		})
 	}
 
-	target = harbor.ScanResult{
+	target = harbor.ScanReport{
 		GeneratedAt:     t.clock.Now(),
 		Scanner:         etc.GetScannerMetadata(),
 		Artifact:        artifact,

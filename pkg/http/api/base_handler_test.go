@@ -1,11 +1,12 @@
 package api
 
 import (
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMimeType_String(t *testing.T) {
@@ -47,4 +48,14 @@ func TestBaseHandler_WriteJSONError(t *testing.T) {
 	// then
 	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 	assert.JSONEq(t, `{"error":{"message":"Invalid request"}}`, recorder.Body.String())
+}
+
+func TestBaseHandler_SendInternalServerError(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	handler := &BaseHandler{}
+
+	handler.SendInternalServerError(recorder)
+
+	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+	assert.Equal(t, "Internal Server Error\n", recorder.Body.String())
 }
