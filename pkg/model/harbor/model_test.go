@@ -72,3 +72,42 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 		assert.Equal(t, tc.ImageRef, imageRef, tc.name)
 	}
 }
+
+func TestSeverity_MarshalJSON(t *testing.T) {
+	testCases := []struct {
+		severityLevel    int
+		expectedSeverity Severity
+	}{
+		{
+			severityLevel:    1,
+			expectedSeverity: SevUnknown,
+		},
+		{
+			severityLevel:    2,
+			expectedSeverity: SevLow,
+		},
+		{
+			severityLevel:    3,
+			expectedSeverity: SevMedium,
+		},
+		{
+			severityLevel:    4,
+			expectedSeverity: SevHigh,
+		},
+		{
+			severityLevel:    5,
+			expectedSeverity: SevCritical,
+		},
+		{
+			severityLevel: 666,
+		},
+	}
+
+	for _, tc := range testCases {
+		s := Severity(tc.severityLevel)
+		b, err := s.MarshalJSON()
+		assert.NoError(t, err)
+		assert.Equal(t, `"`+tc.expectedSeverity.String()+`"`, string(b))
+	}
+
+}
