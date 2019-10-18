@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
@@ -50,12 +51,7 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
-	server := &http.Server{
-		Handler:      apiHandler,
-		Addr:         apiConfig.Addr,
-		ReadTimeout:  apiConfig.ReadTimeout,
-		WriteTimeout: apiConfig.WriteTimeout,
-	}
+	server := api.NewServer(apiConfig, apiHandler)
 
 	shutdownComplete := make(chan struct{})
 	go func() {
