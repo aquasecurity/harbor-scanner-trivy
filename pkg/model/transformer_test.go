@@ -1,11 +1,12 @@
 package model
 
 import (
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 type fixedClock struct {
@@ -78,6 +79,12 @@ func TestTransformer_Transform(t *testing.T) {
 				InstalledVersion: "PKG-05-VER",
 				Severity:         "~~~UNKNOWN~~~",
 			},
+			{
+				VulnerabilityID:  "CVE-0000-0006",
+				PkgName:          "PKG-06",
+				InstalledVersion: "PKG-06-VER",
+				Severity:         "UNKNOWN",
+			},
 		},
 	})
 	assert.Equal(t, harbor.ScanReport{
@@ -142,6 +149,13 @@ func TestTransformer_Transform(t *testing.T) {
 				ID:       "CVE-0000-0005",
 				Pkg:      "PKG-05",
 				Version:  "PKG-05-VER",
+				Severity: harbor.SevUnknown,
+				Links:    []string{},
+			},
+			{
+				ID:       "CVE-0000-0006",
+				Pkg:      "PKG-06",
+				Version:  "PKG-06-VER",
 				Severity: harbor.SevUnknown,
 				Links:    []string{},
 			},
