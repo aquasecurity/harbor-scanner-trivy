@@ -3,17 +3,18 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestRequestHandler_ValidateScanRequest(t *testing.T) {
@@ -266,6 +267,25 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			expectedResponse: `{
   "error": {
     "message": "queue worker failed"
+  }
+}`,
+		},
+		{
+			name: fmt.Sprintf("Should respond with error 500 when scan job is NOT %s", job.Finished),
+			storeExpectation: &mock.Expectation{
+				Method: "GetScanJob",
+				Args:   []interface{}{"job:123"},
+				ReturnArgs: []interface{}{&job.ScanJob{
+					ID:     "job:123",
+					Status: 666,
+					Error:  "queue worker failed",
+				}, nil},
+			},
+			expectedStatus:      http.StatusInternalServerError,
+			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
+			expectedResponse: `{
+  "error": {
+    "message": "unexpected status Unknown of scan job job:123"
   }
 }`,
 		},
