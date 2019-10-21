@@ -58,20 +58,37 @@ make container
    ```
    $ eval $(minikube docker-env)
    ```
-2. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
-   ```
-   $ make container
-   ```
+2. Configure adapter to handle TLS traffic:
+   1. Generate certificate and private key files:
+      ```
+      $ openssl genrsa -out tls.key 2048
+      $ openssl req -new -x509 \
+        -key tls.key \
+        -out tls.cert \
+        -days 365 \
+        -subj /CN=harbor-scanner-trivy
+      ```
+   2. Create a `tls` secret from the two generated files:
+      ```
+      $ kubectl create secret tls harbor-scanner-trivy-tls \
+        --cert=tls.cert \
+        --key=tls.key
+      ```
 3. Create deployment and service for the scanner adapter:
    ```
    $ kubectl apply -f kube/harbor-scanner-trivy.yaml
    ```
-4. Update deployment's image to `aquasec/harbor-scanner-trivy:dev`.
+   > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
+4. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
+   ```
+   $ make container
+   ```
+5. Update deployment's image to `aquasec/harbor-scanner-trivy:dev`.
    ```
    $ kubectl set image deployment harbor-scanner-trivy \
      main=aquasec/harbor-scanner-trivy:dev
    ```
-   > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
+
 
 ## Testing
 
@@ -119,17 +136,24 @@ docker-compose -f test/component/docker-compose.yaml
 
 ### Kubernetes
 
-1. Create deployment and service for the scanner adapter:
+1. Configure adapter to handle TLS traffic:
+   1. Create a `tls` secret from the private kay and certificate files:
+      ```
+      $ kubectl create secret tls harbor-scanner-trivy-tls \
+        --cert=tls.cert \
+        --key=tls.key
+      ```
+2. Create deployment and service for the scanner adapter:
    ```
    $ kubectl apply -f kube/harbor-scanner-trivy.yaml
    ```
    > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
-2. Configure the scanner adapter in Harbor web console.
+3. Configure the scanner adapter in Harbor web console.
    1. Navigate to **Configuration** and select the **Scanners** tab and then click **+ NEW SCANNER**.
-   2. Enter http://harbor-scanner-trivy:8080 as the Endpoint URL and click **TEST CONNECTION**.
+   2. Enter https://harbor-scanner-trivy:8443 as the Endpoint URL and click **TEST CONNECTION**.
       ![Add scanner](docs/images/harbor_ui_add_scanner.png)
    3. If everything is fine click **ADD** to save the configuration.
-3. Select the **trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
+4. Select the **trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
    ![Set Trivy as default scanner](docs/images/harbor_ui_set_trivy_as_default_scanner.png)
    Make sure that the **Default** label is displayed next to the **trivy** scanner name.
 
@@ -141,6 +165,8 @@ Configuration of the adapter is done via environment variables at startup.
 |------|---------------|-------------|
 | `SCANNER_LOG_LEVEL` | `info` | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it. |
 | `SCANNER_API_SERVER_ADDR`          | `:8080` | Binding address for the API server. |
+| `SCANNER_API_SERVER_TLS_CERTIFICATE` | | The absolute path to the x509 certificate file. |
+| `SCANNER_API_SERVER_TLS_KEY`         | | The absolute path to the x509 private key file. |
 | `SCANNER_API_SERVER_READ_TIMEOUT`  | `15s`   | The maximum duration for reading the entire request, including the body. |
 | `SCANNER_API_SERVER_WRITE_TIMEOUT` | `15s`   | The maximum duration before timing out writes of the response. |
 | `SCANNER_TRIVY_CACHE_DIR` | `/root/.cache`/ | Trivy cache directory. |
