@@ -96,7 +96,7 @@ func TestTransformer_Transform(t *testing.T) {
 		Scanner: harbor.Scanner{
 			Name:    "Trivy",
 			Vendor:  "Aqua Security",
-			Version: "0.1.6",
+			Version: "Unknown",
 		},
 		Severity: harbor.SevCritical,
 		Vulnerabilities: []harbor.VulnerabilityItem{

@@ -18,7 +18,7 @@ $(BINARY): $(SOURCES)
 	GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
 
 container: build
-	docker build -t $(IMAGE) .
+	docker build --no-cache -t $(IMAGE) .
 
 container-run: container
 	docker run --name scanner-trivy --rm -d -p 8080:8080 $(IMAGE)

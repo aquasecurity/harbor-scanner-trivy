@@ -40,5 +40,3 @@ dockers:
       - "--label=org.label-schema.build-date={{ .Date }}"
       - "--label=org.label-schema.vcs=https://github.com/aquasecurity/harbor-scanner-trivy"
       - "--label=org.label-schema.vcs-ref={{ .FullCommit }}"
-    extra_files:
-      - trivy
