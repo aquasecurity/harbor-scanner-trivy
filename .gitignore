@@ -4,3 +4,5 @@ scanner-trivy
 dist/
 
 coverage.txt
+
+bin
