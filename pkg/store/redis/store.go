@@ -129,7 +129,7 @@ func (rs *redisStore) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus
 	}
 
 	scanJob.Status = newStatus
-	if error != nil && len(error) > 0 {
+	if len(error) > 0 {
 		scanJob.Error = error[0]
 	}
 

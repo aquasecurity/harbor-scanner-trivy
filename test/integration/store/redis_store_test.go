@@ -33,9 +33,12 @@ func TestRedisStore(t *testing.T) {
 		Started: true,
 	})
 	require.NoError(t, err, "should start redis container")
-	defer redisC.Terminate(ctx)
 
 	redisURL := getRedisURL(t, ctx, redisC)
+
+	if err := redisC.Terminate(ctx); err != nil {
+		t.Fatalf("an unexpected error occurred: %v", err)
+	}
 
 	dataStore := redis.NewDataStore(etc.RedisStoreConfig{
 		RedisURL:      redisURL,
