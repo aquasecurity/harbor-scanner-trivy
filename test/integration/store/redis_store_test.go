@@ -36,10 +36,6 @@ func TestRedisStore(t *testing.T) {
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
-	if err := redisC.Terminate(ctx); err != nil {
-		t.Fatalf("an unexpected error occurred: %v", err)
-	}
-
 	dataStore := redis.NewDataStore(etc.RedisStoreConfig{
 		RedisURL:      redisURL,
 		Namespace:     "harbor.scanner.trivy:store",
@@ -101,6 +97,9 @@ func TestRedisStore(t *testing.T) {
 		require.Nil(t, j, "retrieved scan job should be nil, i.e. expired")
 	})
 
+	if err = redisC.Terminate(ctx); err != nil {
+		panic(err)
+	}
 }
 
 func getRedisURL(t *testing.T, ctx context.Context, redisC tc.Container) string {
