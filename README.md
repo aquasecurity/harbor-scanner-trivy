@@ -127,9 +127,9 @@ Running out of process component tests is not fully automated yet (see [#38][iss
 as follows:
 
 ```
-docker-compose -f test/component/docker-compose.yaml
+docker-compose -f test/component/docker-compose.yaml up -d
 make test-component
-docker-compose -f test/component/docker-compose.yaml
+docker-compose -f test/component/docker-compose.yaml down
 ```
 
 ## Deployment

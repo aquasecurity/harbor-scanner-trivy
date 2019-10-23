@@ -33,7 +33,9 @@ func TestRedisStore(t *testing.T) {
 		Started: true,
 	})
 	require.NoError(t, err, "should start redis container")
-	defer redisC.Terminate(ctx)
+	defer func() {
+		_ = redisC.Terminate(ctx)
+	}()
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
