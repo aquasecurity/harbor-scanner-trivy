@@ -115,11 +115,12 @@ func tagAndPush(config RegistryConfig, imageRef string) (d digest.Digest, err er
 		return
 	}
 	pullOut, err := cli.ImagePull(ctx, imageRef, types.ImagePullOptions{})
+	defer func() {
+		_ = pullOut.Close()
+	}()
+
 	_, err = io.Copy(os.Stdout, pullOut)
 	if err != nil {
-		return
-	}
-	if err = pullOut.Close(); err != nil {
 		return
 	}
 
@@ -138,7 +139,9 @@ func tagAndPush(config RegistryConfig, imageRef string) (d digest.Digest, err er
 	if err != nil {
 		return
 	}
-	defer pushOut.Close()
+	defer func() {
+		_ = pushOut.Close()
+	}()
 	_, err = io.Copy(os.Stdout, pushOut)
 	inspect, err := cli.DistributionInspect(ctx, targetImageRef, auth)
 	if err != nil {

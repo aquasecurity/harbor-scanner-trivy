@@ -33,6 +33,9 @@ func TestRedisStore(t *testing.T) {
 		Started: true,
 	})
 	require.NoError(t, err, "should start redis container")
+	defer func() {
+		_ = redisC.Terminate(ctx)
+	}()
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
@@ -97,9 +100,6 @@ func TestRedisStore(t *testing.T) {
 		require.Nil(t, j, "retrieved scan job should be nil, i.e. expired")
 	})
 
-	if err = redisC.Terminate(ctx); err != nil {
-		panic(err)
-	}
 }
 
 func getRedisURL(t *testing.T, ctx context.Context, redisC tc.Container) string {
