@@ -1,5 +1,5 @@
 # That's the only place where you're supposed to specify or change version of Trivy.
-ARG TRIVY_VERSION=0.1.6
+ARG TRIVY_VERSION=0.1.7
 
 FROM aquasec/trivy:${TRIVY_VERSION}
 
@@ -7,9 +7,6 @@ FROM aquasec/trivy:${TRIVY_VERSION}
 # instruction after a FROM. To use the default value of an ARG declared before the first
 # FROM use an ARG instruction without a value inside of a build stage.
 ARG TRIVY_VERSION
-
-# Trivy aquasec/trivy:0.1.6 does not have rpm preinstalled.
-RUN apk update && apk add --no-cache rpm
 
 COPY scanner-trivy /app/scanner-trivy
 

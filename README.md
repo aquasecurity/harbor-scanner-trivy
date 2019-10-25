@@ -64,14 +64,14 @@ make container
       $ openssl genrsa -out tls.key 2048
       $ openssl req -new -x509 \
         -key tls.key \
-        -out tls.cert \
+        -out tls.crt \
         -days 365 \
         -subj /CN=harbor-scanner-trivy
       ```
    2. Create a `tls` secret from the two generated files:
       ```
       $ kubectl create secret tls harbor-scanner-trivy-tls \
-        --cert=tls.cert \
+        --cert=tls.crt \
         --key=tls.key
       ```
 3. Create deployment and service for the scanner adapter:
@@ -86,9 +86,10 @@ make container
 5. Update deployment's image to `aquasec/harbor-scanner-trivy:dev`.
    ```
    $ kubectl set image deployment harbor-scanner-trivy \
+     init=aquasec/harbor-scanner-trivy:dev
+   $ kubectl set image deployment harbor-scanner-trivy \
      main=aquasec/harbor-scanner-trivy:dev
    ```
-
 
 ## Testing
 
