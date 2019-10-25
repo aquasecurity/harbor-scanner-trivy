@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"io"
-	"net/url"
 	"os"
 	"testing"
 )
@@ -48,14 +47,6 @@ func (c RegistryConfig) GetRegistryAuth() (auth string, err error) {
 
 func (c RegistryConfig) GetBasicAuthorization() string {
 	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", c.Username, c.Password))))
-}
-
-func (c RegistryConfig) GetRegistryHost() (string, error) {
-	registryURL, err := url.Parse(c.URL)
-	if err != nil {
-		return "", err
-	}
-	return registryURL.Host, nil
 }
 
 // TestComponent is a component test for the whole adapter service.
@@ -95,7 +86,7 @@ func TestComponent(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, req.Artifact, report.Artifact)
-	assert.Equal(t, harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.6"}, report.Scanner)
+	assert.Equal(t, harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.7"}, report.Scanner)
 	// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
 	for _, v := range report.Vulnerabilities {
 		t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
@@ -104,11 +95,6 @@ func TestComponent(t *testing.T) {
 
 // tagAndPush tags the given imageRef and pushes it to the given test registry.
 func tagAndPush(config RegistryConfig, imageRef string) (d digest.Digest, err error) {
-	host, err := config.GetRegistryHost()
-	if err != nil {
-		return
-	}
-
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -125,7 +111,7 @@ func tagAndPush(config RegistryConfig, imageRef string) (d digest.Digest, err er
 		return
 	}
 
-	targetImageRef := fmt.Sprintf("%s/%s", host, imageRef)
+	targetImageRef := fmt.Sprintf("%s/%s", "localhost:5443", imageRef)
 
 	err = cli.ImageTag(ctx, imageRef, targetImageRef)
 	if err != nil {

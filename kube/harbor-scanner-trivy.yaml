@@ -13,14 +13,25 @@ spec:
       targetPort: 8443
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: harbor-scanner-trivy
 spec:
-  replicas: 1
+  serviceName: harbor-scanner-trivy
   selector:
     matchLabels:
       app: harbor-scanner-trivy
+  replicas: 0
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        resources:
+          requests:
+            storage: 5Gi
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: "standard"
   template:
     metadata:
       labels:
@@ -33,11 +44,14 @@ spec:
           command:
             - "trivy"
             - "--debug"
-            - "--cache-dir=/root/.cache"
+            - "--no-progress"
+            - "--cache-dir=/root/.cache/trivy"
             - "--refresh"
           volumeMounts:
             - mountPath: /root/.cache
-              name: trivy-cache
+              name: data
+          securityContext:
+            readOnlyRootFilesystem: false
       containers:
         - name: main
           image: aquasec/harbor-scanner-trivy:0.1.0-alpha.1
@@ -52,7 +66,9 @@ spec:
             - name: "SCANNER_API_SERVER_TLS_KEY"
               value: "/certs/tls.key"
             - name: "SCANNER_TRIVY_CACHE_DIR"
-              value: "/root/.cache"
+              value: "/root/.cache/trivy"
+            - name: "SCANNER_TRIVY_REPORTS_DIR"
+              value: "/root/.cache/reports"
             - name: "SCANNER_STORE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"
@@ -80,22 +96,15 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             failureThreshold: 3
-          # TODO Use PersistentVolumeClaim to scale up scanner deployment
           volumeMounts:
             - mountPath: /root/.cache
-              name: trivy-cache
-            - mountPath: /data/scanner
-              name: scanner-data
+              name: data
             - mountPath: /certs
               name: certs
               readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: false
       volumes:
-        - name: trivy-cache
-          hostPath:
-            path: /data/trivy
-        - name: scanner-data
-          hostPath:
-            path: /data/scanner/trivy
         - name: certs
           secret:
             secretName: harbor-scanner-trivy-tls

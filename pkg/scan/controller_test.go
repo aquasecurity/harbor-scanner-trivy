@@ -17,7 +17,7 @@ func TestController_Scan(t *testing.T) {
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
-	trivyReport := model.ScanResult{}
+	trivyReport := model.ScanReport{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
@@ -109,7 +109,7 @@ func TestController_Scan(t *testing.T) {
 					trivy.RegistryAuth{Username: "user", Password: "password"},
 				},
 				ReturnArgs: []interface{}{
-					model.ScanResult{},
+					model.ScanReport{},
 					xerrors.New("out of memory"),
 				},
 			},

@@ -9,7 +9,8 @@ import (
 )
 
 type WrapperConfig struct {
-	TrivyCacheDir string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache"`
+	CacheDir   string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache/trivy"`
+	ReportsDir string `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/root/.cache/reports"`
 }
 
 type APIConfig struct {

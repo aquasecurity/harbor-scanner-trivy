@@ -20,7 +20,7 @@ type RegistryAuth struct {
 }
 
 type Wrapper interface {
-	Run(imageRef string, auth RegistryAuth) (trivy.ScanResult, error)
+	Run(imageRef string, auth RegistryAuth) (trivy.ScanReport, error)
 }
 
 type wrapper struct {
@@ -33,7 +33,7 @@ func NewWrapper(config etc.WrapperConfig) Wrapper {
 	}
 }
 
-func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResult, err error) {
+func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanReport, err error) {
 	log.WithField("image_ref", imageRef).Debug("Started scanning")
 
 	executable, err := exec.LookPath("trivy")
@@ -41,7 +41,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 		return report, err
 	}
 
-	reportFile, err := ioutil.TempFile("", "trivy-scan-report-*.json")
+	reportFile, err := ioutil.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
 		return report, err
 	}
@@ -56,7 +56,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 
 	cmd := exec.Command(executable,
 		"--quiet",
-		"--cache-dir", w.config.TrivyCacheDir,
+		"--cache-dir", w.config.CacheDir,
 		"--vuln-type", "os",
 		"--format", "json",
 		"--output", reportFile.Name(),
@@ -92,7 +92,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanResu
 		"std_out":   string(stdout),
 	}).Debug("Running trivy finished")
 
-	var data []trivy.ScanResult
+	var data []trivy.ScanReport
 	err = json.NewDecoder(reportFile).Decode(&data)
 	if err != nil {
 		return report, xerrors.Errorf("decoding scan report from file %v", err)

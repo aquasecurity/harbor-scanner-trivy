@@ -1,6 +1,6 @@
 package trivy
 
-type ScanResult struct {
+type ScanReport struct {
 	Target          string          `json:"Target"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities"`
 }

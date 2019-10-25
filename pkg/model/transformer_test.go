@@ -26,7 +26,7 @@ func TestTransformer_Transform(t *testing.T) {
 	hr := tf.Transform(harbor.Artifact{
 		Repository: "library/mongo",
 		Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
-	}, trivy.ScanResult{
+	}, trivy.ScanReport{
 		Vulnerabilities: []trivy.Vulnerability{
 			{
 				VulnerabilityID:  "CVE-0000-0001",

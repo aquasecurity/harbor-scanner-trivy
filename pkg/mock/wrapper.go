@@ -14,7 +14,7 @@ func NewWrapper() *Wrapper {
 	return &Wrapper{}
 }
 
-func (w *Wrapper) Run(imageRef string, auth trivy.RegistryAuth) (model.ScanResult, error) {
+func (w *Wrapper) Run(imageRef string, auth trivy.RegistryAuth) (model.ScanReport, error) {
 	args := w.Called(imageRef, auth)
-	return args.Get(0).(model.ScanResult), args.Error(1)
+	return args.Get(0).(model.ScanReport), args.Error(1)
 }

@@ -56,7 +56,8 @@ func TestGetWrapperConfig(t *testing.T) {
 		{
 			Name: "Should return default config",
 			ExpectedConfig: WrapperConfig{
-				TrivyCacheDir: "/root/.cache",
+				CacheDir:   "/root/.cache/trivy",
+				ReportsDir: "/root/.cache/reports",
 			},
 		},
 	}
