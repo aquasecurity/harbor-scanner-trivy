@@ -159,6 +159,7 @@ docker-compose -f test/component/docker-compose.yaml down
    > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
 3. Configure the scanner adapter in Harbor web console.
    1. Navigate to **Configuration** and select the **Scanners** tab and then click **+ NEW SCANNER**.
+      ![Scanners config](docs/images/harbor_ui_scanners_config.png)
    2. Enter https://harbor-scanner-trivy:8443 as the Endpoint URL and click **TEST CONNECTION**.
       ![Add scanner](docs/images/harbor_ui_add_scanner.png)
    3. If everything is fine click **ADD** to save the configuration.
