@@ -68,27 +68,35 @@ make container
         -days 365 \
         -subj /CN=harbor-scanner-trivy
       ```
-   2. Create a `tls` secret from the two generated files:
+   2. Create a `tls` Secret from the two generated files:
       ```
       $ kubectl create secret tls harbor-scanner-trivy-tls \
         --cert=tls.crt \
         --key=tls.key
       ```
-3. Create deployment and service for the scanner adapter:
+3. Create StatefulSet and Service for the scanner adapter:
    ```
    $ kubectl apply -f kube/harbor-scanner-trivy.yaml
    ```
-   > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
+   > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
 4. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
    ```
    $ make container
    ```
-5. Update deployment's image to `aquasec/harbor-scanner-trivy:dev`.
+5. Update StatefulSet's image to `aquasec/harbor-scanner-trivy:dev`
+   1. Update `init` container image:
+      ```
+      $ kubectl set image sts harbor-scanner-trivy \
+          init=aquasec/harbor-scanner-trivy:dev
+      ```
+   2. Update `main` container image:
+      ```
+      $ kubectl set image sts harbor-scanner-trivy \
+          main=aquasec/harbor-scanner-trivy:dev
+      ```
+6. Change the number of replicas of the StatefulSet:
    ```
-   $ kubectl set image deployment harbor-scanner-trivy \
-     init=aquasec/harbor-scanner-trivy:dev
-   $ kubectl set image deployment harbor-scanner-trivy \
-     main=aquasec/harbor-scanner-trivy:dev
+   $ kubectl scale sts harbor-scanner-trivy --replicas=1
    ```
 
 ## Testing
@@ -138,17 +146,17 @@ docker-compose -f test/component/docker-compose.yaml down
 ### Kubernetes
 
 1. Configure adapter to handle TLS traffic:
-   1. Create a `tls` secret from the private kay and certificate files:
+   1. Create a `tls` Secret from the private kay and certificate files:
       ```
       $ kubectl create secret tls harbor-scanner-trivy-tls \
         --cert=tls.cert \
         --key=tls.key
       ```
-2. Create deployment and service for the scanner adapter:
+2. Create StatefulSet and Service for the scanner adapter:
    ```
    $ kubectl apply -f kube/harbor-scanner-trivy.yaml
    ```
-   > By default the deployment's image is the [latest release][latest-release-url] image published to Docker Hub.
+   > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
 3. Configure the scanner adapter in Harbor web console.
    1. Navigate to **Configuration** and select the **Scanners** tab and then click **+ NEW SCANNER**.
    2. Enter https://harbor-scanner-trivy:8443 as the Endpoint URL and click **TEST CONNECTION**.
@@ -170,7 +178,8 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_API_SERVER_TLS_KEY`         | | The absolute path to the x509 private key file. |
 | `SCANNER_API_SERVER_READ_TIMEOUT`  | `15s`   | The maximum duration for reading the entire request, including the body. |
 | `SCANNER_API_SERVER_WRITE_TIMEOUT` | `15s`   | The maximum duration before timing out writes of the response. |
-| `SCANNER_TRIVY_CACHE_DIR` | `/root/.cache`/ | Trivy cache directory. |
+| `SCANNER_TRIVY_CACHE_DIR`   | `/root/.cache/trivy`   | Trivy cache directory.   |
+| `SCANNER_TRIVY_REPORTS_DIR` | `/root/.cache/reports` | Trivy reports directory. |
 | `SCANNER_STORE_REDIS_URL`       | `redis://localhost:6379`          | Redis server URI for a redis store. |
 | `SCANNER_STORE_REDIS_NAMESPACE` | `harbor.scanner.trivy:data-store` | A namespace for keys in a redis store. |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE` | `5`  | The max number of connections allocated by the pool for a redis store. |
@@ -211,7 +220,7 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 [harbor-url]: https://github.com/goharbor/harbor
 [trivy-url]: https://github.com/aquasecurity/trivy
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
-[image-vulnerability-scanning-proposal]: https://github.com/goharbor/community/pull/98
+[image-vulnerability-scanning-proposal]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
 [fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
 [issue-38]: https://github.com/aquasecurity/harbor-scanner-trivy/issues/38

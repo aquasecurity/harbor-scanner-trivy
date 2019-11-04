@@ -12,6 +12,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
+	"os"
 )
 
 type Worker interface {
@@ -72,13 +73,22 @@ func (s *workerContext) ScanArtifact(job *work.Job) (err error) {
 func (s *workerContext) controller() (controller scan.Controller, err error) {
 	config, err := etc.GetWrapperConfig()
 	if err != nil {
-		return controller, err
+		return nil, err
 	}
+
+	if _, err := os.Stat(config.ReportsDir); os.IsNotExist(err) {
+		log.WithField("path", config.ReportsDir).Debug("Creating reports dir")
+		err = os.MkdirAll(config.ReportsDir, os.ModeDir)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	wrapper := trivy.NewWrapper(config)
 
 	storeConfig, err := etc.GetRedisStoreConfig()
 	if err != nil {
-		return controller, err
+		return nil, err
 	}
 	dataStore := store.NewDataStore(storeConfig)
 

@@ -29,11 +29,12 @@ services:
       - 8080:8080
     environment:
       SCANNER_LOG_LEVEL: trace
-      SCANNER_TRIVY_CACHE_DIR: /var/lib/scanner
+      SCANNER_TRIVY_CACHE_DIR: /root/.cache/trivy
+      SCANNER_TRIVY_REPORTS_DIR: /root/.cache/reports
       SCANNER_STORE_REDIS_URL: redis://redis:6379
       SCANNER_JOB_QUEUE_REDIS_URL: redis://redis:6379
     volumes:
-      - scanner-data:/var/lib/scanner
+      - scanner-data:/root/.cache
 
 volumes:
   registry-data:
