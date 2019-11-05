@@ -24,7 +24,7 @@ type worker struct {
 	workerPool *work.WorkerPool
 }
 
-func NewWorker(config etc.JobQueueConfig) Worker {
+func NewWorker(config etc.JobQueue) Worker {
 	redisPool := &redis.Pool{
 		MaxActive: config.PoolMaxActive,
 		MaxIdle:   config.PoolMaxIdle,
@@ -47,7 +47,9 @@ func (w *worker) Start() {
 }
 
 func (w *worker) Stop() {
+	log.Trace("Job queue shutdown started")
 	w.workerPool.Stop()
+	log.Trace("Job queue shutdown completed")
 }
 
 type workerContext struct {
@@ -71,26 +73,21 @@ func (s *workerContext) ScanArtifact(job *work.Job) (err error) {
 }
 
 func (s *workerContext) controller() (controller scan.Controller, err error) {
-	config, err := etc.GetWrapperConfig()
+	config, err := etc.GetConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := os.Stat(config.ReportsDir); os.IsNotExist(err) {
-		log.WithField("path", config.ReportsDir).Debug("Creating reports dir")
-		err = os.MkdirAll(config.ReportsDir, os.ModeDir)
+	if _, err := os.Stat(config.Trivy.ReportsDir); os.IsNotExist(err) {
+		log.WithField("path", config.Trivy.ReportsDir).Debug("Creating reports dir")
+		err = os.MkdirAll(config.Trivy.ReportsDir, os.ModeDir)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	wrapper := trivy.NewWrapper(config)
-
-	storeConfig, err := etc.GetRedisStoreConfig()
-	if err != nil {
-		return nil, err
-	}
-	dataStore := store.NewDataStore(storeConfig)
+	wrapper := trivy.NewWrapper(config.Trivy)
+	dataStore := store.NewDataStore(config.RedisStore)
 
 	controller = scan.NewController(dataStore, wrapper, model.NewTransformer(&model.SystemClock{}))
 	return

@@ -8,9 +8,14 @@ spec:
     app: harbor-scanner-trivy
   type: LoadBalancer
   ports:
-    - protocol: TCP
+    - name: api-server
+      protocol: TCP
       port: 8443
       targetPort: 8443
+    - name: metrics-server
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -50,6 +55,13 @@ spec:
           volumeMounts:
             - mountPath: /root/.cache
               name: data
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1500Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
           securityContext:
             readOnlyRootFilesystem: false
       containers:
@@ -75,14 +87,18 @@ spec:
               value: "1h"
             - name: "SCANNER_JOB_QUEUE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
+            - name: "SCANNER_METRICS_ADDR"
+              value: ":9090"
+            - name: "SCANNER_METRICS_ENDPOINT"
+              value: "/metrics"
           ports:
-            - name: api-server-port
+            - name: api-server
               containerPort: 8443
           livenessProbe:
             httpGet:
               scheme: HTTPS
               path: /probe/healthy
-              port: api-server-port
+              port: api-server
             initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
@@ -91,7 +107,7 @@ spec:
             httpGet:
               scheme: HTTPS
               path: /probe/ready
-              port: api-server-port
+              port: api-server
             initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
@@ -102,6 +118,13 @@ spec:
             - mountPath: /certs
               name: certs
               readOnly: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
           securityContext:
             readOnlyRootFilesystem: false
       volumes:

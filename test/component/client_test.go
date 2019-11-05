@@ -1,3 +1,5 @@
+// +build component
+
 package component
 
 import (

@@ -87,12 +87,12 @@ make container
    1. Update `init` container image:
       ```
       $ kubectl set image sts harbor-scanner-trivy \
-          init=aquasec/harbor-scanner-trivy:dev
+        init=aquasec/harbor-scanner-trivy:dev
       ```
    2. Update `main` container image:
       ```
       $ kubectl set image sts harbor-scanner-trivy \
-          main=aquasec/harbor-scanner-trivy:dev
+        main=aquasec/harbor-scanner-trivy:dev
       ```
 6. Change the number of replicas of the StatefulSet:
    ```
@@ -191,6 +191,8 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE` | `5` | The max number of connections allocated by the pool for a jobs queue. |
 | `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE`   | `5` | The max number of idle connections in the pool for a jobs queue. |
 | `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1` | The number of workers to spin-up for a jobs queue. |
+| `SCANNER_METRICS_ADDR` | `:9090` | Binding address for the metrics HTTP server. |
+| `SCANNER_METRICS_ENDPOINT` | `/metrics` | The HTTP endpoint providing metrics. |
 
 ## Documentation
 

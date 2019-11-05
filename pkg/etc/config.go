@@ -8,24 +8,38 @@ import (
 	"time"
 )
 
-type WrapperConfig struct {
+type Config struct {
+	API        API
+	Metrics    Metrics
+	Trivy      Trivy
+	RedisStore RedisStore
+	JobQueue   JobQueue
+}
+
+type Trivy struct {
 	CacheDir   string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache/trivy"`
 	ReportsDir string `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/root/.cache/reports"`
 }
 
-type APIConfig struct {
+type API struct {
 	Addr           string        `env:"SCANNER_API_SERVER_ADDR" envDefault:":8080"`
 	TLSCertificate string        `env:"SCANNER_API_SERVER_TLS_CERTIFICATE"`
 	TLSKey         string        `env:"SCANNER_API_SERVER_TLS_KEY"`
 	ReadTimeout    time.Duration `env:"SCANNER_API_SERVER_READ_TIMEOUT" envDefault:"15s"`
 	WriteTimeout   time.Duration `env:"SCANNER_API_SERVER_WRITE_TIMEOUT" envDefault:"15s"`
+	IdleTimeout    time.Duration `env:"SCANNER_API_SERVER_IDLE_TIMEOUT" envDefault:"60s"`
 }
 
-func (c *APIConfig) IsTLSEnabled() bool {
+func (c *API) IsTLSEnabled() bool {
 	return c.TLSCertificate != "" && c.TLSKey != ""
 }
 
-type RedisStoreConfig struct {
+type Metrics struct {
+	Addr     string `env:"SCANNER_METRICS_ADDR" envDefault:":9090"`
+	Endpoint string `env:"SCANNER_METRICS_ENDPOINT" envDefault:"/metrics"`
+}
+
+type RedisStore struct {
 	RedisURL      string        `env:"SCANNER_STORE_REDIS_URL" envDefault:"redis://localhost:6379"`
 	Namespace     string        `env:"SCANNER_STORE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:data-store"`
 	PoolMaxActive int           `env:"SCANNER_STORE_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
@@ -33,7 +47,7 @@ type RedisStoreConfig struct {
 	ScanJobTTL    time.Duration `env:"SCANNER_STORE_REDIS_SCAN_JOB_TTL" envDefault:"1h"`
 }
 
-type JobQueueConfig struct {
+type JobQueue struct {
 	RedisURL          string `env:"SCANNER_JOB_QUEUE_REDIS_URL" envDefault:"redis://localhost:6379"`
 	Namespace         string `env:"SCANNER_JOB_QUEUE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:job-queue"`
 	WorkerConcurrency int    `env:"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY" envDefault:"1"`
@@ -52,22 +66,7 @@ func GetLogLevel() logrus.Level {
 	return logrus.InfoLevel
 }
 
-func GetWrapperConfig() (cfg WrapperConfig, err error) {
-	err = env.Parse(&cfg)
-	return
-}
-
-func GetAPIConfig() (cfg APIConfig, err error) {
-	err = env.Parse(&cfg)
-	return
-}
-
-func GetRedisStoreConfig() (cfg RedisStoreConfig, err error) {
-	err = env.Parse(&cfg)
-	return
-}
-
-func GetJobQueueConfig() (cfg JobQueueConfig, err error) {
+func GetConfig() (cfg Config, err error) {
 	err = env.Parse(&cfg)
 	return
 }

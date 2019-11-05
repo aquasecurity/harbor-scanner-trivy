@@ -24,10 +24,10 @@ type Wrapper interface {
 }
 
 type wrapper struct {
-	config etc.WrapperConfig
+	config etc.Trivy
 }
 
-func NewWrapper(config etc.WrapperConfig) Wrapper {
+func NewWrapper(config etc.Trivy) Wrapper {
 	return &wrapper{
 		config: config,
 	}
