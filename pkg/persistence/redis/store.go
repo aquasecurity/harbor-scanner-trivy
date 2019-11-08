@@ -6,20 +6,19 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"time"
 )
 
-type redisStore struct {
+type store struct {
 	cfg  etc.RedisStore
 	pool redis.Pool
 }
 
-func NewDataStore(cfg etc.RedisStore) store.DataStore {
-	return &redisStore{
+func NewStore(cfg etc.RedisStore) persistence.Store {
+	return &store{
 		cfg: cfg,
 		pool: redis.Pool{
 			Dial: func() (redis.Conn, error) {
@@ -32,74 +31,63 @@ func NewDataStore(cfg etc.RedisStore) store.DataStore {
 	}
 }
 
-func (rs *redisStore) SaveScanJob(scanJob job.ScanJob) error {
-	conn := rs.pool.Get()
-	defer rs.close(conn)
+func (s *store) Create(scanJob job.ScanJob) error {
+	conn := s.pool.Get()
+	defer s.close(conn)
 
 	bytes, err := json.Marshal(scanJob)
 	if err != nil {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := rs.getKeyForScanJob(scanJob.ID)
+	key := s.getKeyForScanJob(scanJob.ID)
 
 	log.WithFields(log.Fields{
 		"scan_job_id":     scanJob.ID,
 		"scan_job_status": scanJob.Status.String(),
 		"redis_key":       key,
+		"expire":          s.cfg.ScanJobTTL.Seconds(),
 	}).Debug("Saving scan job")
 
-	_, err = conn.Do("SET", key, string(bytes))
+	_, err = conn.Do("SET", key, string(bytes), "NX", "EX", int(s.cfg.ScanJobTTL.Seconds()))
 	if err != nil {
-		return xerrors.Errorf("saving scan job: %w", err)
+		return xerrors.Errorf("creating scan job: %w", err)
 	}
 
 	return nil
 }
 
-func (rs *redisStore) saveScanJobWithExpire(scanJob job.ScanJob, expire time.Duration) error {
-	conn := rs.pool.Get()
-	defer rs.close(conn)
+func (s *store) update(scanJob job.ScanJob) error {
+	conn := s.pool.Get()
+	defer s.close(conn)
 
 	bytes, err := json.Marshal(scanJob)
 	if err != nil {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := rs.getKeyForScanJob(scanJob.ID)
+	key := s.getKeyForScanJob(scanJob.ID)
 
 	log.WithFields(log.Fields{
 		"scan_job_id":     scanJob.ID,
 		"scan_job_status": scanJob.Status.String(),
-		"expire":          expire.String(),
 		"redis_key":       key,
-	}).Debug("Saving scan job with expire")
+		"expire":          s.cfg.ScanJobTTL.Seconds(),
+	}).Debug("Updating scan job")
 
-	err = conn.Send("MULTI")
+	_, err = conn.Do("SET", key, string(bytes), "XX", "EX", int(s.cfg.ScanJobTTL.Seconds()))
 	if err != nil {
-		return err
-	}
-	err = conn.Send("SET", key, string(bytes))
-	if err != nil {
-		return err
-	}
-	err = conn.Send("EXPIRE", key, int(expire.Seconds()))
-	if err != nil {
-		return err
-	}
-	_, err = conn.Do("EXEC")
-	if err != nil {
-		return xerrors.Errorf("saving scan job: %w", err)
+		return xerrors.Errorf("updating scan job: %w", err)
 	}
 
 	return nil
 }
 
-func (rs *redisStore) GetScanJob(scanJobID string) (*job.ScanJob, error) {
-	conn := rs.pool.Get()
-	defer rs.close(conn)
+func (s *store) Get(scanJobID string) (*job.ScanJob, error) {
+	conn := s.pool.Get()
+	defer s.close(conn)
 
-	key := rs.getKeyForScanJob(scanJobID)
+	key := s.getKeyForScanJob(scanJobID)
 	value, err := redis.String(conn.Do("GET", key))
 	if err != nil {
 		if err == redis.ErrNil {
@@ -117,13 +105,13 @@ func (rs *redisStore) GetScanJob(scanJobID string) (*job.ScanJob, error) {
 	return &scanJob, nil
 }
 
-func (rs *redisStore) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
+func (s *store) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
 	log.WithFields(log.Fields{
 		"scan_job_id": scanJobID,
 		"new_status":  newStatus.String(),
 	}).Debug("Updating status for scan job")
 
-	scanJob, err := rs.GetScanJob(scanJobID)
+	scanJob, err := s.Get(scanJobID)
 	if err != nil {
 		return err
 	}
@@ -133,34 +121,30 @@ func (rs *redisStore) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus
 		scanJob.Error = error[0]
 	}
 
-	if newStatus == job.Finished || newStatus == job.Failed {
-		return rs.saveScanJobWithExpire(*scanJob, rs.cfg.ScanJobTTL)
-	}
-
-	return rs.SaveScanJob(*scanJob)
+	return s.update(*scanJob)
 }
 
-func (rs *redisStore) UpdateReport(scanJobID string, report harbor.ScanReport) error {
+func (s *store) UpdateReport(scanJobID string, report harbor.ScanReport) error {
 	log.WithFields(log.Fields{
 		"scan_job_id": scanJobID,
 	}).Debug("Updating reports for scan job")
 
-	scanJob, err := rs.GetScanJob(scanJobID)
+	scanJob, err := s.Get(scanJobID)
 	if err != nil {
 		return err
 	}
 
 	scanJob.Report = report
-	return rs.SaveScanJob(*scanJob)
+	return s.update(*scanJob)
 }
 
-func (rs *redisStore) getKeyForScanJob(scanJobID string) string {
-	return fmt.Sprintf("%s:scan-job:%s", rs.cfg.Namespace, scanJobID)
+func (s *store) getKeyForScanJob(scanJobID string) string {
+	return fmt.Sprintf("%s:scan-job:%s", s.cfg.Namespace, scanJobID)
 }
 
-func (rs *redisStore) close(conn redis.Conn) {
+func (s *store) close(conn redis.Conn) {
 	err := conn.Close()
 	if err != nil {
-		log.Printf("closing connection: %v", err)
+		log.WithError(err).Error("Error while closing connection")
 	}
 }

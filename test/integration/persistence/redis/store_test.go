@@ -1,6 +1,6 @@
 // +build integration
 
-package store
+package redis
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
@@ -17,8 +17,8 @@ import (
 	"time"
 )
 
-// TestRedisStore is an integration test for the Redis store adapter.
-func TestRedisStore(t *testing.T) {
+// TestStore is an integration test for the Redis persistence store.
+func TestStore(t *testing.T) {
 	if testing.Short() {
 		t.Skip("An integration test")
 	}
@@ -39,7 +39,7 @@ func TestRedisStore(t *testing.T) {
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
-	dataStore := redis.NewDataStore(etc.RedisStore{
+	store := redis.NewStore(etc.RedisStore{
 		RedisURL:      redisURL,
 		Namespace:     "harbor.scanner.trivy:store",
 		PoolMaxActive: 5,
@@ -50,23 +50,23 @@ func TestRedisStore(t *testing.T) {
 	t.Run("CRUD", func(t *testing.T) {
 		scanJobID := "123"
 
-		err := dataStore.SaveScanJob(job.ScanJob{
+		err := store.Create(job.ScanJob{
 			ID:     scanJobID,
 			Status: job.Queued,
 		})
 		require.NoError(t, err, "saving scan job should not fail")
 
-		j, err := dataStore.GetScanJob(scanJobID)
+		j, err := store.Get(scanJobID)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
 			ID:     scanJobID,
 			Status: job.Queued,
 		}, j)
 
-		err = dataStore.UpdateStatus(scanJobID, job.Pending)
+		err = store.UpdateStatus(scanJobID, job.Pending)
 		require.NoError(t, err, "updating scan job status should not fail")
 
-		j, err = dataStore.GetScanJob(scanJobID)
+		j, err = store.Get(scanJobID)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
 			ID:     scanJobID,
@@ -82,20 +82,20 @@ func TestRedisStore(t *testing.T) {
 			},
 		}
 
-		err = dataStore.UpdateReport(scanJobID, scanReport)
+		err = store.UpdateReport(scanJobID, scanReport)
 		require.NoError(t, err, "updating scan job reports should not fail")
 
-		j, err = dataStore.GetScanJob(scanJobID)
+		j, err = store.Get(scanJobID)
 		require.NoError(t, err, "retrieving scan job should not fail")
 		require.NotNil(t, j, "retrieved scan job must not be nil")
 		assert.Equal(t, scanReport, j.Report)
 
-		err = dataStore.UpdateStatus(scanJobID, job.Finished)
+		err = store.UpdateStatus(scanJobID, job.Finished)
 		require.NoError(t, err)
 
 		time.Sleep(parseDuration(t, "12s"))
 
-		j, err = dataStore.GetScanJob(scanJobID)
+		j, err = store.Get(scanJobID)
 		require.NoError(t, err, "retrieve scan job should not fail")
 		require.Nil(t, j, "retrieved scan job should be nil, i.e. expired")
 	})

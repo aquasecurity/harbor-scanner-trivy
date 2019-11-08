@@ -14,12 +14,12 @@ func NewStore() *Store {
 	return &Store{}
 }
 
-func (s *Store) SaveScanJob(scanJob job.ScanJob) error {
+func (s *Store) Create(scanJob job.ScanJob) error {
 	args := s.Called(scanJob)
 	return args.Error(0)
 }
 
-func (s *Store) GetScanJob(scanJobID string) (*job.ScanJob, error) {
+func (s *Store) Get(scanJobID string) (*job.ScanJob, error) {
 	args := s.Called(scanJobID)
 	return args.Get(0).(*job.ScanJob), args.Error(1)
 }

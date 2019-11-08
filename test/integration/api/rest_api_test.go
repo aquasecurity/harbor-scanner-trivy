@@ -73,7 +73,7 @@ func TestRestApi(t *testing.T) {
 		// given
 		now := time.Now()
 
-		store.On("GetScanJob", "job:123").Return(&job.ScanJob{
+		store.On("Get", "job:123").Return(&job.ScanJob{
 			ID:     "job:123",
 			Status: job.Finished,
 			Report: harbor.ScanReport{

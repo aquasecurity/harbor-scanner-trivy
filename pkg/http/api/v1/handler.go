@@ -7,8 +7,8 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -21,15 +21,15 @@ const (
 )
 
 type requestHandler struct {
-	enqueuer  queue.Enqueuer
-	dataStore store.DataStore
+	enqueuer queue.Enqueuer
+	store    persistence.Store
 	api.BaseHandler
 }
 
-func NewAPIHandler(enqueuer queue.Enqueuer, dataStore store.DataStore) http.Handler {
+func NewAPIHandler(enqueuer queue.Enqueuer, store persistence.Store) http.Handler {
 	handler := &requestHandler{
-		enqueuer:  enqueuer,
-		dataStore: dataStore,
+		enqueuer: enqueuer,
+		store:    store,
 	}
 
 	router := mux.NewRouter()
@@ -137,7 +137,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	reqLog := log.WithField("scan_job_id", scanJobID)
 
-	scanJob, err := h.dataStore.GetScanJob(scanJobID)
+	scanJob, err := h.store.Get(scanJobID)
 	if err != nil {
 		reqLog.Error("Error while getting scan job")
 		h.WriteJSONError(res, harbor.Error{

@@ -5,8 +5,8 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	store "github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
-	store "github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
@@ -87,7 +87,7 @@ func (s *workerContext) controller() (controller scan.Controller, err error) {
 	}
 
 	wrapper := trivy.NewWrapper(config.Trivy)
-	dataStore := store.NewDataStore(config.RedisStore)
+	dataStore := store.NewStore(config.RedisStore)
 
 	controller = scan.NewController(dataStore, wrapper, model.NewTransformer(&model.SystemClock{}))
 	return
