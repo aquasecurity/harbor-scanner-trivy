@@ -6,7 +6,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
@@ -21,12 +21,12 @@ type Enqueuer interface {
 	Enqueue(request harbor.ScanRequest) (job.ScanJob, error)
 }
 
-type defaultEnqueuer struct {
-	enqueuer  *work.Enqueuer
-	dataStore store.DataStore
+type enqueuer struct {
+	enqueuer *work.Enqueuer
+	store    persistence.Store
 }
 
-func NewEnqueuer(config etc.JobQueue, dataStore store.DataStore) Enqueuer {
+func NewEnqueuer(config etc.JobQueue, store persistence.Store) Enqueuer {
 	redisPool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
 			return redis.DialURL(config.RedisURL)
@@ -36,13 +36,13 @@ func NewEnqueuer(config etc.JobQueue, dataStore store.DataStore) Enqueuer {
 		Wait:      true,
 	}
 
-	return &defaultEnqueuer{
-		enqueuer:  work.NewEnqueuer(config.Namespace, redisPool),
-		dataStore: dataStore,
+	return &enqueuer{
+		enqueuer: work.NewEnqueuer(config.Namespace, redisPool),
+		store:    store,
 	}
 }
 
-func (se *defaultEnqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, error) {
+func (e *enqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, error) {
 	log.Debug("Enqueueing scan job")
 
 	b, err := json.Marshal(request)
@@ -50,7 +50,7 @@ func (se *defaultEnqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, err
 		return job.ScanJob{}, fmt.Errorf("marshalling scan request: %v", err)
 	}
 
-	j, err := se.enqueuer.Enqueue(scanArtifactJobName, work.Q{
+	j, err := e.enqueuer.Enqueue(scanArtifactJobName, work.Q{
 		scanRequestJobArg: string(b),
 	})
 	if err != nil {
@@ -63,9 +63,9 @@ func (se *defaultEnqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, err
 		Status: job.Queued,
 	}
 
-	err = se.dataStore.SaveScanJob(scanJob)
+	err = e.store.Create(scanJob)
 	if err != nil {
-		return job.ScanJob{}, fmt.Errorf("saving scan job %v", err)
+		return job.ScanJob{}, fmt.Errorf("creating scan job %v", err)
 	}
 
 	return scanJob, nil

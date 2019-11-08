@@ -200,7 +200,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: "Should respond with error 500 when retrieving scan job fails",
 			storeExpectation: &mock.Expectation{
-				Method:     "GetScanJob",
+				Method:     "Get",
 				Args:       []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{}, errors.New("data store is down")},
 			},
@@ -215,7 +215,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: "Should respond with error 404 when scan job cannot be found",
 			storeExpectation: &mock.Expectation{
-				Method:     "GetScanJob",
+				Method:     "Get",
 				Args:       []interface{}{"job:123"},
 				ReturnArgs: []interface{}{(*job.ScanJob)(nil), nil},
 			},
@@ -230,7 +230,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Queued),
 			storeExpectation: &mock.Expectation{
-				Method: "GetScanJob",
+				Method: "Get",
 				Args:   []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
@@ -242,7 +242,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Pending),
 			storeExpectation: &mock.Expectation{
-				Method: "GetScanJob",
+				Method: "Get",
 				Args:   []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
@@ -254,7 +254,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: fmt.Sprintf("Should respond with error 500 when scan job is %s", job.Failed),
 			storeExpectation: &mock.Expectation{
-				Method: "GetScanJob",
+				Method: "Get",
 				Args:   []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
@@ -273,7 +273,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: fmt.Sprintf("Should respond with error 500 when scan job is NOT %s", job.Finished),
 			storeExpectation: &mock.Expectation{
-				Method: "GetScanJob",
+				Method: "Get",
 				Args:   []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
@@ -292,7 +292,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: "Should respond with vulnerabilities report",
 			storeExpectation: &mock.Expectation{
-				Method: "GetScanJob",
+				Method: "Get",
 				Args:   []interface{}{"job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
