@@ -26,7 +26,7 @@ type defaultEnqueuer struct {
 	dataStore store.DataStore
 }
 
-func NewEnqueuer(config etc.JobQueueConfig, dataStore store.DataStore) Enqueuer {
+func NewEnqueuer(config etc.JobQueue, dataStore store.DataStore) Enqueuer {
 	redisPool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
 			return redis.DialURL(config.RedisURL)

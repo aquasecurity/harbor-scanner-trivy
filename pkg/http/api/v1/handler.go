@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
@@ -42,6 +43,8 @@ func NewAPIHandler(enqueuer queue.Enqueuer, dataStore store.DataStore) http.Hand
 	probeRouter := router.PathPrefix("/probe").Subrouter()
 	probeRouter.Methods(http.MethodGet).Path("/healthy").HandlerFunc(handler.GetHealthy)
 	probeRouter.Methods(http.MethodGet).Path("/ready").HandlerFunc(handler.GetReady)
+
+	router.Methods(http.MethodGet).Path("/metrics").Handler(promhttp.Handler())
 
 	return router
 }

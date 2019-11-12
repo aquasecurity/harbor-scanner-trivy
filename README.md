@@ -87,12 +87,12 @@ make container
    1. Update `init` container image:
       ```
       $ kubectl set image sts harbor-scanner-trivy \
-          init=aquasec/harbor-scanner-trivy:dev
+        init=aquasec/harbor-scanner-trivy:dev
       ```
    2. Update `main` container image:
       ```
       $ kubectl set image sts harbor-scanner-trivy \
-          main=aquasec/harbor-scanner-trivy:dev
+        main=aquasec/harbor-scanner-trivy:dev
       ```
 6. Change the number of replicas of the StatefulSet:
    ```

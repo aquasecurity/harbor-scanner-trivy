@@ -14,11 +14,11 @@ import (
 )
 
 type redisStore struct {
-	cfg  etc.RedisStoreConfig
+	cfg  etc.RedisStore
 	pool redis.Pool
 }
 
-func NewDataStore(cfg etc.RedisStoreConfig) store.DataStore {
+func NewDataStore(cfg etc.RedisStore) store.DataStore {
 	return &redisStore{
 		cfg: cfg,
 		pool: redis.Pool{

@@ -39,7 +39,7 @@ func TestRedisStore(t *testing.T) {
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
-	dataStore := redis.NewDataStore(etc.RedisStoreConfig{
+	dataStore := redis.NewDataStore(etc.RedisStore{
 		RedisURL:      redisURL,
 		Namespace:     "harbor.scanner.trivy:store",
 		PoolMaxActive: 5,
