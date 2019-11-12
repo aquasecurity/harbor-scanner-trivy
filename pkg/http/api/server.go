@@ -47,9 +47,9 @@ func (s *Server) listenAndServe() error {
 	return s.server.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context) {
+func (s *Server) Shutdown() {
 	log.Trace("API server shutdown started")
-	if err := s.server.Shutdown(ctx); err != nil {
+	if err := s.server.Shutdown(context.Background()); err != nil {
 		log.WithError(err).Error("Error while shutting down API server")
 	}
 	log.Trace("API server shutdown completed")

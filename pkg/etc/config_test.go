@@ -62,10 +62,6 @@ func TestGetConfig(t *testing.T) {
 					WriteTimeout: parseDuration(t, "15s"),
 					IdleTimeout:  parseDuration(t, "60s"),
 				},
-				Metrics: Metrics{
-					Addr:     ":9090",
-					Endpoint: "/metrics",
-				},
 				Trivy: Trivy{
 					CacheDir:   "/root/.cache/trivy",
 					ReportsDir: "/root/.cache/reports",
@@ -94,9 +90,6 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_API_SERVER_WRITE_TIMEOUT": "2m",
 				"SCANNER_API_SERVER_IDLE_TIMEOUT":  "3m10s",
 
-				"SCANNER_METRICS_ADDR":     ":5187",
-				"SCANNER_METRICS_ENDPOINT": "/prometheus/metrics",
-
 				"SCANNER_TRIVY_CACHE_DIR":   "/home/scanner/trivy-cache",
 				"SCANNER_TRIVY_REPORTS_DIR": "/home/scanner/trivy-reports",
 
@@ -112,10 +105,6 @@ func TestGetConfig(t *testing.T) {
 					ReadTimeout:  parseDuration(t, "1h"),
 					WriteTimeout: parseDuration(t, "2m"),
 					IdleTimeout:  parseDuration(t, "3m10s"),
-				},
-				Metrics: Metrics{
-					Addr:     ":5187",
-					Endpoint: "/prometheus/metrics",
 				},
 				Trivy: Trivy{
 					CacheDir:   "/home/scanner/trivy-cache",

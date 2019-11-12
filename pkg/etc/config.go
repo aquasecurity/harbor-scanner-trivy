@@ -10,7 +10,6 @@ import (
 
 type Config struct {
 	API        API
-	Metrics    Metrics
 	Trivy      Trivy
 	RedisStore RedisStore
 	JobQueue   JobQueue
@@ -32,11 +31,6 @@ type API struct {
 
 func (c *API) IsTLSEnabled() bool {
 	return c.TLSCertificate != "" && c.TLSKey != ""
-}
-
-type Metrics struct {
-	Addr     string `env:"SCANNER_METRICS_ADDR" envDefault:":9090"`
-	Endpoint string `env:"SCANNER_METRICS_ENDPOINT" envDefault:"/metrics"`
 }
 
 type RedisStore struct {

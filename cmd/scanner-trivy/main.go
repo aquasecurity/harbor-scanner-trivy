@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/metrics"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	log "github.com/sirupsen/logrus"
@@ -40,7 +38,6 @@ func main() {
 
 	worker := queue.NewWorker(config.JobQueue)
 	apiServer := newAPIServer(config)
-	metricsServer := metrics.NewServer(config.Metrics)
 
 	shutdownComplete := make(chan struct{})
 	go func() {
@@ -49,15 +46,13 @@ func main() {
 		captured := <-sigint
 		log.WithField("signal", captured.String()).Debug("Trapped os signal")
 
-		apiServer.Shutdown(context.Background())
-		metricsServer.Shutdown(context.Background())
+		apiServer.Shutdown()
 		worker.Stop()
 
 		close(shutdownComplete)
 	}()
 
 	worker.Start()
-	metricsServer.ListenAndServe()
 	apiServer.ListenAndServe()
 
 	<-shutdownComplete
