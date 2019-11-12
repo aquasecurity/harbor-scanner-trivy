@@ -41,7 +41,7 @@ func (s *Server) listenAndServe() error {
 
 func (s *Server) Shutdown(ctx context.Context) {
 	log.Trace("Metrics server shutdown started")
-	if err := s.server.Shutdown(context.Background()); err != nil {
+	if err := s.server.Shutdown(ctx); err != nil {
 		log.WithError(err).Error("Error while shutting down metrics server")
 	}
 	log.Trace("Metrics server shutdown completed")
