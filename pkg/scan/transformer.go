@@ -1,9 +1,9 @@
-package model
+package scan
 
 import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	log "github.com/sirupsen/logrus"
 	"time"
 )

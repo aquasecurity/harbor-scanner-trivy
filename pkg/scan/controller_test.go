@@ -5,7 +5,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	model "github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
@@ -17,7 +16,7 @@ func TestController_Scan(t *testing.T) {
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
-	trivyReport := model.ScanReport{}
+	trivyReport := trivy.ScanReport{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
@@ -109,7 +108,7 @@ func TestController_Scan(t *testing.T) {
 					trivy.RegistryAuth{Username: "user", Password: "password"},
 				},
 				ReturnArgs: []interface{}{
-					model.ScanReport{},
+					trivy.ScanReport{},
 					xerrors.New("out of memory"),
 				},
 			},

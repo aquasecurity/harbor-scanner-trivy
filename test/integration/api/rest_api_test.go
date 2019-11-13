@@ -4,6 +4,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
@@ -28,7 +29,7 @@ func TestRestApi(t *testing.T) {
 	enqueuer := mock.NewEnqueuer()
 	store := mock.NewStore()
 
-	app := v1.NewAPIHandler(enqueuer, store)
+	app := v1.NewAPIHandler(etc.BuildInfo{Version:"1.0", Commit:"abc", Date:"2019-01-04T12:40"},enqueuer, store)
 
 	ts := httptest.NewServer(app)
 	defer ts.Close()
@@ -169,7 +170,11 @@ func TestRestApi(t *testing.T) {
     }
   ],
   "properties": {
-    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability"
+    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+    "org.label-schema.version": "1.0",
+    "org.label-schema.build-date": "2019-01-04T12:40",
+    "org.label-schema.vcs-ref": "abc",
+    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy"
   }
 }`, string(bodyBytes))
 	})

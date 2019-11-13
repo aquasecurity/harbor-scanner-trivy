@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/trivy"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
 	"io/ioutil"
@@ -20,7 +19,7 @@ type RegistryAuth struct {
 }
 
 type Wrapper interface {
-	Run(imageRef string, auth RegistryAuth) (trivy.ScanReport, error)
+	Run(imageRef string, auth RegistryAuth) (ScanReport, error)
 }
 
 type wrapper struct {
@@ -33,7 +32,7 @@ func NewWrapper(config etc.Trivy) Wrapper {
 	}
 }
 
-func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanReport, err error) {
+func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, err error) {
 	log.WithField("image_ref", imageRef).Debug("Started scanning")
 
 	executable, err := exec.LookPath("trivy")
@@ -54,14 +53,19 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanRepo
 		}
 	}()
 
-	cmd := exec.Command(executable,
-		"--quiet",
+	args := []string{
+		"--no-progress",
+		"--debug",
 		"--cache-dir", w.config.CacheDir,
 		"--vuln-type", "os",
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
-	)
+	}
+
+	log.WithFields(log.Fields{"cmd": executable, "args": args}).Trace("Exec command with args")
+
+	cmd := exec.Command(executable, args...)
 
 	cmd.Env = os.Environ()
 	if auth.Username != "" && auth.Password != "" {
@@ -92,7 +96,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report trivy.ScanRepo
 		"std_out":   string(stdout),
 	}).Debug("Running trivy finished")
 
-	var data []trivy.ScanReport
+	var data []ScanReport
 	err = json.NewDecoder(reportFile).Decode(&data)
 	if err != nil {
 		return report, xerrors.Errorf("decoding scan report from file %v", err)

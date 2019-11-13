@@ -22,7 +22,7 @@ spec:
   selector:
     matchLabels:
       app: harbor-scanner-trivy
-  replicas: 0
+  replicas: 1
   volumeClaimTemplates:
     - metadata:
         name: data

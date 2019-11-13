@@ -96,7 +96,7 @@ make container
       ```
 6. Change the number of replicas of the StatefulSet:
    ```
-   $ kubectl scale sts harbor-scanner-trivy --replicas=1
+   $ kubectl scale sts harbor-scanner-trivy --replicas=2
    ```
 
 ## Testing

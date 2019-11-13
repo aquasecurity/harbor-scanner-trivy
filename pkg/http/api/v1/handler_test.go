@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -174,7 +175,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			r, err := http.NewRequest(http.MethodPost, "/api/v1/scan", strings.NewReader(tc.requestBody))
 			require.NoError(t, err)
 
-			NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -367,7 +368,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			r, err := http.NewRequest(http.MethodGet, "/api/v1/scan/job:123/report", nil)
 			require.NoError(t, err)
 
-			NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -390,7 +391,7 @@ func TestRequestHandler_GetHealthy(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/healthy", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -408,7 +409,7 @@ func TestRequestHandler_GetReady(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/ready", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -426,7 +427,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"}, enqueuer, store).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -449,7 +450,11 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
     }
   ],
   "properties": {
-    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability"
+    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+    "org.label-schema.version": "0.1",
+    "org.label-schema.build-date": "2019-01-03T13:40",
+    "org.label-schema.vcs-ref": "abc",
+    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy"
   }
 }`, rr.Body.String())
 	enqueuer.AssertExpectations(t)

@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type BuildInfo struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
 type Config struct {
 	API        API
 	Trivy      Trivy
