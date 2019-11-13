@@ -4,8 +4,8 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store/redis"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -59,8 +59,8 @@ func main() {
 }
 
 func newAPIServer(config etc.Config) *api.Server {
-	dataStore := redis.NewDataStore(config.RedisStore)
-	enqueuer := queue.NewEnqueuer(config.JobQueue, dataStore)
-	apiHandler := v1.NewAPIHandler(enqueuer, dataStore)
+	store := redis.NewStore(config.RedisStore)
+	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
+	apiHandler := v1.NewAPIHandler(enqueuer, store)
 	return api.NewServer(config.API, apiHandler)
 }

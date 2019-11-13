@@ -5,7 +5,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/store"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
@@ -17,14 +17,14 @@ type Controller interface {
 }
 
 type controller struct {
-	dataStore   store.DataStore
+	store       persistence.Store
 	wrapper     trivy.Wrapper
 	transformer model.Transformer
 }
 
-func NewController(dataStore store.DataStore, wrapper trivy.Wrapper, transformer model.Transformer) Controller {
+func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer model.Transformer) Controller {
 	return &controller{
-		dataStore:   dataStore,
+		store:       store,
 		wrapper:     wrapper,
 		transformer: transformer,
 	}
@@ -34,7 +34,7 @@ func (c *controller) Scan(scanJobID string, request harbor.ScanRequest) error {
 	err := c.scan(scanJobID, request)
 	if err != nil {
 		log.WithError(err).Error("Scan failed")
-		err = c.dataStore.UpdateStatus(scanJobID, job.Failed, err.Error())
+		err = c.store.UpdateStatus(scanJobID, job.Failed, err.Error())
 		if err != nil {
 			return xerrors.Errorf("updating scan job as failed: %v", err)
 		}
@@ -49,7 +49,7 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		}
 	}()
 
-	err = c.dataStore.UpdateStatus(scanJobID, job.Pending)
+	err = c.store.UpdateStatus(scanJobID, job.Pending)
 	if err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
@@ -69,12 +69,12 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
 
-	err = c.dataStore.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
+	err = c.store.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
 	if err != nil {
 		return xerrors.Errorf("saving scan report: %v", err)
 	}
 
-	err = c.dataStore.UpdateStatus(scanJobID, job.Finished)
+	err = c.store.UpdateStatus(scanJobID, job.Finished)
 	if err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
