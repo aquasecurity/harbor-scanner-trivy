@@ -40,7 +40,7 @@ spec:
     spec:
       containers:
         - name: main
-          image: aquasec/harbor-scanner-trivy:0.1.0-rc1
+          image: aquasec/harbor-scanner-trivy:0.1.0-rc2
           imagePullPolicy: IfNotPresent
           env:
             - name: "SCANNER_LOG_LEVEL"
