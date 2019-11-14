@@ -79,24 +79,23 @@ make container
    $ kubectl apply -f kube/harbor-scanner-trivy.yaml
    ```
    > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
-4. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
+4. Scale down the StatefulSet:
+   ```
+   $ kubectl scale sts harbor-scanner-trivy --replicas=0
+   ```
+5. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
    ```
    $ make container
    ```
-5. Update StatefulSet's image to `aquasec/harbor-scanner-trivy:dev`
-   1. Update `init` container image:
-      ```
-      $ kubectl set image sts harbor-scanner-trivy \
-        init=aquasec/harbor-scanner-trivy:dev
-      ```
-   2. Update `main` container image:
-      ```
-      $ kubectl set image sts harbor-scanner-trivy \
-        main=aquasec/harbor-scanner-trivy:dev
-      ```
-6. Change the number of replicas of the StatefulSet:
+6. Update StatefulSet's images to `aquasec/harbor-scanner-trivy:dev`
    ```
-   $ kubectl scale sts harbor-scanner-trivy --replicas=2
+   $ kubectl set image sts harbor-scanner-trivy \
+     init=aquasec/harbor-scanner-trivy:dev \
+     main=aquasec/harbor-scanner-trivy:dev
+   ```
+7. Scale up the StatefulSet:
+   ```
+   $ kubectl scale sts harbor-scanner-trivy --replicas=1
    ```
 
 ## Testing
@@ -181,6 +180,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_API_SERVER_WRITE_TIMEOUT` | `15s`   | The maximum duration before timing out writes of the response. |
 | `SCANNER_TRIVY_CACHE_DIR`   | `/root/.cache/trivy`   | Trivy cache directory.   |
 | `SCANNER_TRIVY_REPORTS_DIR` | `/root/.cache/reports` | Trivy reports directory. |
+| `SCANNER_TRIVY_DEBUG_MODE`  | `false` | The flag to enable or disable Trivy debug mode. |
 | `SCANNER_STORE_REDIS_URL`       | `redis://localhost:6379`          | Redis server URI for a redis store. |
 | `SCANNER_STORE_REDIS_NAMESPACE` | `harbor.scanner.trivy:data-store` | A namespace for keys in a redis store. |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE` | `5`  | The max number of connections allocated by the pool for a redis store. |

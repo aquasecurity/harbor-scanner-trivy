@@ -55,12 +55,15 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 
 	args := []string{
 		"--no-progress",
-		"--debug",
 		"--cache-dir", w.config.CacheDir,
 		"--vuln-type", "os",
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
+	}
+
+	if w.config.DebugMode {
+		args = append(args, "--debug")
 	}
 
 	log.WithFields(log.Fields{"cmd": executable, "args": args}).Trace("Exec command with args")
