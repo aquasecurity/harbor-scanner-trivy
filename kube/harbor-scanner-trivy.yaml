@@ -38,28 +38,6 @@ spec:
       labels:
         app: harbor-scanner-trivy
     spec:
-      initContainers:
-        - name: init
-          image: aquasec/harbor-scanner-trivy:0.1.0-rc1
-          imagePullPolicy: IfNotPresent
-          command:
-            - "trivy"
-            - "--debug"
-            - "--no-progress"
-            - "--cache-dir=/root/.cache/trivy"
-            - "--refresh"
-          volumeMounts:
-            - mountPath: /root/.cache
-              name: data
-          resources:
-            requests:
-              cpu: 200m
-              memory: 1500Mi
-            limits:
-              cpu: 1
-              memory: 2Gi
-          securityContext:
-            readOnlyRootFilesystem: false
       containers:
         - name: main
           image: aquasec/harbor-scanner-trivy:0.1.0-rc1

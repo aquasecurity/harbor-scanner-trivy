@@ -87,10 +87,9 @@ make container
    ```
    $ make container
    ```
-6. Update StatefulSet's images to `aquasec/harbor-scanner-trivy:dev`
+6. Update StatefulSet's image to `aquasec/harbor-scanner-trivy:dev`
    ```
    $ kubectl set image sts harbor-scanner-trivy \
-     init=aquasec/harbor-scanner-trivy:dev \
      main=aquasec/harbor-scanner-trivy:dev
    ```
 7. Scale up the StatefulSet:
