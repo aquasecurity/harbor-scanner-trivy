@@ -21,13 +21,15 @@ const (
 )
 
 type requestHandler struct {
+	info     etc.BuildInfo
 	enqueuer queue.Enqueuer
 	store    persistence.Store
 	api.BaseHandler
 }
 
-func NewAPIHandler(enqueuer queue.Enqueuer, store persistence.Store) http.Handler {
+func NewAPIHandler(info etc.BuildInfo, enqueuer queue.Enqueuer, store persistence.Store) http.Handler {
 	handler := &requestHandler{
+		info:     info,
 		enqueuer: enqueuer,
 		store:    store,
 	}
@@ -200,6 +202,10 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		},
 		Properties: map[string]string{
 			"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+			"org.label-schema.version":            h.info.Version,
+			"org.label-schema.build-date":         h.info.Date,
+			"org.label-schema.vcs-ref":            h.info.Commit,
+			"org.label-schema.vcs":                "https://github.com/aquasecurity/harbor-scanner-trivy",
 		},
 	}
 	h.WriteJSON(res, metadata, api.MimeTypeMetadata, http.StatusOK)

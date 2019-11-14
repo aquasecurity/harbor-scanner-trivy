@@ -2,7 +2,6 @@ package scan
 
 import (
 	"encoding/base64"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
@@ -19,10 +18,10 @@ type Controller interface {
 type controller struct {
 	store       persistence.Store
 	wrapper     trivy.Wrapper
-	transformer model.Transformer
+	transformer Transformer
 }
 
-func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer model.Transformer) Controller {
+func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer Transformer) Controller {
 	return &controller{
 		store:       store,
 		wrapper:     wrapper,

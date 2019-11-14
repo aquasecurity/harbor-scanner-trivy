@@ -7,6 +7,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/xerrors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,19 +26,35 @@ func main() {
 	log.SetReportCaller(false)
 	log.SetFormatter(&log.JSONFormatter{})
 
+	info := etc.BuildInfo{
+		Version: version,
+		Commit:  commit,
+		Date:    date,
+	}
+
+	if err := run(info); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+}
+
+func run(info etc.BuildInfo) error {
 	log.WithFields(log.Fields{
-		"version":  version,
-		"commit":   commit,
-		"built_at": date,
+		"version":  info.Version,
+		"commit":   info.Commit,
+		"built_at": info.Date,
 	}).Info("Starting harbor-scanner-trivy")
 
 	config, err := etc.GetConfig()
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return xerrors.Errorf("getting config: %w", err)
 	}
 
 	worker := queue.NewWorker(config.JobQueue)
-	apiServer := newAPIServer(config)
+
+	store := redis.NewStore(config.RedisStore)
+	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
+	apiHandler := v1.NewAPIHandler(info, enqueuer, store)
+	apiServer := api.NewServer(config.API, apiHandler)
 
 	shutdownComplete := make(chan struct{})
 	go func() {
@@ -56,11 +73,5 @@ func main() {
 	apiServer.ListenAndServe()
 
 	<-shutdownComplete
-}
-
-func newAPIServer(config etc.Config) *api.Server {
-	store := redis.NewStore(config.RedisStore)
-	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
-	apiHandler := v1.NewAPIHandler(enqueuer, store)
-	return api.NewServer(config.API, apiHandler)
+	return nil
 }

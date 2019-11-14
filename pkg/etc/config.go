@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type BuildInfo struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
 type Config struct {
 	API        API
 	Trivy      Trivy
@@ -18,6 +24,7 @@ type Config struct {
 type Trivy struct {
 	CacheDir   string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache/trivy"`
 	ReportsDir string `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/root/.cache/reports"`
+	DebugMode  bool   `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
 }
 
 type API struct {

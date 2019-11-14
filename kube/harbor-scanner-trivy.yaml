@@ -22,7 +22,7 @@ spec:
   selector:
     matchLabels:
       app: harbor-scanner-trivy
-  replicas: 0
+  replicas: 1
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -77,6 +77,8 @@ spec:
               value: "/root/.cache/trivy"
             - name: "SCANNER_TRIVY_REPORTS_DIR"
               value: "/root/.cache/reports"
+            - name: "SCANNER_TRIVY_DEBUG_MODE"
+              value: "false"
             - name: "SCANNER_STORE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"
