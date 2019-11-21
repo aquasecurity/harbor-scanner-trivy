@@ -56,7 +56,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
-		"--vuln-type", "os",
+		"--vuln-type", "os,library",
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
@@ -105,6 +105,15 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 		return report, xerrors.Errorf("decoding scan report from file %v", err)
 	}
 	// TODO ASSERT len(data) == 0
-	report = data[0]
+	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
+	if len(data) > 0 {
+		report.Target = data[0].Target
+		report.Vulnerabilities = []Vulnerability{}
+		for _, scanReport := range data {
+			report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
+		}
+	} else {
+		err = fmt.Errorf("Length of obtained report was %d", len(data))
+	}
 	return
 }
