@@ -65,6 +65,7 @@ func TestGetConfig(t *testing.T) {
 				Trivy: Trivy{
 					CacheDir:   "/root/.cache/trivy",
 					ReportsDir: "/root/.cache/reports",
+					VulnType:   "os",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://localhost:6379",
@@ -93,6 +94,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_CACHE_DIR":   "/home/scanner/trivy-cache",
 				"SCANNER_TRIVY_REPORTS_DIR": "/home/scanner/trivy-reports",
 				"SCANNER_TRIVY_DEBUG_MODE":  "true",
+				"SCANNER_TRIVY_VULN_TYPE":   "os,library",
 
 				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
 				"SCANNER_STORE_REDIS_NAMESPACE":       "test.namespace",
@@ -111,6 +113,7 @@ func TestGetConfig(t *testing.T) {
 					CacheDir:   "/home/scanner/trivy-cache",
 					ReportsDir: "/home/scanner/trivy-reports",
 					DebugMode:  true,
+					VulnType:   "os,library",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://harbor-harbor-redis:6379",

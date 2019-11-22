@@ -56,7 +56,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
-		"--vuln-type", "os,library",
+		"--vuln-type", w.config.VulnType,
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
@@ -99,21 +99,26 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 		"std_out":   string(stdout),
 	}).Debug("Running trivy finished")
 
-	var data []ScanReport
-	err = json.NewDecoder(reportFile).Decode(&data)
+	report, err = w.parseScanReports(reportFile)
+	return
+}
+
+func (w *wrapper) parseScanReports(reportFile *os.File) (report ScanReport, err error) {
+	var scanReports []ScanReport
+	err = json.NewDecoder(reportFile).Decode(&scanReports)
 	if err != nil {
 		return report, xerrors.Errorf("decoding scan report from file %v", err)
 	}
-	// TODO ASSERT len(data) == 0
+
 	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
-	if len(data) > 0 {
-		report.Target = data[0].Target
+	if len(scanReports) > 0 {
+		report.Target = scanReports[0].Target
 		report.Vulnerabilities = []Vulnerability{}
-		for _, scanReport := range data {
+		for _, scanReport := range scanReports {
 			report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
 		}
 	} else {
-		err = fmt.Errorf("Length of obtained report was %d", len(data))
+		err = xerrors.Errorf("length of obtained report was %d (expected more than 0)", len(scanReports))
 	}
 	return
 }
