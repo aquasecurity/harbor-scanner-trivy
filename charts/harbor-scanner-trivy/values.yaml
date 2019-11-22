@@ -1,0 +1,45 @@
+app:
+  replicaCount: 1
+  
+  name: main
+  image:
+    repository: aquasec/harbor-scanner-trivy
+    tag: 0.1.0-rc2
+    pullPolicy: IfNotPresent
+
+  port: 8443
+
+  config:
+    env:
+      SCANNER_LOG_LEVEL: "info"
+      SCANNER_API_SERVER_ADDR: ":8443"
+      SCANNER_API_SERVER_TLS_CERTIFICATE: "/certs/tls.crt"
+      SCANNER_API_SERVER_TLS_KEY: "/certs/tls.key"
+      SCANNER_TRIVY_CACHE_DIR: "/root/.cache/trivy"
+      SCANNER_TRIVY_REPORTS_DIR: "/root/.cache/reports"
+      SCANNER_TRIVY_DEBUG_MODE: false
+      SCANNER_STORE_REDIS_URL: "redis://harbor-harbor-redis:6379"
+      SCANNER_STORE_REDIS_SCAN_JOB_TTL: "1h"
+      SCANNER_JOB_QUEUE_REDIS_URL: "redis://harbor-harbor-redis:6379"
+    certs:
+      secretName: harbor-scanner-trivy-tls
+
+  ## Persist cache
+  persistence:
+    enabled: true
+    storageClass: "standard"
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+
+service:
+  type: ClusterIP
+  port: 8443

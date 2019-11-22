@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "harbor-scanner-trivy.fullname" . }}
+  labels:
+{{ include "harbor-scanner-trivy.labels" . | indent 4 }}
+spec:
+  serviceName: {{ include "harbor-scanner-trivy.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ include "harbor-scanner-trivy.name" . }}
+      release: {{ .Release.Name }}
+  replicas: {{ .Values.replicaCount }}
+{{- if .Values.app.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        resources:
+          requests:
+            storage: {{ .Values.app.persistence.size }}
+        accessModes:
+          - {{ .Values.app.persistence.accessMode }}
+        storageClassName: {{ .Values.app.persistence.storageClass }}
+{{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "harbor-scanner-trivy.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: {{ .Values.app.name }}
+          image: {{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "harbor-scanner-trivy.fullname" . }}-config
+          ports:
+            - name: api-server
+              containerPort: 8443
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /probe/healthy
+              port: api-server
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /probe/ready
+              port: api-server
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          volumeMounts:
+{{- if .Values.app.persistence.enabled }}
+            - mountPath: /root/.cache
+              name: data
+{{- end }}
+            - mountPath: /certs
+              name: certs
+              readOnly: true
+{{- if .Values.app.resources }}
+          resources:
+{{ toYaml .Values.app.resources | indent 12 }}
+{{- end }}
+          securityContext:
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: certs
+          secret:
+            secretName: {{ .Values.app.config.certs.secretName }}
