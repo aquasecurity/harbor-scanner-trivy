@@ -14,22 +14,20 @@ Harbor registry as part of its vulnerability scan feature.
 
 ## TOC
 
-- [Harbor Scanner Adapter for Trivy](#harbor-scanner-adapter-for-trivy)
-  - [TOC](#toc)
-  - [Getting started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Build](#build)
-    - [Running on [minikube][minikube-url]](#running-on-minikubeminikube-url)
-  - [Testing](#testing)
-    - [Unit testing](#unit-testing)
-    - [Integration testing](#integration-testing)
-    - [Component testing](#component-testing)
-  - [Deployment](#deployment)
-    - [Kubernetes](#kubernetes)
-  - [Configuration](#configuration)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [License](#license)
+- [Getting started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Build](#build)
+  - [Running on minikube](#running-on-minikube)
+- [Testing](#testing)
+  - [Unit testing](#unit-testing)
+  - [Integration testing](#integration-testing)
+  - [Component testing](#component-testing)
+- [Deployment](#deployment)
+  - [Kubernetes](#kubernetes)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Getting started
 

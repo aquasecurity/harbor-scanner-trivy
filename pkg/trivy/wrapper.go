@@ -7,6 +7,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -103,22 +104,24 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	return
 }
 
-func (w *wrapper) parseScanReports(reportFile *os.File) (report ScanReport, err error) {
+func (w *wrapper) parseScanReports(reportFile io.Reader) (report ScanReport, err error) {
 	var scanReports []ScanReport
 	err = json.NewDecoder(reportFile).Decode(&scanReports)
 	if err != nil {
-		return report, xerrors.Errorf("decoding scan report from file %v", err)
+		return report, xerrors.Errorf("decoding scan report from file %w", err)
+	}
+
+	if len(scanReports) == 0 {
+		return report, xerrors.New("expected at least one report")
 	}
 
 	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
-	if len(scanReports) > 0 {
-		report.Target = scanReports[0].Target
-		report.Vulnerabilities = []Vulnerability{}
-		for _, scanReport := range scanReports {
-			report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
-		}
-	} else {
-		err = xerrors.Errorf("length of obtained report was %d (expected more than 0)", len(scanReports))
+	report.Target = scanReports[0].Target
+	report.Vulnerabilities = []Vulnerability{}
+	for _, scanReport := range scanReports {
+		log.WithField("target", scanReport.Target).Trace("Parsing vulnerabilities")
+		report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
 	}
+
 	return
 }
