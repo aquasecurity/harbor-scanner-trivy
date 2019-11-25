@@ -57,6 +57,8 @@ spec:
               value: "/root/.cache/reports"
             - name: "SCANNER_TRIVY_DEBUG_MODE"
               value: "false"
+            - name: "SCANNER_TRIVY_VULN_TYPE"
+              value: "os"
             - name: "SCANNER_STORE_REDIS_URL"
               value: "redis://harbor-harbor-redis:6379"
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"

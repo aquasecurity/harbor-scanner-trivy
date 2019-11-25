@@ -7,6 +7,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -56,7 +57,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
-		"--vuln-type", "os",
+		"--vuln-type", w.config.VulnType,
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
@@ -99,12 +100,28 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 		"std_out":   string(stdout),
 	}).Debug("Running trivy finished")
 
-	var data []ScanReport
-	err = json.NewDecoder(reportFile).Decode(&data)
+	report, err = w.parseScanReports(reportFile)
+	return
+}
+
+func (w *wrapper) parseScanReports(reportFile io.Reader) (report ScanReport, err error) {
+	var scanReports []ScanReport
+	err = json.NewDecoder(reportFile).Decode(&scanReports)
 	if err != nil {
-		return report, xerrors.Errorf("decoding scan report from file %v", err)
+		return report, xerrors.Errorf("decoding scan report from file %w", err)
 	}
-	// TODO ASSERT len(data) == 0
-	report = data[0]
+
+	if len(scanReports) == 0 {
+		return report, xerrors.New("expected at least one report")
+	}
+
+	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
+	report.Target = scanReports[0].Target
+	report.Vulnerabilities = []Vulnerability{}
+	for _, scanReport := range scanReports {
+		log.WithField("target", scanReport.Target).Trace("Parsing vulnerabilities")
+		report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
+	}
+
 	return
 }
