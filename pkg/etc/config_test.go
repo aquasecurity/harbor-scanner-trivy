@@ -66,6 +66,7 @@ func TestGetConfig(t *testing.T) {
 					CacheDir:   "/root/.cache/trivy",
 					ReportsDir: "/root/.cache/reports",
 					VulnType:   "os",
+					Severity:   "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://localhost:6379",
