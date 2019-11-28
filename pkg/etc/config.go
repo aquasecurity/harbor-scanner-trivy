@@ -27,6 +27,7 @@ type Trivy struct {
 	DebugMode  bool   `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
 	VulnType   string `env:"SCANNER_TRIVY_VULN_TYPE" envDefault:"os"`
 	Severity      string `env:"SCANNER_TRIVY_SEVERITY" envDefault:"UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"`
+	IgnoreUnfixed bool   `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
 }
 
 type API struct {

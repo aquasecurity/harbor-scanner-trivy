@@ -96,6 +96,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_DEBUG_MODE":  "true",
 				"SCANNER_TRIVY_VULN_TYPE":   "os,library",
 				"SCANNER_TRIVY_SEVERITY":       "CRITICAL",
+				"SCANNER_TRIVY_IGNORE_UNFIXED": "true",
 
 				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
 				"SCANNER_STORE_REDIS_NAMESPACE":       "test.namespace",
@@ -116,6 +117,7 @@ func TestGetConfig(t *testing.T) {
 					DebugMode:  true,
 					VulnType:   "os,library",
 					Severity:      "CRITICAL",
+					IgnoreUnfixed: true,
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://harbor-harbor-redis:6379",

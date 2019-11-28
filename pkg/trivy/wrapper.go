@@ -64,6 +64,10 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 		imageRef,
 	}
 
+	if w.config.IgnoreUnfixed {
+		args = append([]string{"--ignore-unfixed"}, args...)
+	}
+
 	if w.config.DebugMode {
 		args = append(args, "--debug")
 	}
