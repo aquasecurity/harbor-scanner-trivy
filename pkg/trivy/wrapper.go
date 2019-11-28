@@ -57,6 +57,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
+		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
 		"--format", "json",
 		"--output", reportFile.Name(),

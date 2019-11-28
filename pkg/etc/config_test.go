@@ -95,6 +95,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_REPORTS_DIR": "/home/scanner/trivy-reports",
 				"SCANNER_TRIVY_DEBUG_MODE":  "true",
 				"SCANNER_TRIVY_VULN_TYPE":   "os,library",
+				"SCANNER_TRIVY_SEVERITY":       "CRITICAL",
 
 				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
 				"SCANNER_STORE_REDIS_NAMESPACE":       "test.namespace",
@@ -114,6 +115,7 @@ func TestGetConfig(t *testing.T) {
 					ReportsDir: "/home/scanner/trivy-reports",
 					DebugMode:  true,
 					VulnType:   "os,library",
+					Severity:      "CRITICAL",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://harbor-harbor-redis:6379",
