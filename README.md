@@ -182,6 +182,8 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_REPORTS_DIR` | `/root/.cache/reports` | Trivy reports directory. |
 | `SCANNER_TRIVY_DEBUG_MODE`  | `false` | The flag to enable or disable Trivy debug mode. |
 | `SCANNER_TRIVY_VULN_TYPE`   | `os` | Comma-separated list of vulnerability types. Possible values `os` and `library` |
+| `SCANNER_TRIVY_SEVERITY`    | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed. |
+| `SCANNER_TRIVY_IGNORE_UNFIXED`  | `false` | The flag to display only fixed vulnerabilities. |
 | `SCANNER_STORE_REDIS_URL`       | `redis://localhost:6379`          | Redis server URI for a redis store. |
 | `SCANNER_STORE_REDIS_NAMESPACE` | `harbor.scanner.trivy:data-store` | A namespace for keys in a redis store. |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE` | `5`  | The max number of connections allocated by the pool for a redis store. |
