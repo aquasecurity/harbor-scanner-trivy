@@ -69,7 +69,7 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	}
 
 	if w.config.DebugMode {
-		args = append(args, "--debug")
+		args = append([]string{"--debug"}, args...)
 	}
 
 	log.WithFields(log.Fields{"cmd": executable, "args": args}).Trace("Exec command with args")
