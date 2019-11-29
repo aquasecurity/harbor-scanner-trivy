@@ -5,12 +5,12 @@ metadata:
   labels:
 {{ include "harbor-scanner-trivy.labels" . | indent 4 }}
 spec:
-  selector:
-    app: {{ include "harbor-scanner-trivy.name" . }}
-    release: {{ .Release.Name }}
   type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "harbor-scanner-trivy.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: api-server
       protocol: TCP
       port: {{ .Values.service.port }}
-      targetPort: {{ .Values.app.port }}
+      targetPort: {{ .Values.service.port }}
