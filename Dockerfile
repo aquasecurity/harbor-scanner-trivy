@@ -12,7 +12,13 @@ COPY scanner-trivy /app/scanner-trivy
 
 ENV TRIVY_VERSION=${TRIVY_VERSION}
 
+RUN apk add --no-cache curl
+
 RUN adduser -H -D -h /app -s /bin/sh -u 1000 scanner-trivy
 USER scanner-trivy
+
+ENV SCANNER_API_SERVER_ADDR=":8080"
+HEALTHCHECK --interval=10s \
+  CMD curl --fail http://localhost${SCANNER_API_SERVER_ADDR}/probe/healthy || exit 1
 
 ENTRYPOINT ["/app/scanner-trivy"]
