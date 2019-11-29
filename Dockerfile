@@ -12,4 +12,7 @@ COPY scanner-trivy /app/scanner-trivy
 
 ENV TRIVY_VERSION=${TRIVY_VERSION}
 
+RUN adduser -H -D -h /app -s /bin/sh -u 1000 scanner-trivy
+USER scanner-trivy
+
 ENTRYPOINT ["/app/scanner-trivy"]
