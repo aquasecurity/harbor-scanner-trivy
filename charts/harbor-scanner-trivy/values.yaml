@@ -1,0 +1,49 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: docker.io
+  repository: aquasec/harbor-scanner-trivy
+  tag: 0.1.0-rc3
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessMode: ReadWriteOnce
+  size: 5Gi
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+scanner:
+  logLevel: info
+  api:
+    tlsEnabled: false
+    tlsCertificate: ""
+    tlsKey: ""
+    readTimeout: 15s
+    writeTimeout: 15s
+  trivy:
+    cacheDir: "/root/.cache/trivy"
+    reportsDir: "/root/.cache/reports"
+    debugMode: false
+    vulnType: "os"
+    severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    ignoreUnfixed: false
+  store:
+    redisURL: "redis://harbor-harbor-redis:6379"
+    scanJobTTL: "1h"
+  jobQueue:
+    redisURL: "redis://harbor-harbor-redis:6379"
+
+service:
+  type: LoadBalancer
+  port: 8080
