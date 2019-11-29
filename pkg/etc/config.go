@@ -22,10 +22,12 @@ type Config struct {
 }
 
 type Trivy struct {
-	CacheDir   string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache/trivy"`
-	ReportsDir string `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/root/.cache/reports"`
-	DebugMode  bool   `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
-	VulnType   string `env:"SCANNER_TRIVY_VULN_TYPE" envDefault:"os"`
+	CacheDir      string `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/root/.cache/trivy"`
+	ReportsDir    string `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/root/.cache/reports"`
+	DebugMode     bool   `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
+	VulnType      string `env:"SCANNER_TRIVY_VULN_TYPE" envDefault:"os"`
+	Severity      string `env:"SCANNER_TRIVY_SEVERITY" envDefault:"UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"`
+	IgnoreUnfixed bool   `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
 }
 
 type API struct {

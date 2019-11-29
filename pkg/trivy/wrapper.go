@@ -57,14 +57,19 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
+		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
 		"--format", "json",
 		"--output", reportFile.Name(),
 		imageRef,
 	}
 
+	if w.config.IgnoreUnfixed {
+		args = append([]string{"--ignore-unfixed"}, args...)
+	}
+
 	if w.config.DebugMode {
-		args = append(args, "--debug")
+		args = append([]string{"--debug"}, args...)
 	}
 
 	log.WithFields(log.Fields{"cmd": executable, "args": args}).Trace("Exec command with args")
