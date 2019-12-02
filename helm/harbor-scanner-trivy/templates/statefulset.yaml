@@ -42,6 +42,8 @@ spec:
               value: {{ .Values.scanner.api.readTimeout | quote }}
             - name: "SCANNER_API_SERVER_WRITE_TIMEOUT"
               value: {{ .Values.scanner.api.writeTimeout | quote }}
+            - name: "SCANNER_API_SERVER_IDLE_TIMEOUT"
+              value: {{ .Values.scanner.api.idleTimeout | quote }}
             - name: "SCANNER_TRIVY_CACHE_DIR"
               value: {{ .Values.scanner.trivy.cacheDir | quote }}
             - name: "SCANNER_TRIVY_REPORTS_DIR"
@@ -56,10 +58,24 @@ spec:
               value: {{ .Values.scanner.trivy.ignoreUnfixed | quote }}
             - name: "SCANNER_STORE_REDIS_URL"
               value: {{ .Values.scanner.store.redisURL | quote }}
+            - name: "SCANNER_STORE_REDIS_NAMESPACE"
+              value: {{ .Values.scanner.store.redisNamespace | quote }}
+            - name: "SCANNER_STORE_REDIS_POOL_MAX_ACTIVE"
+              value: {{ .Values.scanner.store.redisPoolMaxActive | quote }}
+            - name: "SCANNER_STORE_REDIS_POOL_MAX_IDLE"
+              value: {{ .Values.scanner.store.redisPoolMaxIdle | quote }}
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"
-              value: {{ .Values.scanner.store.scanJobTTL | quote }}
+              value: {{ .Values.scanner.store.redisScanJobTTL | quote }}
             - name: "SCANNER_JOB_QUEUE_REDIS_URL"
               value: {{ .Values.scanner.jobQueue.redisURL | quote }}
+            - name: "SCANNER_JOB_QUEUE_REDIS_NAMESPACE"
+              value: {{ .Values.scanner.jobQueue.redisNamespace | quote }}
+            - name: "SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE"
+              value: {{ .Values.scanner.jobQueue.redisPoolMaxActive | quote }}
+            - name: "SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE"
+              value: {{ .Values.scanner.jobQueue.redisPoolMaxIdle | quote }}
+            - name: "SCANNER_JOB_QUEUE_WORKER_CONCURRENCY"
+              value: {{ .Values.scanner.jobQueue.workerConcurrency | quote }}
             {{- if .Values.scanner.api.tlsEnabled }}
             - name: "SCANNER_API_SERVER_TLS_CERTIFICATE"
               value: "/certs/tls.crt"

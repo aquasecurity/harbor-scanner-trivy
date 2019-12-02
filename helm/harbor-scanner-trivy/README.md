@@ -68,31 +68,38 @@ The command removes all the Kubernetes components associated with the chart and 
 
 The following table lists the configurable parameters of the scanner adapter chart and their default values.
 
-|            Parameter          |                                Description                              |    Default     |
-|-------------------------------|-------------------------------------------------------------------------|----------------|
-| `image.registry`              | Image registry                                                          | `docker.io`    |
-| `image.repository`            | Image name                                                              | `aquasec/harbor-scanner-trivy` |
-| `image.tag`                   | Image tag                                                               | `{TAG_NAME}`   |
-| `image.pullPolicy`            | Image pull policy                                                       | `IfNotPresent` |
-| `replicaCount`                | Number of scanner adapter Pods to run                                   | `1`            |
-| `scanner.logLevel`            | The standard logger logs entries with that level or anything above it   | `info`         |
-| `scanner.api.tlsEnabled`      | The flag to enable or disable TLS for HTTP                              | `true`         |
-| `scanner.api.tlsCertificate`  | The absolute path to the x509 certificate file                          |                |
-| `scanner.api.tlsKey`          | The absolute path to the x509 private key file                          |                |
-| `scanner.api.readTimeout`     | The maximum duration for reading the entire request, including the body | `15s`          |
-| `scanner.api.writeTimeout`    | The maximum duration before timing out writes of the response           | `15s`          |
-| `scanner.trivy.cacheDir`      | Trivy cache directory                                                   | `/root/.cache/trivy`   |
-| `scanner.trivy.reportsDir`    | Trivy reports directory                                                 | `/root/.cache/reports` |
-| `scanner.trivy.debugMode`     | The flag to enable or disable Trivy debug mode                          | `false`        |
-| `scanner.trivy.vulnType`      | Comma-separated list of vulnerability types. Possible values `os` and `library` | `os`   |
-| `scanner.trivy.severity`      | Comma-separated list of vulnerabilities severities to be displayed.     | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
-| `scanner.trivy.ignoreUnfixed` | The flag to display only fixed vulnerabilities.                         | `false` |
-| `scanner.store.redisURL`      | Redis server URI for a redis store                                      | `redis://harbor-harbor-redis:6379` |
-| `scanner.store.scanJobTTL`    | The time to live for persisting scan jobs and associated scan reports   | `1h`           |
-| `scanner.jobQueue.redisURL`   | Redis server URI for a jobs queue                                       | `redis://harbor-harbor-redis:6379` |
-| `service.type`                | Kubernetes service type                                                 | `LoadBalancer` |
-| `service.port`                | Kubernetes service port                                                 | `8443`         |
-
+|                 Parameter             |                                Description                              |    Default     |
+|---------------------------------------|-------------------------------------------------------------------------|----------------|
+| `image.registry`                      | Image registry                                                          | `docker.io`    |
+| `image.repository`                    | Image name                                                              | `aquasec/harbor-scanner-trivy` |
+| `image.tag`                           | Image tag                                                               | `{TAG_NAME}`   |
+| `image.pullPolicy`                    | Image pull policy                                                       | `IfNotPresent` |
+| `replicaCount`                        | Number of scanner adapter Pods to run                                   | `1`            |
+| `scanner.logLevel`                    | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it   | `info` |
+| `scanner.api.tlsEnabled`              | The flag to enable or disable TLS for HTTP                              | `true`         |
+| `scanner.api.tlsCertificate`          | The absolute path to the x509 certificate file                          |                |
+| `scanner.api.tlsKey`                  | The absolute path to the x509 private key file                          |                |
+| `scanner.api.readTimeout`             | The maximum duration for reading the entire request, including the body | `15s`          |
+| `scanner.api.writeTimeout`            | The maximum duration before timing out writes of the response           | `15s`          |
+| `scanner.api.idleTimeout`             | The maximum amount of time to wait for the next request when keep-alives are enabled | `60s`     |
+| `scanner.trivy.cacheDir`              | Trivy cache directory                                                   | `/root/.cache/trivy`   |
+| `scanner.trivy.reportsDir`            | Trivy reports directory                                                 | `/root/.cache/reports` |
+| `scanner.trivy.debugMode`             | The flag to enable or disable Trivy debug mode                          | `false`        |
+| `scanner.trivy.vulnType`              | Comma-separated list of vulnerability types. Possible values `os` and `library` | `os`   |
+| `scanner.trivy.severity`              | Comma-separated list of vulnerabilities severities to be displayed      | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
+| `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`                            |
+| `scanner.store.redisURL`              | Redis server URI for a redis store                                      | `redis://harbor-harbor-redis:6379` |
+| `scanner.store.redisNamespace`        | A namespace for keys in a redis store                                   | `harbor.scanner.trivy:store`       |
+| `scanner.store.redisMaxActive`        | The max number of connections allocated by the pool for a redis store   | `5`  |
+| `scanner.store.redisMaxIdle`          | The max number of idle connections in the pool for a redis store        | `5`  |
+| `scanner.store.redisScanJobTTL`       | The time to live for persisting scan jobs and associated scan reports   | `1h` |
+| `scanner.jobQueue.redisURL`           | Redis server URI for a jobs queue                                       | `redis://harbor-harbor-redis:6379` |
+| `scanner.jobQueue.redisNamespace`     | A namespace for keys in a jobs queue                                    | `harbor.scanner.trivy:job-queue`   |
+| `scanner.jobQueue.redisPoolMaxActive` | The max number of connections allocated by the pool for a jobs queue    | `5` |
+| `scanner.jobQueue.redisPoolMaxIdle`   | The max number of idle connections in the pool for a jobs queue         | `5` |
+| `scanner.jobQueue.workerConcurrency`  | The number of workers to spin-up for a jobs queue                       | `1` |
+| `service.type`                        | Kubernetes service type                                                 | `LoadBalancer` |
+| `service.port`                        | Kubernetes service port                                                 | `8443`         |
 
 The above parameters map to the env variables defined in [harbor-scanner-trivy](https://github.com/aquasecurity/harbor-scanner-trivy#configuration).
 

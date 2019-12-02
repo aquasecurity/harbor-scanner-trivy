@@ -29,8 +29,9 @@ scanner:
     tlsEnabled: false
     tlsCertificate: ""
     tlsKey: ""
-    readTimeout: 15s
-    writeTimeout: 15s
+    readTimeout: "15s"
+    writeTimeout: "15s"
+    idleTimeout: "60s"
   trivy:
     cacheDir: "/root/.cache/trivy"
     reportsDir: "/root/.cache/reports"
@@ -40,9 +41,16 @@ scanner:
     ignoreUnfixed: false
   store:
     redisURL: "redis://harbor-harbor-redis:6379"
-    scanJobTTL: "1h"
+    redisNamespace: "harbor.scanner.trivy:store"
+    redisPoolMaxActive: 5
+    redisPoolMaxIdle: 5
+    redisScanJobTTL: "1h"
   jobQueue:
     redisURL: "redis://harbor-harbor-redis:6379"
+    redisNamespace: "harbor.scanner.trivy:job-queue"
+    redisPoolMaxActive: 5
+    redisPoolMaxIdle: 5
+    workerConcurrency: 1
 
 service:
   type: LoadBalancer

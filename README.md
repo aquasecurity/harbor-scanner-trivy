@@ -66,7 +66,8 @@ make container
 3. Install the `harbor-scanner-trivy` release with `helm`:
    ```
    $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
-     --set image.tag=dev
+                  --set scanner.logLevel=trace \
+                  --set image.tag=dev
    ```
 
 ## Testing
@@ -138,30 +139,31 @@ docker-compose -f test/component/docker-compose.yaml down
 
 Configuration of the adapter is done via environment variables at startup.
 
-| Name | Default Value | Description |
-|------|---------------|-------------|
-| `SCANNER_LOG_LEVEL` | `info` | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it. |
-| `SCANNER_API_SERVER_ADDR`          | `:8080` | Binding address for the API server. |
-| `SCANNER_API_SERVER_TLS_CERTIFICATE` | | The absolute path to the x509 certificate file. |
-| `SCANNER_API_SERVER_TLS_KEY`         | | The absolute path to the x509 private key file. |
-| `SCANNER_API_SERVER_READ_TIMEOUT`  | `15s`   | The maximum duration for reading the entire request, including the body. |
-| `SCANNER_API_SERVER_WRITE_TIMEOUT` | `15s`   | The maximum duration before timing out writes of the response. |
-| `SCANNER_TRIVY_CACHE_DIR`   | `/root/.cache/trivy`   | Trivy cache directory.   |
-| `SCANNER_TRIVY_REPORTS_DIR` | `/root/.cache/reports` | Trivy reports directory. |
-| `SCANNER_TRIVY_DEBUG_MODE`  | `false` | The flag to enable or disable Trivy debug mode. |
-| `SCANNER_TRIVY_VULN_TYPE`   | `os` | Comma-separated list of vulnerability types. Possible values `os` and `library` |
-| `SCANNER_TRIVY_SEVERITY`    | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed. |
-| `SCANNER_TRIVY_IGNORE_UNFIXED`  | `false` | The flag to display only fixed vulnerabilities. |
-| `SCANNER_STORE_REDIS_URL`       | `redis://localhost:6379`          | Redis server URI for a redis store. |
-| `SCANNER_STORE_REDIS_NAMESPACE` | `harbor.scanner.trivy:data-store` | A namespace for keys in a redis store. |
-| `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE` | `5`  | The max number of connections allocated by the pool for a redis store. |
-| `SCANNER_STORE_REDIS_POOL_MAX_IDLE`   | `5`  | The max number of idle connections in the pool for a redis store. |
-| `SCANNER_STORE_REDIS_SCAN_JOB_TTL`    | `1h` | The time to live for persisting scan jobs and associated scan reports. |
-| `SCANNER_JOB_QUEUE_REDIS_URL`         | `redis://localhost:6379`         | Redis server URI for a jobs queue. |
-| `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`   | `harbor.scanner.trivy:job-queue` | A namespace for keys in a jobs queue. |
-| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE` | `5` | The max number of connections allocated by the pool for a jobs queue. |
-| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE`   | `5` | The max number of idle connections in the pool for a jobs queue. |
-| `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1` | The number of workers to spin-up for a jobs queue. |
+|                  Name                     |                  Default           | Description |
+|-------------------------------------------|------------------------------------|-------------|
+| `SCANNER_LOG_LEVEL`                       | `info`                             | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it. |
+| `SCANNER_API_SERVER_ADDR`                 | `:8080`                            | Binding address for the API server                                                   |
+| `SCANNER_API_SERVER_TLS_CERTIFICATE`      | N/A                                | The absolute path to the x509 certificate file                                       |
+| `SCANNER_API_SERVER_TLS_KEY`              | N/A                                | The absolute path to the x509 private key file                                       |
+| `SCANNER_API_SERVER_READ_TIMEOUT`         | `15s`                              | The maximum duration for reading the entire request, including the body              |
+| `SCANNER_API_SERVER_WRITE_TIMEOUT`        | `15s`                              | The maximum duration before timing out writes of the response                        |
+| `SCANNER_API_SERVER_IDLE_TIMEOUT`         | `60s`                              | The maximum amount of time to wait for the next request when keep-alives are enabled |
+| `SCANNER_TRIVY_CACHE_DIR`                 | `/root/.cache/trivy`               | Trivy cache directory                                                                |
+| `SCANNER_TRIVY_REPORTS_DIR`               | `/root/.cache/reports`             | Trivy reports directory                                                              |
+| `SCANNER_TRIVY_DEBUG_MODE`                | `false`                            | The flag to enable or disable Trivy debug mode                                       |
+| `SCANNER_TRIVY_VULN_TYPE`                 | `os`                               | Comma-separated list of vulnerability types. Possible values `os` and `library`      |
+| `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
+| `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
+| `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
+| `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
+| `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |
+| `SCANNER_STORE_REDIS_POOL_MAX_IDLE`       | `5`                                | The max number of idle connections in the pool for a redis store                     |
+| `SCANNER_STORE_REDIS_SCAN_JOB_TTL`        | `1h`                               | The time to live for persisting scan jobs and associated scan reports                |
+| `SCANNER_JOB_QUEUE_REDIS_URL`             | `redis://harbor-harbor-redis:6379` | Redis server URI for a jobs queue                                                    |
+| `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`       | `harbor.scanner.trivy:job-queue`   | A namespace for keys in a jobs queue                                                 |
+| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE` | `5`                                | The max number of connections allocated by the pool for a jobs queue                 |
+| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE`   | `5`                                | The max number of idle connections in the pool for a jobs queue                      |
+| `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1`                                | The number of workers to spin-up for a jobs queue                                    |
 
 ## Documentation
 
