@@ -7,9 +7,7 @@ Trivy as a plug-in vulnerability scanner in the Harbor registry.
 ### Without TLS
 
 ```
-$ helm install --name harbor-scanner-trivy \
-               --namespace harbor \
-               .
+$ helm install harbor-scanner-trivy . --namespace harbor
 ```
 
 ### With TLS
@@ -25,13 +23,12 @@ $ helm install --name harbor-scanner-trivy \
    ```
 2. Install the `harbor-scanner-trivy` chart:
    ```
-   $ helm install --name harbor-scanner-trivy \
+   $ helm install harbor-scanner-trivy . \
                   --namespace harbor \
                   --set service.port=8443 \
                   --set scanner.api.tlsEnabled=true \
                   --set scanner.api.tlsCertificate="`cat tls.crt`" \
-                  --set scanner.api.tlsKey="`cat tls.key`" \
-                  .
+                  --set scanner.api.tlsKey="`cat tls.key`"
    ```
 
 ## Introduction
@@ -49,7 +46,7 @@ This chart bootstraps a scanner adapter deployment on a [Kubernetes](http://kube
 To install the chart with the release name `my-release`:
 
 ```
-$ helm install --name my-release .
+$ helm install my-release .
 ```
 
 The command deploys scanner adapter on the Kubernetes cluster in the default configuration. The [Parameters](#parameters)
@@ -62,7 +59,7 @@ section lists the parameters that can be configured during installation.
 To uninstall/delete the `my-release` deployment:
 
 ```
-$ helm delete --purge my-release
+$ helm delete my-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
@@ -102,8 +99,7 @@ The above parameters map to the env variables defined in [harbor-scanner-trivy](
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
 ```
-$ helm install --name my-release \
-               --namespace my-namespace \
-               --set service.port=9090 \
-               .
+$ helm install my-release . \
+       --namespace my-namespace \
+       --set service.port=9090
 ```

@@ -59,43 +59,14 @@ make container
    ```
    $ eval $(minikube docker-env)
    ```
-2. Configure adapter to handle TLS traffic:
-   1. Generate certificate and private key files:
-      ```
-      $ openssl genrsa -out tls.key 2048
-      $ openssl req -new -x509 \
-        -key tls.key \
-        -out tls.crt \
-        -days 365 \
-        -subj /CN=harbor-scanner-trivy
-      ```
-   2. Create a `tls` Secret from the two generated files:
-      ```
-      $ kubectl create secret tls harbor-scanner-trivy-tls \
-        --cert=tls.crt \
-        --key=tls.key
-      ```
-3. Create StatefulSet and Service for the scanner adapter:
-   ```
-   $ kubectl apply -f kube/harbor-scanner-trivy.yaml
-   ```
-   > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
-4. Scale down the StatefulSet:
-   ```
-   $ kubectl scale sts harbor-scanner-trivy --replicas=0
-   ```
-5. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
+2. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
    ```
    $ make container
    ```
-6. Update StatefulSet's image to `aquasec/harbor-scanner-trivy:dev`
+3. Install the `harbor-scanner-trivy` release with `helm`:
    ```
-   $ kubectl set image sts harbor-scanner-trivy \
-     main=aquasec/harbor-scanner-trivy:dev
-   ```
-7. Scale up the StatefulSet:
-   ```
-   $ kubectl scale sts harbor-scanner-trivy --replicas=1
+   $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
+     --set image.tag=dev
    ```
 
 ## Testing
@@ -106,9 +77,6 @@ correctly interacts with its collaborators, more coarse grained testing is requi
 
 ### Unit testing
 
-> A *unit test* exercises the smallest piece of testable software in the application to determine whether it behaves
-> as expected.
-
 Run `make test` to run all unit tests:
 
 ```
@@ -117,8 +85,6 @@ make test
 
 ### Integration testing
 
-> An *integration* test verifies the communication paths and interactions between components to detect interface defects.
-
 Run `make test-integration` to run integration tests:
 
 ```
@@ -126,10 +92,6 @@ make test-integration
 ```
 
 ### Component testing
-
-> A *component test* limits the scope of the exercised software to a portion of the system under test, manipulating the
-> system through internal code interfaces and using test doubles to isolate the code under test from other components.
-> In a microservice architecture, the components are the services themselves.
 
 Running out of process component tests is not fully automated yet (see [#38][issue-38]). However, you can run them
 as follows:
@@ -144,27 +106,33 @@ docker-compose -f test/component/docker-compose.yaml down
 
 ### Kubernetes
 
-1. Configure adapter to handle TLS traffic:
-   1. Create a `tls` Secret from the private kay and certificate files:
-      ```
-      $ kubectl create secret tls harbor-scanner-trivy-tls \
-        --cert=tls.cert \
-        --key=tls.key
-      ```
-2. Create StatefulSet and Service for the scanner adapter:
+1. Generate certificate and private key files:
    ```
-   $ kubectl apply -f kube/harbor-scanner-trivy.yaml
+   $ openssl genrsa -out tls.key 2048
+   $ openssl req -new -x509 \
+                 -key tls.key \
+                 -out tls.crt \
+                 -days 365 \
+                 -subj /CN=harbor-scanner-trivy.harbor
    ```
-   > By default the StatefulSet refers to the latest release image published to [Docker Hub][latest-release-url].
+2. Install the `harbor-scanner-trivy` chart:
+   ```
+   $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
+                  --namespace harbor \
+                  --set service.port=8443 \
+                  --set scanner.api.tlsEnabled=true \
+                  --set scanner.api.tlsCertificate="`cat tls.crt`" \
+                  --set scanner.api.tlsKey="`cat tls.key`"
+   ```
 3. Configure the scanner adapter in Harbor web console.
-   1. Navigate to **Configuration** and select the **Scanners** tab and then click **+ NEW SCANNER**.
+   1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
       ![Scanners config](docs/images/harbor_ui_scanners_config.png)
-   2. Enter https://harbor-scanner-trivy:8443 as the Endpoint URL and click **TEST CONNECTION**.
+   2. Enter https://harbor-scanner-trivy.harbor:8443 as the **Endpoint** URL and click **TEST CONNECTION**.
       ![Add scanner](docs/images/harbor_ui_add_scanner.png)
    3. If everything is fine click **ADD** to save the configuration.
-4. Select the **trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
+4. Select the **Trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
    ![Set Trivy as default scanner](docs/images/harbor_ui_set_trivy_as_default_scanner.png)
-   Make sure that the **Default** label is displayed next to the **trivy** scanner name.
+   Make sure that the **Default** label is displayed next to the **Trivy** scanner's name.
 
 ## Configuration
 
