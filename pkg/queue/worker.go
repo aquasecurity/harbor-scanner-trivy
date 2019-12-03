@@ -79,7 +79,7 @@ func (s *workerContext) controller() (controller scan.Controller, err error) {
 
 	if _, err := os.Stat(config.Trivy.ReportsDir); os.IsNotExist(err) {
 		log.WithField("path", config.Trivy.ReportsDir).Debug("Creating reports dir")
-		err = os.MkdirAll(config.Trivy.ReportsDir, os.ModeDir)
+		err = os.MkdirAll(config.Trivy.ReportsDir, os.ModePerm)
 		if err != nil {
 			return nil, err
 		}

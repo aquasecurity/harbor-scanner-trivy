@@ -63,8 +63,8 @@ func TestGetConfig(t *testing.T) {
 					IdleTimeout:  parseDuration(t, "60s"),
 				},
 				Trivy: Trivy{
-					CacheDir:   "/root/.cache/trivy",
-					ReportsDir: "/root/.cache/reports",
+					CacheDir:   "/home/scanner/.cache/trivy",
+					ReportsDir: "/home/scanner/.cache/reports",
 					VulnType:   "os",
 					Severity:   "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
 				},

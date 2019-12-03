@@ -33,8 +33,8 @@ scanner:
     writeTimeout: "15s"
     idleTimeout: "60s"
   trivy:
-    cacheDir: "/root/.cache/trivy"
-    reportsDir: "/root/.cache/reports"
+    cacheDir: "/home/scanner/.cache/trivy"
+    reportsDir: "/home/scanner/.cache/reports"
     debugMode: false
     vulnType: "os"
     severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"

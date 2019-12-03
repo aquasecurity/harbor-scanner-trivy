@@ -6,11 +6,9 @@
 
 # Harbor Scanner Adapter for Trivy
 
-The Harbor Scanner Adapter for [Trivy][trivy-url] is a service that translates the [Harbor][harbor-url] scanning API
-into Trivy commands and allows Harbor to use Trivy for providing vulnerability reports on images stored in
-Harbor registry as part of its vulnerability scan feature.
-
-> See [Pluggable Image Vulnerability Scanning Proposal][image-vulnerability-scanning-proposal] for more details.
+The Harbor [Scanner Adapter][image-vulnerability-scanning-proposal] for [Trivy][trivy-url] is a service that translates
+the [Harbor][harbor-url] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
+reports on images stored in Harbor registry as part of its vulnerability scan feature.
 
 ## TOC
 
@@ -148,8 +146,8 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_API_SERVER_READ_TIMEOUT`         | `15s`                              | The maximum duration for reading the entire request, including the body              |
 | `SCANNER_API_SERVER_WRITE_TIMEOUT`        | `15s`                              | The maximum duration before timing out writes of the response                        |
 | `SCANNER_API_SERVER_IDLE_TIMEOUT`         | `60s`                              | The maximum amount of time to wait for the next request when keep-alives are enabled |
-| `SCANNER_TRIVY_CACHE_DIR`                 | `/root/.cache/trivy`               | Trivy cache directory                                                                |
-| `SCANNER_TRIVY_REPORTS_DIR`               | `/root/.cache/reports`             | Trivy reports directory                                                              |
+| `SCANNER_TRIVY_CACHE_DIR`                 | `/home/scanner/.cache/trivy`       | Trivy cache directory                                                                |
+| `SCANNER_TRIVY_REPORTS_DIR`               | `/home/scanner/.cache/reports`     | Trivy reports directory                                                              |
 | `SCANNER_TRIVY_DEBUG_MODE`                | `false`                            | The flag to enable or disable Trivy debug mode                                       |
 | `SCANNER_TRIVY_VULN_TYPE`                 | `os`                               | Comma-separated list of vulnerability types. Possible values `os` and `library`      |
 | `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
