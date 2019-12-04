@@ -8,8 +8,12 @@ FROM aquasec/trivy:${TRIVY_VERSION}
 # FROM use an ARG instruction without a value inside of a build stage.
 ARG TRIVY_VERSION
 
-COPY scanner-trivy /app/scanner-trivy
+RUN adduser -u 1000 -D -g '' scanner scanner
+
+COPY scanner-trivy /home/scanner/bin/scanner-trivy
 
 ENV TRIVY_VERSION=${TRIVY_VERSION}
 
-ENTRYPOINT ["/app/scanner-trivy"]
+USER scanner
+
+ENTRYPOINT ["/home/scanner/bin/scanner-trivy"]
