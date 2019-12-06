@@ -64,6 +64,7 @@ make container
 3. Install the `harbor-scanner-trivy` release with `helm`:
    ```
    $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
+                  --namespace harbor \
                   --set scanner.logLevel=trace \
                   --set image.tag=dev
    ```
