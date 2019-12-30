@@ -65,8 +65,9 @@ make container
    ```
    $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
                   --namespace harbor \
-                  --set scanner.logLevel=trace \
-                  --set image.tag=dev
+                  --set "scanner.logLevel=trace" \
+                  --set "scanner.trivy.vulnType=os\,library" \
+                  --set "image.tag=dev"
    ```
 
 ## Testing

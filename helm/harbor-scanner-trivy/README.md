@@ -108,5 +108,6 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 ```
 $ helm install my-release . \
        --namespace my-namespace \
-       --set service.port=9090
+       --set "service.port=9090" \
+       --set "scanner.trivy.vulnType=os\,library"
 ```

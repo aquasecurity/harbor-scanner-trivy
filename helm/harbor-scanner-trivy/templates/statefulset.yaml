@@ -110,6 +110,9 @@ spec:
             failureThreshold: 3
           volumeMounts:
             {{- if .Values.persistence.enabled }}
+            - mountPath: /tmp
+              name: tmp-data
+              readOnly: false
             - mountPath: /home/scanner/.cache
               name: data
               readOnly: false
@@ -124,6 +127,10 @@ spec:
 {{ toYaml .Values.resources | indent 12 }}
           {{- end }}
       volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: tmp-data
+          emptyDir: {}
+        {{- end }}
         {{- if .Values.scanner.api.tlsEnabled }}
         - name: certs
           secret:

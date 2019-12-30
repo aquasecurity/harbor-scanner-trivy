@@ -25,7 +25,6 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-      - '^chore:'
 dockers:
   - image_templates:
       - "docker.io/aquasec/harbor-scanner-trivy:{{ .Version }}"
