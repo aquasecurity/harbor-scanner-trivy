@@ -29,15 +29,18 @@ spec:
         app.kubernetes.io/name: {{ include "harbor-scanner-trivy.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- if .Values.podSecurityContext }}
+      securityContext:
+{{ toYaml .Values.podSecurityContext | indent 8 }}
+      {{- end }}
       containers:
         - name: main
           image: {{ template "harbor-scanner-trivy.imageRef" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.securityContext }}
           securityContext:
-            privileged: false
-            runAsUser: 1000
-            runAsNonRoot: true
-            readOnlyRootFilesystem: true
+{{ toYaml .Values.securityContext | indent 12 }}
+          {{- end }}
           env:
             - name: "SCANNER_LOG_LEVEL"
               value: {{ .Values.scanner.logLevel | quote }}
