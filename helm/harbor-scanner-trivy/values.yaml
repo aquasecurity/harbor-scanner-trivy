@@ -11,7 +11,7 @@ replicaCount: 1
 
 persistence:
   enabled: true
-  storageClass: "standard"
+  storageClass: ""
   accessMode: ReadWriteOnce
   size: 5Gi
 
