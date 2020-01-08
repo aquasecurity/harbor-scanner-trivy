@@ -27,6 +27,7 @@ services:
     image: aquasec/harbor-scanner-trivy:dev
     ports:
       - 8080:8080
+    user: root:root
     environment:
       SCANNER_LOG_LEVEL: trace
       SCANNER_TRIVY_CACHE_DIR: /root/.cache/trivy
