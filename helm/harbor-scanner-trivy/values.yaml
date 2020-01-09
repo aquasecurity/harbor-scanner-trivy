@@ -11,7 +11,7 @@ replicaCount: 1
 
 persistence:
   enabled: true
-  storageClass: "standard"
+  storageClass: ""
   accessMode: ReadWriteOnce
   size: 5Gi
 
@@ -22,6 +22,15 @@ resources:
   limits:
     cpu: 1
     memory: 1Gi
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  fsGroup: 1000
+
+securityContext:
+  privileged: false
+  readOnlyRootFilesystem: true
 
 scanner:
   logLevel: info
