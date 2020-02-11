@@ -8,14 +8,15 @@ import (
 
 func TestScanRequest_GetImageRef(t *testing.T) {
 	testCases := []struct {
-		name          string
-		Request       ScanRequest
-		ImageRef      string
-		expectedError string
+		name             string
+		request          ScanRequest
+		expectedImageRef string
+		expectedInsecure bool
+		expectedError    string
 	}{
 		{
 			name: "mongo",
-			Request: ScanRequest{
+			request: ScanRequest{
 				Registry: Registry{
 					URL: "https://core.harbor.domain",
 				},
@@ -24,11 +25,12 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 					Digest:     "test:ABC",
 				},
 			},
-			ImageRef: "core.harbor.domain/library/mongo@test:ABC",
+			expectedImageRef: "core.harbor.domain/library/mongo@test:ABC",
+			expectedInsecure: false,
 		},
 		{
 			name: "nginx",
-			Request: ScanRequest{
+			request: ScanRequest{
 				Registry: Registry{
 					URL: "https://core.harbor.domain:443",
 				},
@@ -36,11 +38,12 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 					Digest: "test:DEF",
 				},
 			},
-			ImageRef: "core.harbor.domain:443/library/nginx@test:DEF",
+			expectedImageRef: "core.harbor.domain:443/library/nginx@test:DEF",
+			expectedInsecure: false,
 		},
 		{
 			name: "harbor",
-			Request: ScanRequest{
+			request: ScanRequest{
 				Registry: Registry{
 					URL: "http://harbor-harbor-registry:5000",
 				},
@@ -49,11 +52,12 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 					Digest:     "test:GHI",
 				},
 			},
-			ImageRef: "harbor-harbor-registry:5000/scanners/mongo@test:GHI",
+			expectedImageRef: "harbor-harbor-registry:5000/scanners/mongo@test:GHI",
+			expectedInsecure: true,
 		},
 		{
 			name: "invalid registry url",
-			Request: ScanRequest{
+			request: ScanRequest{
 				Registry: Registry{
 					URL: `"http://foo%bar@www.example.com/"`,
 				},
@@ -62,14 +66,17 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		imageRef, err := tc.Request.GetImageRef()
-		switch {
-		case tc.expectedError != "":
-			assert.Equal(t, tc.expectedError, err.Error(), tc.name)
-		default:
-			assert.NoError(t, err, tc.name)
-		}
-		assert.Equal(t, tc.ImageRef, imageRef, tc.name)
+		t.Run(tc.name, func(t *testing.T) {
+			imageRef, insecure, err := tc.request.GetImageRef()
+			switch {
+			case tc.expectedError != "":
+				assert.Equal(t, tc.expectedError, err.Error(), tc.name)
+			default:
+				assert.NoError(t, err, tc.name)
+			}
+			assert.Equal(t, tc.expectedImageRef, imageRef, tc.name)
+			assert.Equal(t, tc.expectedInsecure, insecure)
+		})
 	}
 }
 

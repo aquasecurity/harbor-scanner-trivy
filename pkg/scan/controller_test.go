@@ -62,6 +62,7 @@ func TestController_Scan(t *testing.T) {
 				Args: []interface{}{
 					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 					trivy.RegistryAuth{Username: "user", Password: "password"},
+					false,
 				},
 				ReturnArgs: []interface{}{
 					trivyReport,
@@ -106,6 +107,7 @@ func TestController_Scan(t *testing.T) {
 				Args: []interface{}{
 					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 					trivy.RegistryAuth{Username: "user", Password: "password"},
+					false,
 				},
 				ReturnArgs: []interface{}{
 					trivy.ScanReport{},

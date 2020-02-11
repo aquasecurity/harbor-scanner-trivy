@@ -13,7 +13,7 @@ func NewWrapper() *Wrapper {
 	return &Wrapper{}
 }
 
-func (w *Wrapper) Run(imageRef string, auth trivy.RegistryAuth) (trivy.ScanReport, error) {
-	args := w.Called(imageRef, auth)
+func (w *Wrapper) Run(imageRef string, auth trivy.RegistryAuth, insecureRegistry bool) (trivy.ScanReport, error) {
+	args := w.Called(imageRef, auth, insecureRegistry)
 	return args.Get(0).(trivy.ScanReport), args.Error(1)
 }
