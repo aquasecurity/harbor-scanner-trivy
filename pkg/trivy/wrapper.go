@@ -20,7 +20,7 @@ type RegistryAuth struct {
 }
 
 type Wrapper interface {
-	Run(imageRef string, auth RegistryAuth) (ScanReport, error)
+	Run(imageRef string, auth RegistryAuth, insecureRegistry bool) (ScanReport, error)
 }
 
 type wrapper struct {
@@ -33,7 +33,7 @@ func NewWrapper(config etc.Trivy) Wrapper {
 	}
 }
 
-func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, err error) {
+func (w *wrapper) Run(imageRef string, auth RegistryAuth, insecureRegistry bool) (report ScanReport, err error) {
 	log.WithField("image_ref", imageRef).Debug("Started scanning")
 
 	executable, err := exec.LookPath("trivy")
@@ -81,6 +81,9 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth) (report ScanReport, er
 		cmd.Env = append(cmd.Env,
 			fmt.Sprintf("TRIVY_USERNAME=%s", auth.Username),
 			fmt.Sprintf("TRIVY_PASSWORD=%s", auth.Password))
+	}
+	if insecureRegistry {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_NON_SSL=true"))
 	}
 
 	stderrBuffer := bytes.Buffer{}
