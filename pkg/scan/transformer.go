@@ -38,11 +38,11 @@ func NewTransformer(clock Clock) Transformer {
 	}
 }
 
-func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanReport) (target harbor.ScanReport) {
-	var vulnerabilities []harbor.VulnerabilityItem
+func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanReport) (harbor.ScanReport) {
+	vulnerabilities := make([]harbor.VulnerabilityItem, len(source.Vulnerabilities))
 
-	for _, v := range source.Vulnerabilities {
-		vulnerabilities = append(vulnerabilities, harbor.VulnerabilityItem{
+	for i, v := range source.Vulnerabilities {
+		vulnerabilities[i] = harbor.VulnerabilityItem{
 			ID:          v.VulnerabilityID,
 			Pkg:         v.PkgName,
 			Version:     v.InstalledVersion,
@@ -50,52 +50,56 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanRepor
 			Severity:    t.toHarborSeverity(v.Severity),
 			Description: v.Description,
 			Links:       t.toLinks(v.References),
-		})
+			LayerID:     v.LayerID,
+		}
 	}
 
-	target = harbor.ScanReport{
+	return harbor.ScanReport{
 		GeneratedAt:     t.clock.Now(),
 		Scanner:         etc.GetScannerMetadata(),
 		Artifact:        artifact,
-		Severity:        t.toHighestSeverity(source),
+		Severity:        t.toHighestSeverity(vulnerabilities),
 		Vulnerabilities: vulnerabilities,
 	}
-	return
 }
 
 func (t *transformer) toLinks(references []string) []string {
 	if references == nil {
 		return []string{}
 	}
+
 	return references
 }
 
-func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
-	switch severity {
-	case "CRITICAL":
-		return harbor.SevCritical
-	case "HIGH":
-		return harbor.SevHigh
-	case "MEDIUM":
-		return harbor.SevMedium
-	case "LOW":
-		return harbor.SevLow
-	case "UNKNOWN":
-		return harbor.SevUnknown
-	default:
-		log.WithField("severity", severity).Warn("Unknown trivy severity")
-		return harbor.SevUnknown
-	}
+var trivyToHarborSeverityMap = map[string]harbor.Severity {
+	"CRITICAL": harbor.SevCritical,
+	"HIGH":     harbor.SevHigh,
+	"MEDIUM":   harbor.SevMedium,
+	"LOW":      harbor.SevLow,
+	"UNKNOWN":  harbor.SevUnknown,
 }
 
-func (t *transformer) toHighestSeverity(sr trivy.ScanReport) (highest harbor.Severity) {
+func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
+	if harborSev, ok := trivyToHarborSeverityMap[severity]; ok {
+		return harborSev
+	}
+
+	log.WithField("severity", severity).Warn("Unknown trivy severity")
+	return harbor.SevUnknown
+}
+
+func (t *transformer) toHighestSeverity(vlns []harbor.VulnerabilityItem) (highest harbor.Severity) {
 	highest = harbor.SevUnknown
 
-	for _, vln := range sr.Vulnerabilities {
-		sev := t.toHarborSeverity(vln.Severity)
-		if sev > highest {
-			highest = sev
+	for _, vln := range vlns {
+		if vln.Severity > highest {
+			highest = vln.Severity
+
+			if highest == harbor.SevCritical {
+				break
+			}
 		}
+
 	}
 
 	return

@@ -125,7 +125,7 @@ func (w *wrapper) parseScanReports(reportFile io.Reader) (report ScanReport, err
 
 	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
 	report.Target = scanReports[0].Target
-	report.Vulnerabilities = []Vulnerability{}
+	report.Vulnerabilities = make([]Vulnerability, 0, len(scanReports[0].Vulnerabilities))
 	for _, scanReport := range scanReports {
 		log.WithField("target", scanReport.Target).Trace("Parsing vulnerabilities")
 		report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)

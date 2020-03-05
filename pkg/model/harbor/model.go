@@ -7,6 +7,8 @@ import (
 	"golang.org/x/xerrors"
 	"net/url"
 	"time"
+
+	"github.com/opencontainers/go-digest"
 )
 
 // Severity represents the severity of a image/component in terms of vulnerability.
@@ -103,13 +105,14 @@ type ScanReport struct {
 
 // VulnerabilityItem is an item in the vulnerability result returned by vulnerability details API.
 type VulnerabilityItem struct {
-	ID          string   `json:"id"`
-	Pkg         string   `json:"package"`
-	Version     string   `json:"version"`
-	FixVersion  string   `json:"fix_version,omitempty"`
-	Severity    Severity `json:"severity"`
-	Description string   `json:"description"`
-	Links       []string `json:"links"`
+	ID          string        `json:"id"`
+	Pkg         string        `json:"package"`
+	Version     string        `json:"version"`
+	FixVersion  string        `json:"fix_version,omitempty"`
+	Severity    Severity      `json:"severity"`
+	Description string        `json:"description"`
+	Links       []string      `json:"links"`
+	LayerID     digest.Digest `json:"layerID"`
 }
 
 type ScannerAdapterMetadata struct {
