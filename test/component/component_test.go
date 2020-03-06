@@ -10,6 +10,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/opencontainers/go-digest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"

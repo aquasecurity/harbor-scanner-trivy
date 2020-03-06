@@ -38,7 +38,7 @@ func NewTransformer(clock Clock) Transformer {
 	}
 }
 
-func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanReport) (harbor.ScanReport) {
+func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanReport) harbor.ScanReport {
 	vulnerabilities := make([]harbor.VulnerabilityItem, len(source.Vulnerabilities))
 
 	for i, v := range source.Vulnerabilities {
