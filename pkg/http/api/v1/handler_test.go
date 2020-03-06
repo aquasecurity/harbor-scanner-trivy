@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/opencontainers/go-digest"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -322,7 +321,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 								Links: []string{
 									"http://cve.com?id=CVE-2019-1111",
 								},
-								LayerID: digest.Digest("sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"),
+								LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 							},
 						},
 					},
