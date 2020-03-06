@@ -352,7 +352,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
       "links": [
         "http://cve.com?id=CVE-2019-1111"
       ],
-      "layerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+      "layer_id": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
     }
   ]
 }`, now.Format(time.RFC3339Nano)),
