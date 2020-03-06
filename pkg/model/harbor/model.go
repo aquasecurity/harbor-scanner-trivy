@@ -110,6 +110,7 @@ type VulnerabilityItem struct {
 	Severity    Severity `json:"severity"`
 	Description string   `json:"description"`
 	Links       []string `json:"links"`
+	LayerID     string   `json:"layer_id"`
 }
 
 type ScannerAdapterMetadata struct {

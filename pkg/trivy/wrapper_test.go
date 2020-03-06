@@ -20,7 +20,8 @@ const (
 		"Severity": "MEDIUM",
 		"References": [
 			"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543"
-		]
+		],
+		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
 	}]
 },
 {
@@ -34,7 +35,8 @@ const (
 		"References": [
 			"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
 			"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html"
-		]
+		],
+		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
 	}]
 },
 {
@@ -47,7 +49,8 @@ const (
 		"Severity": "MEDIUM",
 		"References": [
 			"http://linux.oracle.com/cve/CVE-2016-5385.html"
-		]
+		],
+		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11"
 	}]
 },
 {
@@ -79,6 +82,7 @@ func TestWrapperParseScanReports(t *testing.T) {
 						References: []string{
 							"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543",
 						},
+						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 					},
 					{
 						VulnerabilityID:  "CVE-2019-11358",
@@ -90,6 +94,7 @@ func TestWrapperParseScanReports(t *testing.T) {
 							"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
 							"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html",
 						},
+						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 					},
 					{
 						VulnerabilityID:  "CVE-2016-5385",
@@ -100,6 +105,7 @@ func TestWrapperParseScanReports(t *testing.T) {
 						References: []string{
 							"http://linux.oracle.com/cve/CVE-2016-5385.html",
 						},
+						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
 					},
 				},
 			},

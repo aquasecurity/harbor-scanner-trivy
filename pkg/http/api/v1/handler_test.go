@@ -321,6 +321,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 								Links: []string{
 									"http://cve.com?id=CVE-2019-1111",
 								},
+								LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 							},
 						},
 					},
@@ -350,7 +351,8 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
       "description": "You'd better upgrade your server",
       "links": [
         "http://cve.com?id=CVE-2019-1111"
-      ]
+      ],
+      "layer_id": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
     }
   ]
 }`, now.Format(time.RFC3339Nano)),

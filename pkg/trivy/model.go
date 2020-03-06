@@ -14,4 +14,5 @@ type Vulnerability struct {
 	Description      string   `json:"Description"`
 	Severity         string   `json:"Severity"`
 	References       []string `json:"References"`
+	LayerID          string   `json:"LayerID"`
 }
