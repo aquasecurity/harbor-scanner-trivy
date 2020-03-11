@@ -63,10 +63,11 @@ func TestGetConfig(t *testing.T) {
 					IdleTimeout:  parseDuration(t, "60s"),
 				},
 				Trivy: Trivy{
-					CacheDir:   "/home/scanner/.cache/trivy",
-					ReportsDir: "/home/scanner/.cache/reports",
-					VulnType:   "os",
-					Severity:   "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					GitHubToken: "",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://localhost:6379",
@@ -98,6 +99,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_VULN_TYPE":      "os,library",
 				"SCANNER_TRIVY_SEVERITY":       "CRITICAL",
 				"SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+				"SCANNER_TRIVY_GITHUB_TOKEN":   "<GITHUB_TOKEN>",
 
 				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
 				"SCANNER_STORE_REDIS_NAMESPACE":       "test.namespace",
@@ -119,6 +121,7 @@ func TestGetConfig(t *testing.T) {
 					VulnType:      "os,library",
 					Severity:      "CRITICAL",
 					IgnoreUnfixed: true,
+					GitHubToken:   "<GITHUB_TOKEN>",
 				},
 				RedisStore: RedisStore{
 					RedisURL:      "redis://harbor-harbor-redis:6379",

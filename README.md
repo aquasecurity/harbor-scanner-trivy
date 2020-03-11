@@ -154,6 +154,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_VULN_TYPE`                 | `os`                               | Comma-separated list of vulnerability types. Possible values `os` and `library`      |
 | `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
 | `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
+| `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | GitHub token to authenticate API requests (see [rate limit][gh-rate-limit])          |
 | `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
 | `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |
@@ -198,3 +199,4 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
 [fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
 [issue-38]: https://github.com/aquasecurity/harbor-scanner-trivy/issues/38
+[gh-rate-limit]: https://github.com/aquasecurity/trivy#github-rate-limiting

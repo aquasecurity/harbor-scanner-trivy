@@ -48,6 +48,7 @@ scanner:
     vulnType: "os"
     severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
     ignoreUnfixed: false
+    gitHubToken: ""
   store:
     redisURL: "redis://harbor-harbor-redis:6379"
     redisNamespace: "harbor.scanner.trivy:store"
