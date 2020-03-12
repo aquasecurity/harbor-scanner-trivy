@@ -88,6 +88,7 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.trivy.vulnType`              | Comma-separated list of vulnerability types. Possible values `os` and `library` | `os`   |
 | `scanner.trivy.severity`              | Comma-separated list of vulnerabilities severities to be displayed      | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
 | `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`                            |
+| `scanner.trivy.gitHubToken`           | GitHub token to authenticate API requests                               |      |
 | `scanner.store.redisURL`              | Redis server URI for a redis store                                      | `redis://harbor-harbor-redis:6379` |
 | `scanner.store.redisNamespace`        | A namespace for keys in a redis store                                   | `harbor.scanner.trivy:store`       |
 | `scanner.store.redisMaxActive`        | The max number of connections allocated by the pool for a redis store   | `5`  |

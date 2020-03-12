@@ -71,7 +71,7 @@ func (t *transformer) toLinks(references []string) []string {
 	return references
 }
 
-var trivyToHarborSeverityMap = map[string]harbor.Severity {
+var trivyToHarborSeverityMap = map[string]harbor.Severity{
 	"CRITICAL": harbor.SevCritical,
 	"HIGH":     harbor.SevHigh,
 	"MEDIUM":   harbor.SevMedium,

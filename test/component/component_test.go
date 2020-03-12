@@ -86,7 +86,7 @@ func TestComponent(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, req.Artifact, report.Artifact)
-	assert.Equal(t, harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.1"}, report.Scanner)
+	assert.Equal(t, harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.2"}, report.Scanner)
 	// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
 	for _, v := range report.Vulnerabilities {
 		t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)

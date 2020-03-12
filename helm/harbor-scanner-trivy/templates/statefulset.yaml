@@ -64,6 +64,11 @@ spec:
               value: {{ .Values.scanner.trivy.severity | quote }}
             - name: "SCANNER_TRIVY_IGNORE_UNFIXED"
               value: {{ .Values.scanner.trivy.ignoreUnfixed | quote }}
+            - name: "SCANNER_TRIVY_GITHUB_TOKEN"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-scanner-trivy.fullname" . }}
+                  key: gitHubToken
             - name: "SCANNER_STORE_REDIS_URL"
               value: {{ .Values.scanner.store.redisURL | quote }}
             - name: "SCANNER_STORE_REDIS_NAMESPACE"

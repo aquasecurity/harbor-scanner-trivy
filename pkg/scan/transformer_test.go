@@ -39,7 +39,7 @@ func TestTransformer_Transform(t *testing.T) {
 					"http://cve.com?id=CVE-0000-0001",
 					"http://vendor.com?id=CVE-0000-0001",
 				},
-				LayerID:          "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0002",
@@ -51,7 +51,7 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0002",
 				},
-				LayerID:          "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0003",
@@ -63,7 +63,7 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0003",
 				},
-				LayerID:          "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0004",
@@ -75,7 +75,7 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0004",
 				},
-				LayerID:          "UNKNOWN",
+				LayerID: "UNKNOWN",
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0005",
@@ -116,7 +116,7 @@ func TestTransformer_Transform(t *testing.T) {
 					"http://cve.com?id=CVE-0000-0001",
 					"http://vendor.com?id=CVE-0000-0001",
 				},
-				LayerID:     "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 			},
 			{
 				ID:          "CVE-0000-0002",
@@ -128,7 +128,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0002",
 				},
-				LayerID:     "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
 			},
 			{
 				ID:          "CVE-0000-0003",
@@ -140,7 +140,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0003",
 				},
-				LayerID:     "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
 			},
 			{
 				ID:          "CVE-0000-0004",
@@ -152,7 +152,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0004",
 				},
-				LayerID:     "UNKNOWN",
+				LayerID: "UNKNOWN",
 			},
 			{
 				ID:       "CVE-0000-0005",

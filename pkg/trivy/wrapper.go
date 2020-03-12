@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // RegistryAuth wraps registry credentials.
@@ -83,7 +84,10 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth, insecureRegistry bool)
 			fmt.Sprintf("TRIVY_PASSWORD=%s", auth.Password))
 	}
 	if insecureRegistry {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_NON_SSL=true"))
+		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
+	}
+	if strings.TrimSpace(w.config.GitHubToken) != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
 	}
 
 	stderrBuffer := bytes.Buffer{}
