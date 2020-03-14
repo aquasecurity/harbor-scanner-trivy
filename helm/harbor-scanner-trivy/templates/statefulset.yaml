@@ -89,6 +89,12 @@ spec:
               value: {{ .Values.scanner.jobQueue.redisPoolMaxIdle | quote }}
             - name: "SCANNER_JOB_QUEUE_WORKER_CONCURRENCY"
               value: {{ .Values.scanner.jobQueue.workerConcurrency | quote }}
+            - name: "HTTP_PROXY"
+              value: {{ .Values.httpProxy | quote }}
+            - name: "HTTPS_PROXY"
+              value: {{ .Values.httpsProxy | quote }}
+            - name: "NO_PROXY"
+              value: {{ .Values.noProxy | quote }}
             {{- if .Values.scanner.api.tlsEnabled }}
             - name: "SCANNER_API_SERVER_TLS_CERTIFICATE"
               value: "/certs/tls.crt"

@@ -101,6 +101,9 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.jobQueue.workerConcurrency`  | The number of workers to spin-up for a jobs queue                       | `1` |
 | `service.type`                        | Kubernetes service type                                                 | `LoadBalancer` |
 | `service.port`                        | Kubernetes service port                                                 | `8443`         |
+| `httpProxy`                           | The URL of the HTTP proxy server                                        |     |
+| `httpsProxy`                          | The URL of the HTTPS proxy server                                       |     |
+| `noProxy`                             | The URLs that the proxy settings do not apply to                        |     |
 
 The above parameters map to the env variables defined in [harbor-scanner-trivy](https://github.com/aquasecurity/harbor-scanner-trivy#configuration).
 

@@ -165,6 +165,9 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE` | `5`                                | The max number of connections allocated by the pool for a jobs queue                 |
 | `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE`   | `5`                                | The max number of idle connections in the pool for a jobs queue                      |
 | `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1`                                | The number of workers to spin-up for a jobs queue                                    |
+| `HTTP_PROXY`                              | N/A                                | The URL of the HTTP proxy server                                                     |
+| `HTTPS_PROXY`                             | N/A                                | The URL of the HTTPS proxy server                                                    |
+| `NO_PROXY`                                | N/A                                | The URLs that the proxy settings do not apply to                                     |
 
 ## Documentation
 
