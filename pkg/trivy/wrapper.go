@@ -2,12 +2,13 @@ package trivy
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"os/exec"
-	"strings"
 )
 
 const (
@@ -124,6 +125,7 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if imageRef.Insecure {
 		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
 	}
+
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
 	}
