@@ -11,7 +11,7 @@ test: build
 test-integration: build
 	GO111MODULE=on go test -count=1 -v -tags=integration ./test/integration/...
 
-test-component: build
+test-component: container
 	GO111MODULE=on go test -count=1 -v -tags=component ./test/component/...
 
 $(BINARY): $(SOURCES)

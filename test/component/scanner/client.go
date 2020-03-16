@@ -1,6 +1,6 @@
 // +build component
 
-package component
+package scanner
 
 import (
 	"bytes"
