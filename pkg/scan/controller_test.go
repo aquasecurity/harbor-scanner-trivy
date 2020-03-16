@@ -58,11 +58,13 @@ func TestController_Scan(t *testing.T) {
 				},
 			},
 			wrapperExpectation: &mock.Expectation{
-				Method: "Run",
+				Method: "Scan",
 				Args: []interface{}{
-					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-					trivy.RegistryAuth{Username: "user", Password: "password"},
-					false,
+					trivy.ImageRef{
+						Name:     "core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
+						Insecure: false,
+					},
 				},
 				ReturnArgs: []interface{}{
 					trivyReport,
@@ -103,11 +105,13 @@ func TestController_Scan(t *testing.T) {
 				},
 			},
 			wrapperExpectation: &mock.Expectation{
-				Method: "Run",
+				Method: "Scan",
 				Args: []interface{}{
-					"core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-					trivy.RegistryAuth{Username: "user", Password: "password"},
-					false,
+					trivy.ImageRef{
+						Name:     "core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
+						Insecure: false,
+					},
 				},
 				ReturnArgs: []interface{}{
 					trivy.ScanReport{},
@@ -120,7 +124,7 @@ func TestController_Scan(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := mock.NewStore()
-			wrapper := mock.NewWrapper()
+			wrapper := trivy.NewMockWrapper()
 			transformer := mock.NewTransformer()
 
 			mock.ApplyExpectations(t, store, tc.storeExpectation...)

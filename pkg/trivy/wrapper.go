@@ -1,18 +1,24 @@
 package trivy
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"io"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"strings"
 )
+
+const (
+	trivyCmd = "trivy"
+)
+
+type ImageRef struct {
+	Name     string
+	Auth     RegistryAuth
+	Insecure bool
+}
 
 // RegistryAuth wraps registry credentials.
 type RegistryAuth struct {
@@ -21,48 +27,71 @@ type RegistryAuth struct {
 }
 
 type Wrapper interface {
-	Run(imageRef string, auth RegistryAuth, insecureRegistry bool) (ScanReport, error)
+	Scan(imageRef ImageRef) (ScanReport, error)
 }
 
 type wrapper struct {
-	config etc.Trivy
+	config     etc.Trivy
+	ambassador ext.Ambassador
 }
 
-func NewWrapper(config etc.Trivy) Wrapper {
+func NewWrapper(config etc.Trivy, ambassador ext.Ambassador) Wrapper {
 	return &wrapper{
-		config: config,
+		config:     config,
+		ambassador: ambassador,
 	}
 }
 
-func (w *wrapper) Run(imageRef string, auth RegistryAuth, insecureRegistry bool) (report ScanReport, err error) {
-	log.WithField("image_ref", imageRef).Debug("Started scanning")
+func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
+	log.WithField("image_ref", imageRef.Name).Debug("Started scanning")
 
-	executable, err := exec.LookPath("trivy")
-	if err != nil {
-		return report, err
-	}
-
-	reportFile, err := ioutil.TempFile(w.config.ReportsDir, "scan_report_*.json")
+	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
 		return report, err
 	}
 	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
 		log.WithField("path", reportFile.Name()).Debug("Removing scan report tmp file")
-		err := os.Remove(reportFile.Name())
+		err := w.ambassador.Remove(reportFile.Name())
 		if err != nil {
-			log.WithError(err).Warn("Error while removing scan report file")
+			log.WithError(err).Warn("Error while removing scan report tmp file")
 		}
 	}()
 
+	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name())
+	if err != nil {
+		return
+	}
+
+	stdout, err := w.ambassador.RunCmd(cmd)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"image_ref": imageRef.Name,
+			"exit_code": cmd.ProcessState.ExitCode(),
+			"std_out":   string(stdout),
+		}).Error("Running trivy failed")
+		return report, xerrors.Errorf("running trivy: %v: %v", err, string(stdout))
+	}
+
+	log.WithFields(log.Fields{
+		"image_ref": imageRef.Name,
+		"exit_code": cmd.ProcessState.ExitCode(),
+		"std_out":   string(stdout),
+	}).Debug("Running trivy finished")
+
+	report, err = ScanReportFrom(reportFile)
+	return
+}
+
+func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cmd, error) {
 	args := []string{
 		"--no-progress",
 		"--cache-dir", w.config.CacheDir,
 		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
 		"--format", "json",
-		"--output", reportFile.Name(),
-		imageRef,
+		"--output", outputFile,
+		imageRef.Name,
 	}
 
 	if w.config.IgnoreUnfixed {
@@ -73,67 +102,24 @@ func (w *wrapper) Run(imageRef string, auth RegistryAuth, insecureRegistry bool)
 		args = append([]string{"--debug"}, args...)
 	}
 
-	log.WithFields(log.Fields{"cmd": executable, "args": args}).Trace("Exec command with args")
-
-	cmd := exec.Command(executable, args...)
-
-	cmd.Env = os.Environ()
-	if auth.Username != "" && auth.Password != "" {
-		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("TRIVY_USERNAME=%s", auth.Username),
-			fmt.Sprintf("TRIVY_PASSWORD=%s", auth.Password))
+	name, err := w.ambassador.LookPath(trivyCmd)
+	if err != nil {
+		return nil, err
 	}
-	if insecureRegistry {
+
+	cmd := exec.Command(name, args...)
+
+	cmd.Env = w.ambassador.Environ()
+	if imageRef.Auth.Username != "" && imageRef.Auth.Password != "" {
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("TRIVY_USERNAME=%s", imageRef.Auth.Username),
+			fmt.Sprintf("TRIVY_PASSWORD=%s", imageRef.Auth.Password))
+	}
+	if imageRef.Insecure {
 		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
 	}
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
 	}
-
-	stderrBuffer := bytes.Buffer{}
-
-	cmd.Stderr = &stderrBuffer
-
-	stdout, err := cmd.Output()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"image_ref": imageRef,
-			"exit_code": cmd.ProcessState.ExitCode(),
-			"std_err":   stderrBuffer.String(),
-			"std_out":   string(stdout),
-		}).Error("Running trivy failed")
-		return report, xerrors.Errorf("running trivy: %v: %v", err, stderrBuffer.String())
-	}
-
-	log.WithFields(log.Fields{
-		"image_ref": imageRef,
-		"exit_code": cmd.ProcessState.ExitCode(),
-		"std_err":   stderrBuffer.String(),
-		"std_out":   string(stdout),
-	}).Debug("Running trivy finished")
-
-	report, err = w.parseScanReports(reportFile)
-	return
-}
-
-func (w *wrapper) parseScanReports(reportFile io.Reader) (report ScanReport, err error) {
-	var scanReports []ScanReport
-	err = json.NewDecoder(reportFile).Decode(&scanReports)
-	if err != nil {
-		return report, xerrors.Errorf("decoding scan report from file %w", err)
-	}
-
-	if len(scanReports) == 0 {
-		return report, xerrors.New("expected at least one report")
-	}
-
-	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
-	report.Target = scanReports[0].Target
-	report.Vulnerabilities = make([]Vulnerability, 0, len(scanReports[0].Vulnerabilities))
-	for _, scanReport := range scanReports {
-		log.WithField("target", scanReport.Target).Trace("Parsing vulnerabilities")
-		report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
-	}
-
-	return
+	return cmd, nil
 }
