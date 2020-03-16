@@ -65,3 +65,10 @@ scanner:
 service:
   type: LoadBalancer
   port: 8080
+
+# httpProxy the URL of the HTTP proxy server
+httpProxy:
+# httpsProxy the URL of the HTTPS proxy server
+httpsProxy:
+# noProxy the URLs that the proxy settings do not apply to
+noProxy:
