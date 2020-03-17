@@ -3,137 +3,194 @@
 package component
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"context"
 	"fmt"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/caarlos0/env/v6"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/opencontainers/go-digest"
+	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
+	"github.com/aquasecurity/harbor-scanner-trivy/test/component/scanner"
+	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
-	"io"
-	"os"
+	tc "github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"net/url"
+	"path/filepath"
 	"testing"
 )
 
-type Config struct {
-	Registry           RegistryConfig
-	ArtifactRepository string `env:"TEST_ARTIFACT_REPOSITORY" envDefault:"alpine"`
-	ArtifactTag        string `env:"TEST_ARTIFACT_TAG" envDefault:"3.10.2"`
-	ScannerURL         string `env:"TEST_SCANNER_URL" envDefault:"http://localhost:8080"`
-}
+var (
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.2"}
+)
 
-type RegistryConfig struct {
-	URL      string `env:"TEST_REGISTRY_URL" envDefault:"https://registry:5443"`
-	Username string `env:"TEST_REGISTRY_USERNAME" envDefault:"testuser"`
-	Password string `env:"TEST_REGISTRY_PASSWORD" envDefault:"testpassword"`
-}
+const (
+	testNetwork = "component_test"
+)
 
-func (c RegistryConfig) GetRegistryAuth() (auth string, err error) {
-	authConfig := types.AuthConfig{
-		Username: c.Username,
-		Password: c.Password,
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		return "", err
-	}
-	auth = base64.URLEncoding.EncodeToString(encodedJSON)
-	return
-}
+const (
+	registryImage       = "registry:2"
+	registryPort        = "5443/tcp"
+	registryInternalURL = "https://registry:5443"
+	registryUsername    = "testuser"
+	registryPassword    = "testpassword"
+)
 
-func (c RegistryConfig) GetBasicAuthorization() string {
-	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", c.Username, c.Password))))
-}
+const (
+	adapterImage = "aquasec/harbor-scanner-trivy:dev"
+	adapterPort  = "8080/tcp"
+)
 
-// TestComponent is a component test for the whole adapter service.
-// It should test only the shortest and happiest path to make sure that all pieces are nicely put together.
 func TestComponent(t *testing.T) {
 	if testing.Short() {
 		t.Skip("A component test")
 	}
-	var config Config
-	err := env.Parse(&config)
+
+	baseDir, err := filepath.Abs(".")
 	require.NoError(t, err)
 
-	imageRef := fmt.Sprintf("%s:%s", config.ArtifactRepository, config.ArtifactTag)
-
-	// 1. Download a test image from DockerHub, retag it and push to the test registry.
-	artifactDigest, err := tagAndPush(config.Registry, imageRef)
+	ctx := context.TODO()
+	dp, err := tc.NewDockerProvider()
 	require.NoError(t, err)
+	nt, err := dp.CreateNetwork(ctx, tc.NetworkRequest{
+		Name: testNetwork,
+	})
+	require.NoError(t, err)
+	defer func() { _ = nt.Remove(ctx) }()
 
-	req := harbor.ScanRequest{
-		Registry: harbor.Registry{
-			URL:           config.Registry.URL,
-			Authorization: config.Registry.GetBasicAuthorization(),
+	redisC, err := dp.CreateContainer(ctx,
+		tc.ContainerRequest{
+			Name:       "redis",
+			Image:      "redis:5",
+			Networks:   []string{testNetwork},
+			WaitingFor: wait.ForLog("Ready to accept connections"),
+		})
+	require.NoError(t, err)
+	err = redisC.Start(ctx)
+	require.NoError(t, err)
+	defer func() { _ = redisC.Terminate(ctx) }()
+
+	registryC, err := dp.CreateContainer(ctx,
+		tc.ContainerRequest{
+			Name:         "registry",
+			Image:        registryImage,
+			Networks:     []string{testNetwork},
+			ExposedPorts: []string{registryPort},
+			Env: map[string]string{
+				"REGISTRY_HTTP_ADDR":            "0.0.0.0:5443",
+				"REGISTRY_HTTP_TLS_CERTIFICATE": "/certs/cert.pem",
+				"REGISTRY_HTTP_TLS_KEY":         "/certs/key.pem",
+				"REGISTRY_AUTH":                 "htpasswd",
+				"REGISTRY_AUTH_HTPASSWD_PATH":   "/auth/htpasswd",
+				"REGISTRY_AUTH_HTPASSWD_REALM":  "Registry Realm",
+			},
+			BindMounts: map[string]string{
+				filepath.Join(baseDir, "data", "registry", "certs"): "/certs",
+				filepath.Join(baseDir, "data", "registry", "auth"):  "/auth",
+			},
+			WaitingFor: wait.ForLog("listening on [::]:5443"),
+		})
+
+	require.NoError(t, err)
+	err = registryC.Start(ctx)
+	require.NoError(t, err)
+	defer func() { _ = registryC.Terminate(ctx) }()
+
+	adapterC, err := dp.CreateContainer(ctx, tc.ContainerRequest{
+		Name:         "trivy-adapter",
+		Image:        adapterImage,
+		Networks:     []string{testNetwork},
+		ExposedPorts: []string{adapterPort},
+		Env: map[string]string{
+			"SCANNER_LOG_LEVEL":           "trace",
+			"SCANNER_STORE_REDIS_URL":     "redis://redis:6379",
+			"SCANNER_JOB_QUEUE_REDIS_URL": "redis://redis:6379",
 		},
-		Artifact: harbor.Artifact{
-			Repository: config.ArtifactRepository,
-			Digest:     artifactDigest.String(),
+		WaitingFor: wait.ForLog("Starting API server without TLS"),
+	})
+	require.NoError(t, err)
+	defer func() { _ = adapterC.Terminate(ctx) }()
+	err = adapterC.Start(ctx)
+	require.NoError(t, err)
+
+	registryExternalURL, err := GetRegistryExternalURL(registryC, registryPort)
+	require.NoError(t, err)
+
+	adapterURL, err := GetAdapterURL(adapterC, adapterPort)
+	require.NoError(t, err)
+
+	config := docker.RegistryConfig{
+		URL:      registryExternalURL,
+		Username: registryUsername,
+		Password: registryPassword,
+	}
+
+	testCases := []struct {
+		repository string
+		tag        string
+	}{
+		{
+			repository: "alpine",
+			tag:        "3.10.2",
+		},
+		{
+			repository: "photon",
+			tag:        "3.0-20200202",
+		},
+		{
+			repository: "gcr.io/distroless/java",
+			tag:        "11",
 		},
 	}
 
-	c := NewClient(config.ScannerURL)
-	// 2. Send ScanRequest to Scanner Adapter.
-	resp, err := c.RequestScan(req)
-	require.NoError(t, err)
+	for _, cc := range testCases {
+		imageRef := fmt.Sprintf("%s:%s", cc.repository, cc.tag)
+		t.Run(fmt.Sprintf("Should scan %s", imageRef), func(t *testing.T) {
 
-	// 3. Poll Scanner Adapter for ScanReport.
-	report, err := c.GetScanReport(resp.ID)
-	require.NoError(t, err)
+			// 1. Download a test image from DockerHub, tag it and push to the test registry.
+			artifactDigest, err := docker.ReplicateImage(imageRef, config)
+			require.NoError(t, err)
 
-	assert.Equal(t, req.Artifact, report.Artifact)
-	assert.Equal(t, harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.2"}, report.Scanner)
-	// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
-	for _, v := range report.Vulnerabilities {
-		t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
+			artifact := harbor.Artifact{
+				Repository: cc.repository,
+				Digest:     artifactDigest.String(),
+			}
+
+			c := scanner.NewClient(adapterURL)
+			// 2. Send ScanRequest to Scanner Adapter.
+			resp, err := c.RequestScan(harbor.ScanRequest{
+				Registry: harbor.Registry{
+					URL:           registryInternalURL,
+					Authorization: config.GetBasicAuthorization(),
+				},
+				Artifact: artifact,
+			})
+			require.NoError(t, err)
+
+			// 3. Poll Scanner Adapter for ScanReport.
+			report, err := c.GetScanReport(resp.ID)
+			require.NoError(t, err)
+
+			assert.Equal(t, artifact, report.Artifact)
+			assert.Equal(t, trivyScanner, report.Scanner)
+			// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
+			for _, v := range report.Vulnerabilities {
+				t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
+			}
+		})
 	}
 }
 
-// tagAndPush tags the given imageRef and pushes it to the given test registry.
-func tagAndPush(config RegistryConfig, imageRef string) (d digest.Digest, err error) {
-	ctx := context.Background()
+func GetRegistryExternalURL(registry tc.Container, exposedPort nat.Port) (*url.URL, error) {
+	port, err := registry.MappedPort(context.TODO(), exposedPort)
+	if err != nil {
+		return nil, err
+	}
+	return url.Parse(fmt.Sprintf("https://localhost:%d", port.Int()))
+}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+func GetAdapterURL(adapter tc.Container, exposedPort nat.Port) (string, error) {
+	port, err := adapter.MappedPort(context.TODO(), exposedPort)
 	if err != nil {
-		return
+		return "", err
 	}
-	pullOut, err := cli.ImagePull(ctx, imageRef, types.ImagePullOptions{})
-	defer func() {
-		_ = pullOut.Close()
-	}()
-
-	_, err = io.Copy(os.Stdout, pullOut)
-	if err != nil {
-		return
-	}
-
-	targetImageRef := fmt.Sprintf("%s/%s", "localhost:5443", imageRef)
-
-	err = cli.ImageTag(ctx, imageRef, targetImageRef)
-	if err != nil {
-		return
-	}
-
-	auth, err := config.GetRegistryAuth()
-	if err != nil {
-		return
-	}
-	pushOut, err := cli.ImagePush(ctx, targetImageRef, types.ImagePushOptions{RegistryAuth: auth})
-	if err != nil {
-		return
-	}
-	defer func() {
-		_ = pushOut.Close()
-	}()
-	_, err = io.Copy(os.Stdout, pushOut)
-	inspect, err := cli.DistributionInspect(ctx, targetImageRef, auth)
-	if err != nil {
-		return
-	}
-	d = inspect.Descriptor.Digest
-	return
+	return fmt.Sprintf("http://localhost:%d", port.Int()), nil
 }

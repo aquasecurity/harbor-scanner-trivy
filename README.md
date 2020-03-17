@@ -94,13 +94,10 @@ make test-integration
 
 ### Component testing
 
-Running out of process component tests is not fully automated yet (see [#38][issue-38]). However, you can run them
-as follows:
+Run `make test-component` to run component tests:
 
 ```
-docker-compose -f test/component/docker-compose.yaml up -d
 make test-component
-docker-compose -f test/component/docker-compose.yaml down
 ```
 
 ## Deployment
