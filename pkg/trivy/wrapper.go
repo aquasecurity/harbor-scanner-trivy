@@ -47,7 +47,7 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return report, err
+		return 
 	}
 	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
