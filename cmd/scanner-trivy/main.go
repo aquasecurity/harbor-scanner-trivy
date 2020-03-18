@@ -1,16 +1,19 @@
 package main
 
 import (
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
+	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/xerrors"
 )
 
 var (
@@ -53,7 +56,7 @@ func run(info etc.BuildInfo) error {
 
 	store := redis.NewStore(config.RedisStore)
 	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
-	apiHandler := v1.NewAPIHandler(info, enqueuer, store)
+	apiHandler := v1.NewAPIHandler(info, enqueuer, store, trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador))
 	apiServer := api.NewServer(config.API, apiHandler)
 
 	shutdownComplete := make(chan struct{})

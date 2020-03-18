@@ -1,14 +1,22 @@
 package v1
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	ttypes "github.com/aquasecurity/trivy/pkg/types"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
@@ -16,6 +24,18 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	expectedVersion = ttypes.VersionInfo{
+		Trivy: "v0.5.2-17-g3c9af62",
+		VulnerabilityDB: db.Metadata{
+			Version:    1,
+			Type:       1,
+			NextUpdate: time.Unix(1584507644, 0).UTC(),
+			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
+		},
+	}
 )
 
 func TestRequestHandler_ValidateScanRequest(t *testing.T) {
@@ -175,7 +195,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			r, err := http.NewRequest(http.MethodPost, "/api/v1/scan", strings.NewReader(tc.requestBody))
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -370,7 +390,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			r, err := http.NewRequest(http.MethodGet, "/api/v1/scan/job:123/report", nil)
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -393,7 +413,7 @@ func TestRequestHandler_GetHealthy(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/healthy", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -411,7 +431,7 @@ func TestRequestHandler_GetReady(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/ready", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -423,13 +443,43 @@ func TestRequestHandler_GetReady(t *testing.T) {
 func TestRequestHandler_GetMetadata(t *testing.T) {
 	enqueuer := mock.NewEnqueuer()
 	store := mock.NewStore()
+	ambassador := ext.NewMockAmbassador()
+
+	config := etc.Trivy{
+		CacheDir:   "/home/scanner/.cache/trivy",
+		ReportsDir: "/home/scanner/.cache/reports",
+		DebugMode:  true,
+	}
+	expectedCmdArgs := []string{
+		"/usr/local/bin/trivy",
+		"--version",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--format",
+		"json",
+		"--output",
+		"/home/scanner/.cache/reports/version_1234567890.json",
+	}
+
+	b, _ := json.Marshal(expectedVersion)
+	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
+	ambassador.On("TempFile", "/home/scanner/.cache/reports", "version_*.json").
+		Return(ext.NewFakeFile("/home/scanner/.cache/reports/version_1234567890.json", string(b)), nil)
+	ambassador.On("Remove", "/home/scanner/.cache/reports/version_1234567890.json").
+		Return(nil)
+	ambassador.On("RunCmd", &exec.Cmd{
+		Path: "/usr/local/bin/trivy",
+		Args: expectedCmdArgs},
+	).Return([]byte{}, nil)
+	wrapper := trivy.NewWrapper(config, ambassador)
 
 	rr := httptest.NewRecorder()
 
 	r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"}, enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+		enqueuer, store, wrapper).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -453,6 +503,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
   ],
   "properties": {
     "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+    "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18 05:00:44 +0000 UTC",
+    "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18 07:47:24 +0000 UTC",
     "org.label-schema.version": "0.1",
     "org.label-schema.build-date": "2019-01-03T13:40",
     "org.label-schema.vcs-ref": "abc",

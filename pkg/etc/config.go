@@ -1,11 +1,12 @@
 package etc
 
 import (
+	"os"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/caarlos0/env/v6"
 	"github.com/sirupsen/logrus"
-	"os"
-	"time"
 )
 
 type BuildInfo struct {

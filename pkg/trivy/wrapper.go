@@ -3,10 +3,9 @@ package trivy
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
-
-	"io/ioutil"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
@@ -153,6 +152,10 @@ func (w *wrapper) GetVersion() (ttypes.VersionInfo, error) {
 	}()
 
 	cmd, err := w.prepareVersionCmd(versionFile.Name())
+	if err != nil {
+		return ttypes.VersionInfo{}, err
+	}
+
 	stdout, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{

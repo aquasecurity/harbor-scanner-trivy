@@ -1,11 +1,16 @@
 package trivy
 
 import (
+	"github.com/aquasecurity/trivy/pkg/types"
 	"github.com/stretchr/testify/mock"
 )
 
 type MockWrapper struct {
 	mock.Mock
+}
+
+func (w *MockWrapper) GetVersion() (types.VersionInfo, error) {
+	panic("implement me!")
 }
 
 func NewMockWrapper() *MockWrapper {
