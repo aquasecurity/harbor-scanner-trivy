@@ -1,11 +1,15 @@
 package trivy
 
 import (
+	"encoding/json"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	ttypes "github.com/aquasecurity/trivy/pkg/types"
 	"github.com/stretchr/testify/require"
 	"os/exec"
 	"testing"
+	"time"
 )
 
 var (
@@ -37,6 +41,16 @@ var (
 				},
 				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 			},
+		},
+	}
+
+	expectedVersion =  ttypes.VersionInfo{
+		Trivy:           "v0.5.2-17-g3c9af62",
+		VulnerabilityDB: db.Metadata{
+			Version:    1,
+			Type:       1,
+			NextUpdate: time.Unix(1584507644, 0).UTC(),
+			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 		},
 	}
 )
@@ -107,3 +121,43 @@ func TestWrapper_Scan(t *testing.T) {
 
 	ambassador.AssertExpectations(t)
 }
+
+
+func TestWrapper_GetVersion(t *testing.T) {
+	ambassador := ext.NewMockAmbassador()
+	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
+
+	config := etc.Trivy{
+		CacheDir:      "/home/scanner/.cache/trivy",
+		ReportsDir:    "/home/scanner/.cache/reports",
+		DebugMode:     true,
+	}
+
+	expectedCmdArgs := []string{
+		"/usr/local/bin/trivy",
+		"--version",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--format",
+		"json",
+		"--output",
+		"/home/scanner/.cache/reports/version_1234567890.json",
+	}
+
+	b, _ := json.Marshal(expectedVersion)
+	ambassador.On("TempFile", "/home/scanner/.cache/reports", "version_*.json").
+		Return(ext.NewFakeFile("/home/scanner/.cache/reports/version_1234567890.json", string(b)), nil)
+	ambassador.On("Remove", "/home/scanner/.cache/reports/version_1234567890.json").
+		Return(nil)
+	ambassador.On("RunCmd", &exec.Cmd{
+		Path: "/usr/local/bin/trivy",
+		Args: expectedCmdArgs},
+	).Return([]byte{}, nil)
+
+	vi, err := NewWrapper(config, ambassador).GetVersion()
+	require.NoError(t, err)
+	require.Equal(t, expectedVersion, vi)
+
+	ambassador.AssertExpectations(t)
+}
+
