@@ -6,7 +6,7 @@
 
 # Harbor Scanner Adapter for Trivy
 
-The Harbor [Scanner Adapter][image-vulnerability-scanning-proposal] for [Trivy][trivy] is a service that translates
+The Harbor [Scanner Adapter][harbor-pluggable-scanners] for [Trivy][trivy] is a service that translates
 the [Harbor][harbor] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
 reports on images stored in Harbor registry as part of its vulnerability scan feature.
 
@@ -16,14 +16,14 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
   - [Prerequisites](#prerequisites)
   - [Build](#build)
   - [Running on minikube](#running-on-minikube)
-- [Testing](#testing)
-  - [Unit testing](#unit-testing)
-  - [Integration testing](#integration-testing)
-  - [Component testing](#component-testing)
 - [Deployment](#deployment)
   - [Kubernetes](#kubernetes)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
+- [Testing](#testing)
+  - [Unit testing](#unit-testing)
+  - [Integration testing](#integration-testing)
+  - [Component testing](#component-testing)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -70,36 +70,6 @@ make container
                   --set "scanner.trivy.vulnType=os\,library" \
                   --set "image.tag=dev"
    ```
-
-## Testing
-
-Unit testing alone doesn't provide guarantees about the behaviour of the adapter. To verify that each Go module
-correctly interacts with its collaborators, more coarse grained testing is required as described in
-[Testing Strategies in a Microservice Architecture][fowler-testing-strategies].
-
-### Unit testing
-
-Run `make test` to run all unit tests:
-
-```
-make test
-```
-
-### Integration testing
-
-Run `make test-integration` to run integration tests:
-
-```
-make test-integration
-```
-
-### Component testing
-
-Run `make test-component` to run component tests:
-
-```
-make test-component
-```
 
 ## Deployment
 
@@ -173,6 +143,36 @@ Configuration of the adapter is done via environment variables at startup.
 - [Architecture](./docs/ARCHITECTURE.md): architectural decisions behind designing harbor-scanner-trivy.
 - [Releases](./docs/RELEASES.md): how to release a new version of harbor-scanner-trivy.
 
+## Testing
+
+Unit testing alone doesn't provide guarantees about the behaviour of the adapter. To verify that each Go module
+correctly interacts with its collaborators, more coarse grained testing is required as described in
+[Testing Strategies in a Microservice Architecture][fowler-testing-strategies].
+
+### Unit testing
+
+Run `make test` to run all unit tests:
+
+```
+make test
+```
+
+### Integration testing
+
+Run `make test-integration` to run integration tests:
+
+```
+make test-integration
+```
+
+### Component testing
+
+Run `make test-component` to run component tests:
+
+```
+make test-component
+```
+
 ## Troubleshooting
 
 ### Error: database error: --skip-update cannot be specified on the first run
@@ -180,7 +180,7 @@ Configuration of the adapter is done via environment variables at startup.
 If you set the value of the `SCANNER_TRIVY_SKIP_UPDATE` to `true`, make sure that you download the Trivy DB
 from [GitHub][trivy-db] and mount it in the `/home/scanner/.cache/trivy/db/trivy.db` path.
 
-### Error: failed to list releases: GET https://api.github.com/repos/aquasecurity/trivy-db/releases: 403 API rate limit exceeded for 66.170.99.2
+### Error: failed to list releases: GET https://api.github.com/repos/aquasecurity/trivy-db/releases: 403 API rate limit exceeded
 
 Trivy DB downloads from GitHub are subject to [rate limiting][gh-rate-limit]. Make sure that the Trivy DB is mounted
 and cached in the `/home/scanner/.cache/trivy/db/trivy.db` path. If, for any reason, it's not enough you can set the
@@ -211,7 +211,7 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 [trivy]: https://github.com/aquasecurity/trivy
 [trivy-db]: https://github.com/aquasecurity/trivy-db
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
-[image-vulnerability-scanning-proposal]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
+[harbor-pluggable-scanners]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
 [fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
 [issue-38]: https://github.com/aquasecurity/harbor-scanner-trivy/issues/38
