@@ -1,6 +1,9 @@
 package mock
 
-import "testing"
+import (
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
+	"testing"
+)
 
 // Expectation represents an expectation of a method being called and its return values.
 type Expectation struct {
@@ -26,8 +29,8 @@ func ApplyExpectations(t *testing.T, mock interface{}, expectations ...*Expectat
 		for _, e := range expectations {
 			m.On(e.Method, e.Args...).Return(e.ReturnArgs...)
 		}
-	case *Wrapper:
-		m := mock.(*Wrapper)
+	case *trivy.MockWrapper:
+		m := mock.(*trivy.MockWrapper)
 		for _, e := range expectations {
 			m.On(e.Method, e.Args...).Return(e.ReturnArgs...)
 		}

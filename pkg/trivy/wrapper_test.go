@@ -1,17 +1,16 @@
 package trivy
 
 import (
-	"golang.org/x/xerrors"
-	"strings"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
+	"github.com/stretchr/testify/require"
+	"os/exec"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-const (
-	emptyReport  = `[]`
-	sampleReport = `[{
-	"Target": "knqyf263/vuln-image (alpine 3.7.1)",
+var (
+	expectedReportJSON = `[{
+	"Target": "alpine:3.10.2",
 	"Vulnerabilities": [{
 		"VulnerabilityID": "CVE-2018-6543",
 		"PkgName": "binutils",
@@ -23,111 +22,86 @@ const (
 		],
 		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
 	}]
-},
-{
-	"Target": "node-app/package-lock.json",
-	"Vulnerabilities": [{
-		"VulnerabilityID": "CVE-2019-11358",
-		"PkgName": "jquery",
-		"InstalledVersion": "3.3.9",
-		"FixedVersion": "3.4.0",
-		"Severity": "MEDIUM",
-		"References": [
-			"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
-			"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html"
-		],
-		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
-	}]
-},
-{
-	"Target": "php-app/composer.lock",
-	"Vulnerabilities": [{
-		"VulnerabilityID": "CVE-2016-5385",
-		"PkgName": "guzzlehttp/guzzle",
-		"InstalledVersion": "6.2.0",
-		"FixedVersion": "6.2.1",
-		"Severity": "MEDIUM",
-		"References": [
-			"http://linux.oracle.com/cve/CVE-2016-5385.html"
-		],
-		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11"
-	}]
-},
-{
-	"Target": "python-app/Pipfile.lock",
-	"Vulnerabilities": null
-}
-]`
-)
-
-func TestWrapperParseScanReports(t *testing.T) {
-	testCases := []struct {
-		name           string
-		jsonOutput     string
-		expectedReport ScanReport
-		expectedError  error
-	}{
-		{
-			name:       "Should parse scan report with application dependencies",
-			jsonOutput: sampleReport,
-			expectedReport: ScanReport{
-				Target: "knqyf263/vuln-image (alpine 3.7.1)",
-				Vulnerabilities: []Vulnerability{
-					{
-						VulnerabilityID:  "CVE-2018-6543",
-						PkgName:          "binutils",
-						InstalledVersion: "2.30-r1",
-						FixedVersion:     "2.30-r2",
-						Severity:         "MEDIUM",
-						References: []string{
-							"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543",
-						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
-					},
-					{
-						VulnerabilityID:  "CVE-2019-11358",
-						PkgName:          "jquery",
-						InstalledVersion: "3.3.9",
-						FixedVersion:     "3.4.0",
-						Severity:         "MEDIUM",
-						References: []string{
-							"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
-							"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html",
-						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
-					},
-					{
-						VulnerabilityID:  "CVE-2016-5385",
-						PkgName:          "guzzlehttp/guzzle",
-						InstalledVersion: "6.2.0",
-						FixedVersion:     "6.2.1",
-						Severity:         "MEDIUM",
-						References: []string{
-							"http://linux.oracle.com/cve/CVE-2016-5385.html",
-						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
-					},
+}]`
+	expectedReport = ScanReport{
+		Target: "alpine:3.10.2",
+		Vulnerabilities: []Vulnerability{
+			{
+				VulnerabilityID:  "CVE-2018-6543",
+				PkgName:          "binutils",
+				InstalledVersion: "2.30-r1",
+				FixedVersion:     "2.30-r2",
+				Severity:         "MEDIUM",
+				References: []string{
+					"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543",
 				},
+				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 			},
 		},
-		{
-			name:          "Should return error when scan report is empty",
-			jsonOutput:    emptyReport,
-			expectedError: xerrors.New("expected at least one report"),
-		},
+	}
+)
+
+func TestWrapper_Scan(t *testing.T) {
+	ambassador := ext.NewMockAmbassador()
+	ambassador.On("Environ").Return([]string{"HTTP_PROXY=http://someproxy:7777"})
+	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
+
+	config := etc.Trivy{
+		CacheDir:      "/home/scanner/.cache/trivy",
+		ReportsDir:    "/home/scanner/.cache/reports",
+		DebugMode:     true,
+		VulnType:      "os,library",
+		Severity:      "CRITICAL,MEDIUM",
+		IgnoreUnfixed: true,
+		GitHubToken:   "<github_token>",
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			w := &wrapper{}
-			report, err := w.parseScanReports(strings.NewReader(tc.jsonOutput))
-			assert.Equal(t, tc.expectedReport, report)
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error())
-			default:
-				assert.NoError(t, err)
-			}
-		})
+	imageRef := ImageRef{
+		Name:     "alpine:3.10.2",
+		Auth:     RegistryAuth{Username: "dave.loper", Password: "s3cret"},
+		Insecure: true,
 	}
+
+	expectedCmdArgs := []string{
+		"/usr/local/bin/trivy",
+		"--debug",
+		"--ignore-unfixed",
+		"--no-progress",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--severity",
+		"CRITICAL,MEDIUM",
+		"--vuln-type",
+		"os,library",
+		"--format",
+		"json",
+		"--output",
+		"/home/scanner/.cache/reports/scan_report_1234567890.json",
+		"alpine:3.10.2",
+	}
+
+	expectedCmdEnvs := []string{
+		"HTTP_PROXY=http://someproxy:7777",
+		"TRIVY_USERNAME=dave.loper",
+		"TRIVY_PASSWORD=s3cret",
+		"TRIVY_NON_SSL=true",
+		"GITHUB_TOKEN=<github_token>",
+	}
+
+	ambassador.On("TempFile", "/home/scanner/.cache/reports", "scan_report_*.json").
+		Return(ext.NewFakeFile("/home/scanner/.cache/reports/scan_report_1234567890.json", expectedReportJSON), nil)
+	ambassador.On("Remove", "/home/scanner/.cache/reports/scan_report_1234567890.json").
+		Return(nil)
+	ambassador.On("RunCmd", &exec.Cmd{
+		Path: "/usr/local/bin/trivy",
+		Env:  expectedCmdEnvs,
+		Args: expectedCmdArgs},
+	).Return([]byte{}, nil)
+
+	report, err := NewWrapper(config, ambassador).Scan(imageRef)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedReport, report)
+
+	ambassador.AssertExpectations(t)
 }
