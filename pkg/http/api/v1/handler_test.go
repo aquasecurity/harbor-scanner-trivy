@@ -446,9 +446,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 	ambassador := ext.NewMockAmbassador()
 
 	config := etc.Trivy{
-		CacheDir:   "/home/scanner/.cache/trivy",
-		ReportsDir: "/home/scanner/.cache/reports",
-		DebugMode:  true,
+		CacheDir:  "/home/scanner/.cache/trivy",
+		DebugMode: true,
 	}
 	expectedCmdArgs := []string{
 		"/usr/local/bin/trivy",
@@ -457,20 +456,14 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		"/home/scanner/.cache/trivy",
 		"--format",
 		"json",
-		"--output",
-		"/home/scanner/.cache/reports/version_1234567890.json",
 	}
 
 	b, _ := json.Marshal(expectedVersion)
 	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
-	ambassador.On("TempFile", "/home/scanner/.cache/reports", "version_*.json").
-		Return(ext.NewFakeFile("/home/scanner/.cache/reports/version_1234567890.json", string(b)), nil)
-	ambassador.On("Remove", "/home/scanner/.cache/reports/version_1234567890.json").
-		Return(nil)
 	ambassador.On("RunCmd", &exec.Cmd{
 		Path: "/usr/local/bin/trivy",
 		Args: expectedCmdArgs},
-	).Return([]byte{}, nil)
+	).Return(b, nil)
 	wrapper := trivy.NewWrapper(config, ambassador)
 
 	rr := httptest.NewRecorder()

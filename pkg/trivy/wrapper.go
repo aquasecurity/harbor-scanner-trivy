@@ -3,7 +3,6 @@ package trivy
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"strings"
 
@@ -138,46 +137,31 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 }
 
 func (w *wrapper) GetVersion() (ttypes.VersionInfo, error) {
-	versionFile, err := w.ambassador.TempFile(w.config.ReportsDir, "version_*.json")
-	if err != nil {
-		return ttypes.VersionInfo{}, err
-	}
-	log.WithField("path", versionFile.Name()).Debug("Saving version output to tmp file")
-	defer func() {
-		log.WithField("path", versionFile.Name()).Debug("Removing version output tmp file")
-		err := w.ambassador.Remove(versionFile.Name())
-		if err != nil {
-			log.WithError(err).Warn("Error while removing version output tmp file")
-		}
-	}()
-
-	cmd, err := w.prepareVersionCmd(versionFile.Name())
+	cmd, err := w.prepareVersionCmd()
 	if err != nil {
 		return ttypes.VersionInfo{}, err
 	}
 
-	stdout, err := w.ambassador.RunCmd(cmd)
+	versionOutput, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"exit_code": cmd.ProcessState.ExitCode(),
-			"std_out":   string(stdout),
+			"std_out":   string(versionOutput),
 		}).Error("Running trivy failed")
-		return ttypes.VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(stdout))
+		return ttypes.VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(versionOutput))
 	}
 
-	b, _ := ioutil.ReadAll(versionFile)
 	var vi ttypes.VersionInfo
-	_ = json.Unmarshal(b, &vi)
+	_ = json.Unmarshal(versionOutput, &vi)
 
 	return vi, nil
 }
 
-func (w *wrapper) prepareVersionCmd(outputFile string) (*exec.Cmd, error) {
+func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
 	args := []string{
 		"--version",
 		"--cache-dir", w.config.CacheDir,
 		"--format", "json",
-		"--output", outputFile,
 	}
 
 	name, err := w.ambassador.LookPath(trivyCmd)
