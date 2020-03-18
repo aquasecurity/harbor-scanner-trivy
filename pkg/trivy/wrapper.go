@@ -47,7 +47,7 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return 
+		return
 	}
 	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
@@ -62,6 +62,8 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 	if err != nil {
 		return
 	}
+
+	log.WithFields(log.Fields{"path": cmd.Path, "args": cmd.Args}).Trace("Exec command with args")
 
 	stdout, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
@@ -100,6 +102,10 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 
 	if w.config.DebugMode {
 		args = append([]string{"--debug"}, args...)
+	}
+
+	if w.config.SkipUpdate {
+		args = append([]string{"--skip-update"}, args...)
 	}
 
 	name, err := w.ambassador.LookPath(trivyCmd)

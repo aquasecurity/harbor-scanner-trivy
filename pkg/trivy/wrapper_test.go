@@ -53,6 +53,7 @@ func TestWrapper_Scan(t *testing.T) {
 		VulnType:      "os,library",
 		Severity:      "CRITICAL,MEDIUM",
 		IgnoreUnfixed: true,
+		SkipUpdate:    true,
 		GitHubToken:   "<github_token>",
 	}
 
@@ -64,6 +65,7 @@ func TestWrapper_Scan(t *testing.T) {
 
 	expectedCmdArgs := []string{
 		"/usr/local/bin/trivy",
+		"--skip-update",
 		"--debug",
 		"--ignore-unfixed",
 		"--no-progress",

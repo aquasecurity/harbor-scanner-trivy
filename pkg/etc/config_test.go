@@ -99,6 +99,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_VULN_TYPE":      "os,library",
 				"SCANNER_TRIVY_SEVERITY":       "CRITICAL",
 				"SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+				"SCANNER_TRIVY_SKIP_UPDATE":    "true",
 				"SCANNER_TRIVY_GITHUB_TOKEN":   "<GITHUB_TOKEN>",
 
 				"SCANNER_STORE_REDIS_URL":             "redis://harbor-harbor-redis:6379",
@@ -121,6 +122,7 @@ func TestGetConfig(t *testing.T) {
 					VulnType:      "os,library",
 					Severity:      "CRITICAL",
 					IgnoreUnfixed: true,
+					SkipUpdate:    true,
 					GitHubToken:   "<GITHUB_TOKEN>",
 				},
 				RedisStore: RedisStore{

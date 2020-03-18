@@ -85,7 +85,6 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 		})
 		return
 	}
-	log.Debugf("Enqueued scan job: %v", scanJob)
 
 	scanResponse := harbor.ScanResponse{ID: scanJob.ID}
 
