@@ -6,8 +6,8 @@
 
 # Harbor Scanner Adapter for Trivy
 
-The Harbor [Scanner Adapter][image-vulnerability-scanning-proposal] for [Trivy][trivy-url] is a service that translates
-the [Harbor][harbor-url] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
+The Harbor [Scanner Adapter][image-vulnerability-scanning-proposal] for [Trivy][trivy] is a service that translates
+the [Harbor][harbor] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
 reports on images stored in Harbor registry as part of its vulnerability scan feature.
 
 ## TOC
@@ -24,6 +24,7 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
   - [Kubernetes](#kubernetes)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -151,7 +152,8 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_VULN_TYPE`                 | `os`                               | Comma-separated list of vulnerability types. Possible values `os` and `library`      |
 | `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
 | `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
-| `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | GitHub token to authenticate API requests (see [rate limit][gh-rate-limit])          |
+| `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |
+| `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | The GitHub access token to download [Trivy DB][trivy-db] (see [GitHub rate limiting][gh-rate-limit]) |
 | `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
 | `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |
@@ -170,6 +172,19 @@ Configuration of the adapter is done via environment variables at startup.
 
 - [Architecture](./docs/ARCHITECTURE.md): architectural decisions behind designing harbor-scanner-trivy.
 - [Releases](./docs/RELEASES.md): how to release a new version of harbor-scanner-trivy.
+
+## Troubleshooting
+
+### Error: database error: --skip-update cannot be specified on the first run
+
+If you set the value of the `SCANNER_TRIVY_SKIP_UPDATE` to `true`, make sure that you download the Trivy DB
+from [GitHub][trivy-db] and mount it in the `/home/scanner/.cache/trivy/db/trivy.db` path.
+
+### Error: failed to list releases: GET https://api.github.com/repos/aquasecurity/trivy-db/releases: 403 API rate limit exceeded for 66.170.99.2
+
+Trivy DB downloads from GitHub are subject to [rate limiting][gh-rate-limit]. Make sure that the Trivy DB is mounted
+and cached in the `/home/scanner/.cache/trivy/db/trivy.db` path. If, for any reason, it's not enough you can set the
+value of the `SCANNER_TRIVY_GITHUB_TOKEN` environment variable (authenticated requests get a higher rate limit).
 
 ## Contributing
 
@@ -192,8 +207,9 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 [license]: https://github.com/aquasecurity/harbor-scanner-trivy/blob/master/LICENSE
 
 [minikube-url]: https://github.com/kubernetes/minikube
-[harbor-url]: https://github.com/goharbor/harbor
-[trivy-url]: https://github.com/aquasecurity/trivy
+[harbor]: https://github.com/goharbor/harbor
+[trivy]: https://github.com/aquasecurity/trivy
+[trivy-db]: https://github.com/aquasecurity/trivy-db
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [image-vulnerability-scanning-proposal]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
