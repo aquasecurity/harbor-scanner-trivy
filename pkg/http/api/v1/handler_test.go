@@ -20,16 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	expectedVersion = trivy.VersionInfo{
-		Trivy: "v0.5.2-17-g3c9af62",
-		VulnerabilityDB: trivy.Metadata{
-			NextUpdate: time.Unix(1584507644, 0).UTC(),
-			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
-		},
-	}
-)
-
 func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 	testCases := []struct {
 		Name          string
@@ -433,49 +423,56 @@ func TestRequestHandler_GetReady(t *testing.T) {
 }
 
 func TestRequestHandler_GetMetadata(t *testing.T) {
-	enqueuer := mock.NewEnqueuer()
-	store := mock.NewStore()
-	wrapper := trivy.NewMockWrapper()
-	wrapper.On("GetVersion").Return(expectedVersion, nil)
+	testCases := []struct {
+		name             string
+		mockedVersion    trivy.VersionInfo
+		mockedError      error
+		expectedHTTPCode int
+		expectedResp     string
+		expectedError    error
+	}{
+		{
+			name: "happy path",
+			mockedVersion: trivy.VersionInfo{
+				Trivy: "v0.5.2-17-g3c9af62",
+				VulnerabilityDB: trivy.Metadata{
+					NextUpdate: time.Unix(1584507644, 0).UTC(),
+					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
+				},
+			},
+			expectedHTTPCode: http.StatusOK,
+			expectedResp: `{"scanner":{"name":"Trivy","vendor":"Aqua Security","version":"Unknown"},"capabilities":[{"consumes_mime_types":["application/vnd.oci.image.manifest.v1+json","application/vnd.docker.distribution.manifest.v2+json"],"produces_mime_types":["application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"]}],"properties":{"harbor.scanner-adapter/scanner-type":"os-package-vulnerability","harbor.scanner-adapter/vulnerability-database-next-update-at":"2020-03-18T05:00:44Z","harbor.scanner-adapter/vulnerability-database-updated-at":"2020-03-18T07:47:24Z","org.label-schema.build-date":"2019-01-03T13:40","org.label-schema.vcs":"https://github.com/aquasecurity/harbor-scanner-trivy","org.label-schema.vcs-ref":"abc","org.label-schema.version":"0.1"}}
+`,
+		},
+		{
+			name:             "sad path, failed to get version",
+			mockedError:      errors.New("get version failed"),
+			expectedHTTPCode: http.StatusInternalServerError,
+			expectedResp:     "Internal Server Error\n",
+		},
+	}
 
-	rr := httptest.NewRecorder()
+	for _, tc := range testCases {
+		enqueuer := mock.NewEnqueuer()
+		store := mock.NewStore()
+		wrapper := trivy.NewMockWrapper()
+		wrapper.On("GetVersion").Return(tc.mockedVersion, tc.mockedError)
 
-	r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
-	require.NoError(t, err)
+		rr := httptest.NewRecorder()
 
-	NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
-		enqueuer, store, wrapper).ServeHTTP(rr, r)
+		r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
+		require.NoError(t, err, tc.name)
 
-	rs := rr.Result()
+		NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			enqueuer, store, wrapper).ServeHTTP(rr, r)
 
-	assert.Equal(t, http.StatusOK, rs.StatusCode)
-	assert.JSONEq(t, `{
-  "scanner": {
-    "name": "Trivy",
-    "vendor": "Aqua Security",
-    "version": "Unknown"
-  },
-  "capabilities": [
-    {
-      "consumes_mime_types": [
-        "application/vnd.oci.image.manifest.v1+json",
-        "application/vnd.docker.distribution.manifest.v2+json"
-      ],
-      "produces_mime_types": [
-        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
-      ]
-    }
-  ],
-  "properties": {
-    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-    "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
-    "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
-    "org.label-schema.version": "0.1",
-    "org.label-schema.build-date": "2019-01-03T13:40",
-    "org.label-schema.vcs-ref": "abc",
-    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy"
-  }
-}`, rr.Body.String())
-	enqueuer.AssertExpectations(t)
-	store.AssertExpectations(t)
+		rs := rr.Result()
+
+		assert.Equal(t, tc.expectedHTTPCode, rs.StatusCode, tc.name)
+		assert.Equal(t, tc.expectedResp, rr.Body.String(), tc.name)
+
+		enqueuer.AssertExpectations(t)
+		store.AssertExpectations(t)
+	}
+
 }

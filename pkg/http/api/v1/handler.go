@@ -191,7 +191,12 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
-	vi, _ := h.wrapper.GetVersion()
+	vi, err := h.wrapper.GetVersion()
+	if err != nil {
+		log.WithError(err).Error("Error while retrieving vulnerability DB version")
+		h.SendInternalServerError(res)
+		return
+	}
 
 	metadata := &harbor.ScannerAdapterMetadata{
 		Scanner: etc.GetScannerMetadata(),
