@@ -10,8 +10,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-
-	ttypes "github.com/aquasecurity/trivy/pkg/types"
 )
 
 const (
@@ -32,7 +30,7 @@ type RegistryAuth struct {
 
 type Wrapper interface {
 	Scan(imageRef ImageRef) (ScanReport, error)
-	GetVersion() (ttypes.VersionInfo, error)
+	GetVersion() (VersionInfo, error)
 }
 
 type wrapper struct {
@@ -136,10 +134,10 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	return cmd, nil
 }
 
-func (w *wrapper) GetVersion() (ttypes.VersionInfo, error) {
+func (w *wrapper) GetVersion() (VersionInfo, error) {
 	cmd, err := w.prepareVersionCmd()
 	if err != nil {
-		return ttypes.VersionInfo{}, err
+		return VersionInfo{}, err
 	}
 
 	versionOutput, err := w.ambassador.RunCmd(cmd)
@@ -148,10 +146,10 @@ func (w *wrapper) GetVersion() (ttypes.VersionInfo, error) {
 			"exit_code": cmd.ProcessState.ExitCode(),
 			"std_out":   string(versionOutput),
 		}).Error("Running trivy failed")
-		return ttypes.VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(versionOutput))
+		return VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(versionOutput))
 	}
 
-	var vi ttypes.VersionInfo
+	var vi VersionInfo
 	_ = json.Unmarshal(versionOutput, &vi)
 
 	return vi, nil

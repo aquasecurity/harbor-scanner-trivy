@@ -8,8 +8,6 @@ import (
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	ttypes "github.com/aquasecurity/trivy/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,11 +43,9 @@ var (
 		},
 	}
 
-	expectedVersion = ttypes.VersionInfo{
+	expectedVersion = VersionInfo{
 		Trivy: "v0.5.2-17-g3c9af62",
-		VulnerabilityDB: db.Metadata{
-			Version:    1,
-			Type:       1,
+		VulnerabilityDB: Metadata{
 			NextUpdate: time.Unix(1584507644, 0).UTC(),
 			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 		},
