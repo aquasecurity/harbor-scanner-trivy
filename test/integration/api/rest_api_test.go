@@ -4,6 +4,15 @@ package api
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
@@ -11,12 +20,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestRestApi is an integration test for the REST API adapter.
@@ -28,8 +31,9 @@ func TestRestApi(t *testing.T) {
 
 	enqueuer := mock.NewEnqueuer()
 	store := mock.NewStore()
+	wrapper := trivy.NewMockWrapper()
 
-	app := v1.NewAPIHandler(etc.BuildInfo{Version:"1.0", Commit:"abc", Date:"2019-01-04T12:40"},enqueuer, store)
+	app := v1.NewAPIHandler(etc.BuildInfo{Version: "1.0", Commit: "abc", Date: "2019-01-04T12:40"}, enqueuer, store, wrapper)
 
 	ts := httptest.NewServer(app)
 	defer ts.Close()
@@ -147,6 +151,14 @@ func TestRestApi(t *testing.T) {
 	})
 
 	t.Run("GET /api/v1/metadata", func(t *testing.T) {
+		wrapper.On("GetVersion").Return(trivy.VersionInfo{
+			Trivy: "v0.5.2-17-g3c9af62",
+			VulnerabilityDB: trivy.Metadata{
+				NextUpdate: time.Unix(1584507644, 0).UTC(),
+				UpdatedAt:  time.Unix(1584517644, 0).UTC(),
+			},
+		}, nil)
+
 		rs, err := ts.Client().Get(ts.URL + "/api/v1/metadata")
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rs.StatusCode)
@@ -173,6 +185,8 @@ func TestRestApi(t *testing.T) {
   ],
   "properties": {
     "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+    "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
+    "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
     "org.label-schema.version": "1.0",
     "org.label-schema.build-date": "2019-01-04T12:40",
     "org.label-schema.vcs-ref": "abc",
