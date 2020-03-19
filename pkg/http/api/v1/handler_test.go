@@ -1,18 +1,15 @@
 package v1
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
@@ -438,28 +435,8 @@ func TestRequestHandler_GetReady(t *testing.T) {
 func TestRequestHandler_GetMetadata(t *testing.T) {
 	enqueuer := mock.NewEnqueuer()
 	store := mock.NewStore()
-	ambassador := ext.NewMockAmbassador()
-
-	config := etc.Trivy{
-		CacheDir:  "/home/scanner/.cache/trivy",
-		DebugMode: true,
-	}
-	expectedCmdArgs := []string{
-		"/usr/local/bin/trivy",
-		"--version",
-		"--cache-dir",
-		"/home/scanner/.cache/trivy",
-		"--format",
-		"json",
-	}
-
-	b, _ := json.Marshal(expectedVersion)
-	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
-	ambassador.On("RunCmd", &exec.Cmd{
-		Path: "/usr/local/bin/trivy",
-		Args: expectedCmdArgs},
-	).Return(b, nil)
-	wrapper := trivy.NewWrapper(config, ambassador)
+	wrapper := trivy.NewMockWrapper()
+	wrapper.On("GetVersion").Return(expectedVersion, nil)
 
 	rr := httptest.NewRecorder()
 

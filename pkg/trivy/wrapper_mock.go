@@ -9,7 +9,8 @@ type MockWrapper struct {
 }
 
 func (w *MockWrapper) GetVersion() (VersionInfo, error) {
-	panic("implement me!")
+	args := w.Called()
+	return args.Get(0).(VersionInfo), args.Error(1)
 }
 
 func NewMockWrapper() *MockWrapper {
