@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
@@ -207,8 +208,8 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		},
 		Properties: map[string]string{
 			"harbor.scanner-adapter/scanner-type":                          "os-package-vulnerability",
-			"harbor.scanner-adapter/vulnerability-database-updated-at":     vi.VulnerabilityDB.UpdatedAt.String(),
-			"harbor.scanner-adapter/vulnerability-database-next-update-at": vi.VulnerabilityDB.NextUpdate.String(),
+			"harbor.scanner-adapter/vulnerability-database-updated-at":     vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339),
+			"harbor.scanner-adapter/vulnerability-database-next-update-at": vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339),
 			"org.label-schema.version":                                     h.info.Version,
 			"org.label-schema.build-date":                                  h.info.Date,
 			"org.label-schema.vcs-ref":                                     h.info.Commit,

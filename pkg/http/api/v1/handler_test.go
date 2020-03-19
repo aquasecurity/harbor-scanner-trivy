@@ -11,9 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	ttypes "github.com/aquasecurity/trivy/pkg/types"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
@@ -27,11 +24,9 @@ import (
 )
 
 var (
-	expectedVersion = ttypes.VersionInfo{
+	expectedVersion = trivy.VersionInfo{
 		Trivy: "v0.5.2-17-g3c9af62",
-		VulnerabilityDB: db.Metadata{
-			Version:    1,
-			Type:       1,
+		VulnerabilityDB: trivy.Metadata{
 			NextUpdate: time.Unix(1584507644, 0).UTC(),
 			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 		},
@@ -496,8 +491,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
   ],
   "properties": {
     "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-    "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18 05:00:44 +0000 UTC",
-    "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18 07:47:24 +0000 UTC",
+    "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
+    "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
     "org.label-schema.version": "0.1",
     "org.label-schema.build-date": "2019-01-03T13:40",
     "org.label-schema.vcs-ref": "abc",
