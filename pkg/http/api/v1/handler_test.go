@@ -441,14 +441,43 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 				},
 			},
 			expectedHTTPCode: http.StatusOK,
-			expectedResp: `{"scanner":{"name":"Trivy","vendor":"Aqua Security","version":"Unknown"},"capabilities":[{"consumes_mime_types":["application/vnd.oci.image.manifest.v1+json","application/vnd.docker.distribution.manifest.v2+json"],"produces_mime_types":["application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"]}],"properties":{"harbor.scanner-adapter/scanner-type":"os-package-vulnerability","harbor.scanner-adapter/vulnerability-database-next-update-at":"2020-03-18T05:00:44Z","harbor.scanner-adapter/vulnerability-database-updated-at":"2020-03-18T07:47:24Z","org.label-schema.build-date":"2019-01-03T13:40","org.label-schema.vcs":"https://github.com/aquasecurity/harbor-scanner-trivy","org.label-schema.vcs-ref":"abc","org.label-schema.version":"0.1"}}
-`,
+			expectedResp: `{
+   "scanner":{
+      "name":"Trivy",
+      "vendor":"Aqua Security",
+      "version":"Unknown"
+   },
+   "capabilities":[
+      {
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+         ]
+      }
+   ],
+   "properties":{
+      "harbor.scanner-adapter/scanner-type":"os-package-vulnerability",
+      "harbor.scanner-adapter/vulnerability-database-next-update-at":"2020-03-18T05:00:44Z",
+      "harbor.scanner-adapter/vulnerability-database-updated-at":"2020-03-18T07:47:24Z",
+      "org.label-schema.build-date":"2019-01-03T13:40",
+      "org.label-schema.vcs":"https://github.com/aquasecurity/harbor-scanner-trivy",
+      "org.label-schema.vcs-ref":"abc",
+      "org.label-schema.version":"0.1"
+   }
+}`,
 		},
 		{
 			name:             "sad path, failed to get version",
 			mockedError:      errors.New("get version failed"),
 			expectedHTTPCode: http.StatusInternalServerError,
-			expectedResp:     "Internal Server Error\n",
+			expectedResp: `{
+   "error":{
+      "message":"cannot retrieve vulnerability DB version"
+   }
+}`,
 		},
 	}
 
@@ -469,10 +498,11 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		rs := rr.Result()
 
 		assert.Equal(t, tc.expectedHTTPCode, rs.StatusCode, tc.name)
-		assert.Equal(t, tc.expectedResp, rr.Body.String(), tc.name)
+		assert.JSONEq(t, tc.expectedResp, rr.Body.String(), tc.name)
 
 		enqueuer.AssertExpectations(t)
 		store.AssertExpectations(t)
+		wrapper.AssertExpectations(t)
 	}
 
 }

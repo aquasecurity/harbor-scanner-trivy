@@ -194,7 +194,10 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 	vi, err := h.wrapper.GetVersion()
 	if err != nil {
 		log.WithError(err).Error("Error while retrieving vulnerability DB version")
-		h.SendInternalServerError(res)
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusInternalServerError,
+			Message:  "cannot retrieve vulnerability DB version",
+		})
 		return
 	}
 
