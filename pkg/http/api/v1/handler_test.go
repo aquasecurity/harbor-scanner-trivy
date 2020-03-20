@@ -432,7 +432,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		expectedError    error
 	}{
 		{
-			name: "happy path",
+			name: "Should respond with a valid Metadata JSON and HTTP 200 OK",
 			mockedVersion: trivy.VersionInfo{
 				Trivy: "v0.5.2-17-g3c9af62",
 				VulnerabilityDB: trivy.Metadata{
@@ -470,7 +470,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 }`,
 		},
 		{
-			name:             "sad path, failed to get version",
+			name:             "Should respond with an error and HTTP 500 Internal Server Error when GetVersion fails",
 			mockedError:      errors.New("get version failed"),
 			expectedHTTPCode: http.StatusInternalServerError,
 			expectedResp: `{
