@@ -8,6 +8,11 @@ type MockWrapper struct {
 	mock.Mock
 }
 
+func (w *MockWrapper) GetVersion() (VersionInfo, error) {
+	args := w.Called()
+	return args.Get(0).(VersionInfo), args.Error(1)
+}
+
 func NewMockWrapper() *MockWrapper {
 	return &MockWrapper{}
 }

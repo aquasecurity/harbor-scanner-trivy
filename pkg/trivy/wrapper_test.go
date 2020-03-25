@@ -1,11 +1,14 @@
 package trivy
 
 import (
+	"encoding/json"
+	"os/exec"
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	"github.com/stretchr/testify/require"
-	"os/exec"
-	"testing"
 )
 
 var (
@@ -37,6 +40,14 @@ var (
 				},
 				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 			},
+		},
+	}
+
+	expectedVersion = VersionInfo{
+		Trivy: "v0.5.2-17-g3c9af62",
+		VulnerabilityDB: Metadata{
+			NextUpdate: time.Unix(1584507644, 0).UTC(),
+			UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 		},
 	}
 )
@@ -104,6 +115,37 @@ func TestWrapper_Scan(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, expectedReport, report)
+
+	ambassador.AssertExpectations(t)
+}
+
+func TestWrapper_GetVersion(t *testing.T) {
+	ambassador := ext.NewMockAmbassador()
+	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
+
+	config := etc.Trivy{
+		CacheDir:  "/home/scanner/.cache/trivy",
+		DebugMode: true,
+	}
+
+	expectedCmdArgs := []string{
+		"/usr/local/bin/trivy",
+		"--version",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--format",
+		"json",
+	}
+
+	b, _ := json.Marshal(expectedVersion)
+	ambassador.On("RunCmd", &exec.Cmd{
+		Path: "/usr/local/bin/trivy",
+		Args: expectedCmdArgs},
+	).Return(b, nil)
+
+	vi, err := NewWrapper(config, ambassador).GetVersion()
+	require.NoError(t, err)
+	require.Equal(t, expectedVersion, vi)
 
 	ambassador.AssertExpectations(t)
 }

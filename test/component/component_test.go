@@ -5,6 +5,11 @@ package component
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/scanner"
@@ -13,13 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"net/url"
-	"path/filepath"
-	"testing"
 )
 
 var (
-	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.2"}
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.3"}
 )
 
 const (
@@ -38,6 +40,14 @@ const (
 	adapterImage = "aquasec/harbor-scanner-trivy:dev"
 	adapterPort  = "8080/tcp"
 )
+
+type LogConsumer struct {
+	Msgs []string
+}
+
+func (g *LogConsumer) Accept(l tc.Log) {
+	g.Msgs = append(g.Msgs, string(l.Content))
+}
 
 func TestComponent(t *testing.T) {
 	if testing.Short() {
@@ -107,9 +117,20 @@ func TestComponent(t *testing.T) {
 		WaitingFor: wait.ForLog("Starting API server without TLS"),
 	})
 	require.NoError(t, err)
-	defer func() { _ = adapterC.Terminate(ctx) }()
 	err = adapterC.Start(ctx)
 	require.NoError(t, err)
+	defer func() { _ = adapterC.Terminate(ctx) }()
+
+	adapterLogs := &LogConsumer{}
+	err = adapterC.StartLogProducer(ctx)
+	require.NoError(t, err)
+	defer func() {
+		_ = adapterC.StopLogProducer()
+		if t.Failed() {
+			t.Logf("adatper logs\n%v", adapterLogs.Msgs)
+		}
+	}()
+	adapterC.FollowOutput(adapterLogs)
 
 	registryExternalURL, err := GetRegistryExternalURL(registryC, registryPort)
 	require.NoError(t, err)
@@ -176,6 +197,10 @@ func TestComponent(t *testing.T) {
 				t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
 			}
 		})
+	}
+
+	if t.Failed() {
+		time.Sleep(15 * time.Second)
 	}
 }
 

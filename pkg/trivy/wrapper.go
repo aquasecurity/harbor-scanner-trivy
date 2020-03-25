@@ -1,13 +1,15 @@
 package trivy
 
 import (
+	"encoding/json"
 	"fmt"
+	"os/exec"
+	"strings"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"os/exec"
-	"strings"
 )
 
 const (
@@ -28,6 +30,7 @@ type RegistryAuth struct {
 
 type Wrapper interface {
 	Scan(imageRef ImageRef) (ScanReport, error)
+	GetVersion() (VersionInfo, error)
 }
 
 type wrapper struct {
@@ -124,8 +127,46 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if imageRef.Insecure {
 		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
 	}
+
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
 	}
+	return cmd, nil
+}
+
+func (w *wrapper) GetVersion() (VersionInfo, error) {
+	cmd, err := w.prepareVersionCmd()
+	if err != nil {
+		return VersionInfo{}, err
+	}
+
+	versionOutput, err := w.ambassador.RunCmd(cmd)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"exit_code": cmd.ProcessState.ExitCode(),
+			"std_out":   string(versionOutput),
+		}).Error("Running trivy failed")
+		return VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(versionOutput))
+	}
+
+	var vi VersionInfo
+	_ = json.Unmarshal(versionOutput, &vi)
+
+	return vi, nil
+}
+
+func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
+	args := []string{
+		"--version",
+		"--cache-dir", w.config.CacheDir,
+		"--format", "json",
+	}
+
+	name, err := w.ambassador.LookPath(trivyCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command(name, args...)
 	return cmd, nil
 }

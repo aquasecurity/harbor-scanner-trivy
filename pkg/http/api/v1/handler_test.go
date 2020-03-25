@@ -3,12 +3,14 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
@@ -175,7 +177,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			r, err := http.NewRequest(http.MethodPost, "/api/v1/scan", strings.NewReader(tc.requestBody))
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -370,7 +372,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			r, err := http.NewRequest(http.MethodGet, "/api/v1/scan/job:123/report", nil)
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -393,7 +395,7 @@ func TestRequestHandler_GetHealthy(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/healthy", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -411,7 +413,7 @@ func TestRequestHandler_GetReady(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/ready", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -421,44 +423,86 @@ func TestRequestHandler_GetReady(t *testing.T) {
 }
 
 func TestRequestHandler_GetMetadata(t *testing.T) {
-	enqueuer := mock.NewEnqueuer()
-	store := mock.NewStore()
+	testCases := []struct {
+		name             string
+		mockedVersion    trivy.VersionInfo
+		mockedError      error
+		expectedHTTPCode int
+		expectedResp     string
+		expectedError    error
+	}{
+		{
+			name: "Should respond with a valid Metadata JSON and HTTP 200 OK",
+			mockedVersion: trivy.VersionInfo{
+				Trivy: "v0.5.2-17-g3c9af62",
+				VulnerabilityDB: trivy.Metadata{
+					NextUpdate: time.Unix(1584507644, 0).UTC(),
+					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
+				},
+			},
+			expectedHTTPCode: http.StatusOK,
+			expectedResp: `{
+   "scanner":{
+      "name":"Trivy",
+      "vendor":"Aqua Security",
+      "version":"Unknown"
+   },
+   "capabilities":[
+      {
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+         ]
+      }
+   ],
+   "properties":{
+      "harbor.scanner-adapter/scanner-type":"os-package-vulnerability",
+      "harbor.scanner-adapter/vulnerability-database-next-update-at":"2020-03-18T05:00:44Z",
+      "harbor.scanner-adapter/vulnerability-database-updated-at":"2020-03-18T07:47:24Z",
+      "org.label-schema.build-date":"2019-01-03T13:40",
+      "org.label-schema.vcs":"https://github.com/aquasecurity/harbor-scanner-trivy",
+      "org.label-schema.vcs-ref":"abc",
+      "org.label-schema.version":"0.1"
+   }
+}`,
+		},
+		{
+			name:             "Should respond with an error and HTTP 500 Internal Server Error when GetVersion fails",
+			mockedError:      errors.New("get version failed"),
+			expectedHTTPCode: http.StatusInternalServerError,
+			expectedResp: `{
+   "error":{
+      "message":"cannot retrieve vulnerability DB version"
+   }
+}`,
+		},
+	}
 
-	rr := httptest.NewRecorder()
+	for _, tc := range testCases {
+		enqueuer := mock.NewEnqueuer()
+		store := mock.NewStore()
+		wrapper := trivy.NewMockWrapper()
+		wrapper.On("GetVersion").Return(tc.mockedVersion, tc.mockedError)
 
-	r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
-	require.NoError(t, err)
+		rr := httptest.NewRecorder()
 
-	NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"}, enqueuer, store).ServeHTTP(rr, r)
+		r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
+		require.NoError(t, err, tc.name)
 
-	rs := rr.Result()
+		NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			enqueuer, store, wrapper).ServeHTTP(rr, r)
 
-	assert.Equal(t, http.StatusOK, rs.StatusCode)
-	assert.JSONEq(t, `{
-  "scanner": {
-    "name": "Trivy",
-    "vendor": "Aqua Security",
-    "version": "Unknown"
-  },
-  "capabilities": [
-    {
-      "consumes_mime_types": [
-        "application/vnd.oci.image.manifest.v1+json",
-        "application/vnd.docker.distribution.manifest.v2+json"
-      ],
-      "produces_mime_types": [
-        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
-      ]
-    }
-  ],
-  "properties": {
-    "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-    "org.label-schema.version": "0.1",
-    "org.label-schema.build-date": "2019-01-03T13:40",
-    "org.label-schema.vcs-ref": "abc",
-    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy"
-  }
-}`, rr.Body.String())
-	enqueuer.AssertExpectations(t)
-	store.AssertExpectations(t)
+		rs := rr.Result()
+
+		assert.Equal(t, tc.expectedHTTPCode, rs.StatusCode, tc.name)
+		assert.JSONEq(t, tc.expectedResp, rr.Body.String(), tc.name)
+
+		enqueuer.AssertExpectations(t)
+		store.AssertExpectations(t)
+		wrapper.AssertExpectations(t)
+	}
+
 }

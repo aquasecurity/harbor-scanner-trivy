@@ -2,14 +2,26 @@ package trivy
 
 import (
 	"encoding/json"
+	"io"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"io"
 )
 
 type ScanReport struct {
 	Target          string          `json:"Target"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities"`
+}
+
+type Metadata struct {
+	NextUpdate time.Time
+	UpdatedAt  time.Time
+}
+
+type VersionInfo struct {
+	Trivy           string   `json:",omitempty"`
+	VulnerabilityDB Metadata `json:",omitempty"`
 }
 
 type Vulnerability struct {

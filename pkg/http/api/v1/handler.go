@@ -3,17 +3,20 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"net/url"
 )
 
 const (
@@ -24,14 +27,16 @@ type requestHandler struct {
 	info     etc.BuildInfo
 	enqueuer queue.Enqueuer
 	store    persistence.Store
+	wrapper  trivy.Wrapper
 	api.BaseHandler
 }
 
-func NewAPIHandler(info etc.BuildInfo, enqueuer queue.Enqueuer, store persistence.Store) http.Handler {
+func NewAPIHandler(info etc.BuildInfo, enqueuer queue.Enqueuer, store persistence.Store, wrapper trivy.Wrapper) http.Handler {
 	handler := &requestHandler{
 		info:     info,
 		enqueuer: enqueuer,
 		store:    store,
+		wrapper:  wrapper,
 	}
 
 	router := mux.NewRouter()
@@ -186,6 +191,16 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
+	vi, err := h.wrapper.GetVersion()
+	if err != nil {
+		log.WithError(err).Error("Error while retrieving vulnerability DB version")
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusInternalServerError,
+			Message:  "cannot retrieve vulnerability DB version",
+		})
+		return
+	}
+
 	metadata := &harbor.ScannerAdapterMetadata{
 		Scanner: etc.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
@@ -200,11 +215,13 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 			},
 		},
 		Properties: map[string]string{
-			"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-			"org.label-schema.version":            h.info.Version,
-			"org.label-schema.build-date":         h.info.Date,
-			"org.label-schema.vcs-ref":            h.info.Commit,
-			"org.label-schema.vcs":                "https://github.com/aquasecurity/harbor-scanner-trivy",
+			"harbor.scanner-adapter/scanner-type":                          "os-package-vulnerability",
+			"harbor.scanner-adapter/vulnerability-database-updated-at":     vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339),
+			"harbor.scanner-adapter/vulnerability-database-next-update-at": vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339),
+			"org.label-schema.version":                                     h.info.Version,
+			"org.label-schema.build-date":                                  h.info.Date,
+			"org.label-schema.vcs-ref":                                     h.info.Commit,
+			"org.label-schema.vcs":                                         "https://github.com/aquasecurity/harbor-scanner-trivy",
 		},
 	}
 	h.WriteJSON(res, metadata, api.MimeTypeMetadata, http.StatusOK)
