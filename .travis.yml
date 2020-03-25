@@ -21,7 +21,6 @@ script:
   - make lint
   - make test
   - make test-integration
-  - docker network ls
   - make test-component
   - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 
