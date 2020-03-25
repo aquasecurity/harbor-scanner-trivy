@@ -5,6 +5,10 @@ package component
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"testing"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/scanner"
@@ -13,13 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"net/url"
-	"path/filepath"
-	"testing"
 )
 
 var (
-	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.2"}
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.5.3"}
 )
 
 const (
