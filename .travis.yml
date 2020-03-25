@@ -21,7 +21,8 @@ script:
   - make lint
   - make test
   - make test-integration
-  - make test-component
+  # Uncomment the line belowe when we resolve https://github.com/aquasecurity/harbor-scanner-trivy/issues/90
+  # - make test-component
   - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 
 after_success:
