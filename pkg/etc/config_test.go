@@ -1,13 +1,14 @@
 package etc
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
-	"time"
 )
 
 type Envs map[string]string
@@ -65,7 +66,7 @@ func TestGetConfig(t *testing.T) {
 				Trivy: Trivy{
 					CacheDir:    "/home/scanner/.cache/trivy",
 					ReportsDir:  "/home/scanner/.cache/reports",
-					VulnType:    "os",
+					VulnType:    "os,library",
 					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
 					GitHubToken: "",
 				},

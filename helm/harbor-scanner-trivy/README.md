@@ -81,11 +81,11 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.api.tlsKey`                  | The absolute path to the x509 private key file                          |                |
 | `scanner.api.readTimeout`             | The maximum duration for reading the entire request, including the body | `15s`          |
 | `scanner.api.writeTimeout`            | The maximum duration before timing out writes of the response           | `15s`          |
-| `scanner.api.idleTimeout`             | The maximum amount of time to wait for the next request when keep-alives are enabled | `60s`     |
+| `scanner.api.idleTimeout`             | The maximum amount of time to wait for the next request when keep-alives are enabled | `60s` |
 | `scanner.trivy.cacheDir`              | Trivy cache directory                                                   | `/home/scanner/.cache/trivy`   |
 | `scanner.trivy.reportsDir`            | Trivy reports directory                                                 | `/home/scanner/.cache/reports` |
-| `scanner.trivy.debugMode`             | The flag to enable or disable Trivy debug mode                          | `false`        |
-| `scanner.trivy.vulnType`              | Comma-separated list of vulnerability types. Possible values `os` and `library` | `os`   |
+| `scanner.trivy.debugMode`             | The flag to enable or disable Trivy debug mode                          | `false` |
+| `scanner.trivy.vulnType`              | Comma-separated list of vulnerability types. Possible values are `os` and `library`. | `os,library` |
 | `scanner.trivy.severity`              | Comma-separated list of vulnerabilities severities to be displayed      | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
 | `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`        |
 | `scanner.trivy.skipUpdate`            | The flag to enable or disable Trivy DB downloads from GitHub            | `false`        |
