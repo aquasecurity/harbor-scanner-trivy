@@ -44,9 +44,13 @@ scanner:
   trivy:
     cacheDir: "/home/scanner/.cache/trivy"
     reportsDir: "/home/scanner/.cache/reports"
+    # debugMode the flag to enable Trivy debug mode
     debugMode: false
-    vulnType: "os"
+    # vulnType a comma-separated list of vulnerability types. Possible values are `os` and `library`.
+    vulnType: "os,library"
+    # severity a comma-separated list of vulnerabilities severities to be displayed
     severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    # ignoreUnfixed the flag to display only fixed vulnerabilities
     ignoreUnfixed: false
     # skipUpdate the flag to enable or disable Trivy DB downloads from GitHub
     #

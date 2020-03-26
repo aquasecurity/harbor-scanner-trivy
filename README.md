@@ -119,7 +119,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_CACHE_DIR`                 | `/home/scanner/.cache/trivy`       | Trivy cache directory                                                                |
 | `SCANNER_TRIVY_REPORTS_DIR`               | `/home/scanner/.cache/reports`     | Trivy reports directory                                                              |
 | `SCANNER_TRIVY_DEBUG_MODE`                | `false`                            | The flag to enable or disable Trivy debug mode                                       |
-| `SCANNER_TRIVY_VULN_TYPE`                 | `os`                               | Comma-separated list of vulnerability types. Possible values `os` and `library`      |
+| `SCANNER_TRIVY_VULN_TYPE`                 | `os,library`                       | Comma-separated list of vulnerability types. Possible values are `os` and `library`. |
 | `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
 | `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
 | `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |

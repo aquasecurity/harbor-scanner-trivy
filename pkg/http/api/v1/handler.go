@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
@@ -23,17 +24,25 @@ const (
 	pathVarScanRequestID = "scan_request_id"
 )
 
+const (
+	propertyScannerType    = "harbor.scanner-adapter/scanner-type"
+	propertyDBUpdatedAt    = "harbor.scanner-adapter/vulnerability-database-updated-at"
+	propertyDBNextUpdateAt = "harbor.scanner-adapter/vulnerability-database-next-update-at"
+)
+
 type requestHandler struct {
 	info     etc.BuildInfo
+	config   etc.Config
 	enqueuer queue.Enqueuer
 	store    persistence.Store
 	wrapper  trivy.Wrapper
 	api.BaseHandler
 }
 
-func NewAPIHandler(info etc.BuildInfo, enqueuer queue.Enqueuer, store persistence.Store, wrapper trivy.Wrapper) http.Handler {
+func NewAPIHandler(info etc.BuildInfo, config etc.Config, enqueuer queue.Enqueuer, store persistence.Store, wrapper trivy.Wrapper) http.Handler {
 	handler := &requestHandler{
 		info:     info,
+		config:   config,
 		enqueuer: enqueuer,
 		store:    store,
 		wrapper:  wrapper,
@@ -201,6 +210,26 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	properties := map[string]string{
+		propertyScannerType: "os-package-vulnerability",
+		propertyDBUpdatedAt: vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339),
+
+		"org.label-schema.version":    h.info.Version,
+		"org.label-schema.build-date": h.info.Date,
+		"org.label-schema.vcs-ref":    h.info.Commit,
+		"org.label-schema.vcs":        "https://github.com/aquasecurity/harbor-scanner-trivy",
+
+		"com.github.aquasecurity.trivy.skipUpdate":    strconv.FormatBool(h.config.Trivy.SkipUpdate),
+		"com.github.aquasecurity.trivy.ignoreUnfixed": strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
+		"com.github.aquasecurity.trivy.debugMode":     strconv.FormatBool(h.config.Trivy.DebugMode),
+		"com.github.aquasecurity.trivy.vulnType":      h.config.Trivy.VulnType,
+		"com.github.aquasecurity.trivy.severity":      h.config.Trivy.Severity,
+	}
+
+	if !h.config.Trivy.SkipUpdate {
+		properties[propertyDBNextUpdateAt] = vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339)
+	}
+
 	metadata := &harbor.ScannerAdapterMetadata{
 		Scanner: etc.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
@@ -214,15 +243,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 				},
 			},
 		},
-		Properties: map[string]string{
-			"harbor.scanner-adapter/scanner-type":                          "os-package-vulnerability",
-			"harbor.scanner-adapter/vulnerability-database-updated-at":     vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339),
-			"harbor.scanner-adapter/vulnerability-database-next-update-at": vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339),
-			"org.label-schema.version":                                     h.info.Version,
-			"org.label-schema.build-date":                                  h.info.Date,
-			"org.label-schema.vcs-ref":                                     h.info.Commit,
-			"org.label-schema.vcs":                                         "https://github.com/aquasecurity/harbor-scanner-trivy",
-		},
+		Properties: properties,
 	}
 	h.WriteJSON(res, metadata, api.MimeTypeMetadata, http.StatusOK)
 }

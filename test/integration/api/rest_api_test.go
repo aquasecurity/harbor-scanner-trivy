@@ -11,10 +11,11 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
@@ -33,7 +34,13 @@ func TestRestApi(t *testing.T) {
 	store := mock.NewStore()
 	wrapper := trivy.NewMockWrapper()
 
-	app := v1.NewAPIHandler(etc.BuildInfo{Version: "1.0", Commit: "abc", Date: "2019-01-04T12:40"}, enqueuer, store, wrapper)
+	app := v1.NewAPIHandler(etc.BuildInfo{Version: "1.0", Commit: "abc", Date: "2019-01-04T12:40"}, etc.Config{Trivy: etc.Trivy{
+		SkipUpdate:    false,
+		IgnoreUnfixed: true,
+		DebugMode:     true,
+		VulnType:      "os,library",
+		Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+	}}, enqueuer, store, wrapper)
 
 	ts := httptest.NewServer(app)
 	defer ts.Close()
@@ -190,7 +197,12 @@ func TestRestApi(t *testing.T) {
     "org.label-schema.version": "1.0",
     "org.label-schema.build-date": "2019-01-04T12:40",
     "org.label-schema.vcs-ref": "abc",
-    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy"
+    "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+    "com.github.aquasecurity.trivy.skipUpdate": "false",
+    "com.github.aquasecurity.trivy.ignoreUnfixed": "true",
+    "com.github.aquasecurity.trivy.debugMode": "true",
+    "com.github.aquasecurity.trivy.vulnType": "os,library",
+    "com.github.aquasecurity.trivy.severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   }
 }`, string(bodyBytes))
 	})

@@ -56,7 +56,7 @@ func run(info etc.BuildInfo) error {
 
 	store := redis.NewStore(config.RedisStore)
 	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
-	apiHandler := v1.NewAPIHandler(info, enqueuer, store, trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador))
+	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador))
 	apiServer := api.NewServer(config.API, apiHandler)
 
 	shutdownComplete := make(chan struct{})

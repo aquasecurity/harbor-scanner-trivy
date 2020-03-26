@@ -177,7 +177,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			r, err := http.NewRequest(http.MethodPost, "/api/v1/scan", strings.NewReader(tc.requestBody))
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, etc.Config{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -372,7 +372,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			r, err := http.NewRequest(http.MethodGet, "/api/v1/scan/job:123/report", nil)
 			require.NoError(t, err)
 
-			NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
+			NewAPIHandler(etc.BuildInfo{}, etc.Config{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 			assert.Equal(t, tc.expectedStatus, rr.Code)
 			assert.Equal(t, tc.expectedContentType, rr.Header().Get("Content-Type"))
@@ -395,7 +395,7 @@ func TestRequestHandler_GetHealthy(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/healthy", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, etc.Config{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -413,7 +413,7 @@ func TestRequestHandler_GetReady(t *testing.T) {
 	r, err := http.NewRequest(http.MethodGet, "/probe/ready", nil)
 	require.NoError(t, err)
 
-	NewAPIHandler(etc.BuildInfo{}, enqueuer, store, nil).ServeHTTP(rr, r)
+	NewAPIHandler(etc.BuildInfo{}, etc.Config{}, enqueuer, store, nil).ServeHTTP(rr, r)
 
 	rs := rr.Result()
 
@@ -425,14 +425,17 @@ func TestRequestHandler_GetReady(t *testing.T) {
 func TestRequestHandler_GetMetadata(t *testing.T) {
 	testCases := []struct {
 		name             string
+		mockedBuildInfo  etc.BuildInfo
 		mockedVersion    trivy.VersionInfo
+		mockedConfig     etc.Config
 		mockedError      error
 		expectedHTTPCode int
 		expectedResp     string
 		expectedError    error
 	}{
 		{
-			name: "Should respond with a valid Metadata JSON and HTTP 200 OK",
+			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK",
+			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
 			mockedVersion: trivy.VersionInfo{
 				Trivy: "v0.5.2-17-g3c9af62",
 				VulnerabilityDB: trivy.Metadata{
@@ -440,6 +443,13 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 				},
 			},
+			mockedConfig: etc.Config{Trivy: etc.Trivy{
+				SkipUpdate:    false,
+				IgnoreUnfixed: true,
+				DebugMode:     true,
+				VulnType:      "os,library",
+				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+			}},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
    "scanner":{
@@ -459,13 +469,18 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       }
    ],
    "properties":{
-      "harbor.scanner-adapter/scanner-type":"os-package-vulnerability",
-      "harbor.scanner-adapter/vulnerability-database-next-update-at":"2020-03-18T05:00:44Z",
-      "harbor.scanner-adapter/vulnerability-database-updated-at":"2020-03-18T07:47:24Z",
-      "org.label-schema.build-date":"2019-01-03T13:40",
-      "org.label-schema.vcs":"https://github.com/aquasecurity/harbor-scanner-trivy",
-      "org.label-schema.vcs-ref":"abc",
-      "org.label-schema.version":"0.1"
+      "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+      "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
+      "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
+      "org.label-schema.build-date": "2019-01-03T13:40",
+      "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+      "org.label-schema.vcs-ref": "abc",
+      "org.label-schema.version": "0.1",
+      "com.github.aquasecurity.trivy.skipUpdate": "false",
+      "com.github.aquasecurity.trivy.ignoreUnfixed": "true",
+      "com.github.aquasecurity.trivy.debugMode": "true",
+      "com.github.aquasecurity.trivy.vulnType": "os,library",
+      "com.github.aquasecurity.trivy.severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
    }
 }`,
 		},
@@ -492,8 +507,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
 		require.NoError(t, err, tc.name)
 
-		NewAPIHandler(etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
-			enqueuer, store, wrapper).ServeHTTP(rr, r)
+		NewAPIHandler(tc.mockedBuildInfo, tc.mockedConfig, enqueuer, store, wrapper).ServeHTTP(rr, r)
 
 		rs := rr.Result()
 
