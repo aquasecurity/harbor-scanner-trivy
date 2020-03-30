@@ -121,15 +121,18 @@ func TestWrapper_Scan(t *testing.T) {
 
 func TestWrapper_GetVersion(t *testing.T) {
 	ambassador := ext.NewMockAmbassador()
+	ambassador.On("Environ").Return([]string{"HTTP_PROXY=http://someproxy:7777"})
 	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
 
 	config := etc.Trivy{
-		CacheDir:  "/home/scanner/.cache/trivy",
-		DebugMode: true,
+		CacheDir:   "/home/scanner/.cache/trivy",
+		DebugMode:  true,
+		SkipUpdate: true,
 	}
 
 	expectedCmdArgs := []string{
 		"/usr/local/bin/trivy",
+		"--skip-update",
 		"--version",
 		"--cache-dir",
 		"/home/scanner/.cache/trivy",
@@ -140,7 +143,8 @@ func TestWrapper_GetVersion(t *testing.T) {
 	b, _ := json.Marshal(expectedVersion)
 	ambassador.On("RunCmd", &exec.Cmd{
 		Path: "/usr/local/bin/trivy",
-		Args: expectedCmdArgs},
+		Args: expectedCmdArgs,
+		Env:  []string{"HTTP_PROXY=http://someproxy:7777"}},
 	).Return(b, nil)
 
 	vi, err := NewWrapper(config, ambassador).GetVersion()

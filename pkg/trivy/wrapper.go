@@ -162,11 +162,20 @@ func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
 		"--format", "json",
 	}
 
+	if w.config.SkipUpdate {
+		args = append([]string{"--skip-update"}, args...)
+	}
+
 	name, err := w.ambassador.LookPath(trivyCmd)
 	if err != nil {
 		return nil, err
 	}
 
 	cmd := exec.Command(name, args...)
+	cmd.Env = w.ambassador.Environ()
+
+	if strings.TrimSpace(w.config.GitHubToken) != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
+	}
 	return cmd, nil
 }
