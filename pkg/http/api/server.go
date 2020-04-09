@@ -1,10 +1,11 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"net/http"
 )
 
 type Server struct {

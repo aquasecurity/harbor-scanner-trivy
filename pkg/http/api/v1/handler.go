@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"

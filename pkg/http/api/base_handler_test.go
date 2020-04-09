@@ -5,7 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+
 	"github.com/stretchr/testify/assert"
 )
 

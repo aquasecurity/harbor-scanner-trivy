@@ -10,7 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/scanner"
 	"github.com/docker/go-connections/nat"

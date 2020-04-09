@@ -2,13 +2,14 @@ package scan
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/xerrors"
-	"testing"
 )
 
 func TestController_Scan(t *testing.T) {

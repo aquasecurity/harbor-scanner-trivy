@@ -1,11 +1,12 @@
 package scan
 
 import (
+	"time"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 // Clock wraps the Now method. Introduced to allow replacing the global state with fixed clocks to facilitate testing.

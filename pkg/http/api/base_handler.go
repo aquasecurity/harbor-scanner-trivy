@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

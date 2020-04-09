@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 )
 
 type Store interface {

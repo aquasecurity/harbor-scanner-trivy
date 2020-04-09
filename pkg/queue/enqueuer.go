@@ -3,9 +3,10 @@ package queue
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"

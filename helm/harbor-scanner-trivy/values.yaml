@@ -4,7 +4,7 @@ fullnameOverride: ""
 image:
   registry: docker.io
   repository: aquasec/harbor-scanner-trivy
-  tag: 0.7.0
+  tag: 0.7.1
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -88,7 +88,7 @@ scanner:
     workerConcurrency: 1
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 8080
 
 # httpProxy the URL of the HTTP proxy server

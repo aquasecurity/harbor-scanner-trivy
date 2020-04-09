@@ -9,13 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

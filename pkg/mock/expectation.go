@@ -1,8 +1,9 @@
 package mock
 
 import (
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"testing"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 )
 
 // Expectation represents an expectation of a method being called and its return values.
