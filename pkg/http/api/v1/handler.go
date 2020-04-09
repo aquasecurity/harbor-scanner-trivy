@@ -200,20 +200,9 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	h.WriteJSON(res, scanJob.Report, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
 }
 
-func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request) {
-	vi, err := h.wrapper.GetVersion()
-	if err != nil {
-		log.WithError(err).Error("Error while retrieving vulnerability DB version")
-		h.WriteJSONError(res, harbor.Error{
-			HTTPCode: http.StatusInternalServerError,
-			Message:  "cannot retrieve vulnerability DB version",
-		})
-		return
-	}
-
+func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 	properties := map[string]string{
 		propertyScannerType: "os-package-vulnerability",
-		propertyDBUpdatedAt: vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339),
 
 		"org.label-schema.version":    h.info.Version,
 		"org.label-schema.build-date": h.info.Date,
@@ -227,7 +216,16 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, req *http.Request)
 		"com.github.aquasecurity.trivy.severity":      h.config.Trivy.Severity,
 	}
 
-	if !h.config.Trivy.SkipUpdate {
+	vi, err := h.wrapper.GetVersion()
+	if err != nil {
+		log.WithError(err).Error("Error while retrieving vulnerability DB version")
+	}
+
+	if err == nil {
+		properties[propertyDBUpdatedAt] = vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339)
+	}
+
+	if err == nil && !h.config.Trivy.SkipUpdate {
 		properties[propertyDBNextUpdateAt] = vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339)
 	}
 
