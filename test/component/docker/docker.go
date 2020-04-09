@@ -7,12 +7,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/opencontainers/go-digest"
 	"io"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/opencontainers/go-digest"
 )
 
 type RegistryConfig struct {

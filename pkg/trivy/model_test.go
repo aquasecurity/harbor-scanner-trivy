@@ -1,10 +1,11 @@
 package trivy
 
 import (
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/xerrors"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/xerrors"
 )
 
 const (

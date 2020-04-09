@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 )
 
 // Client is the API client that performs all operations against a Scanner Adapter.

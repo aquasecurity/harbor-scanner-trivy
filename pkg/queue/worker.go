@@ -2,9 +2,11 @@ package queue
 
 import (
 	"encoding/json"
+	"os"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	store "github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
@@ -12,7 +14,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"os"
 )
 
 type Worker interface {

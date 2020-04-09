@@ -1,7 +1,7 @@
 package job
 
 import (
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/model/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 )
 
 type ScanJobStatus int

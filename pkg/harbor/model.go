@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/xerrors"
 	"net/url"
 	"time"
+
+	"golang.org/x/xerrors"
 )
 
 // Severity represents the severity of a image/component in terms of vulnerability.
