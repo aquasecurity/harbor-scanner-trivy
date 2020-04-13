@@ -16,6 +16,7 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
   - [Prerequisites](#prerequisites)
   - [Build](#build)
   - [Running on Kubernetes](#running-on-kubernetes)
+  - [Running with Docker](#running-with-docker)
 - [Deployment](#deployment)
   - [Kubernetes](#kubernetes)
 - [Configuration](#configuration)
@@ -55,7 +56,7 @@ $ make docker-build
 
 ### Running on Kubernetes
 
-> In the following instructions I assume that you installed Harbor >= 1.10 with [Helm chart for Harbor][harbor-helm-chart]
+> I assume that you installed Harbor >= 1.10 with [Helm chart for Harbor][harbor-helm-chart]
 > in the `harbor` namespace, and it's accessible at https://core.harbor.domain.
 > ```
 > $ helm repo add harbor https://helm.goharbor.io
@@ -83,9 +84,110 @@ $ make docker-build
        --set "image.tag=dev"
    ```
 
+### Running with Docker
+
+> I assume that you installed Harbor >= 10 with an online or offline installer script,
+> and it's accessible at http://harbor.domain.
+> ```
+> $ wget https://github.com/goharbor/harbor/releases/download/v1.10.1/harbor-online-installer-v1.10.1.tgz
+> $ mkdir $HARBOR_HOME
+> $ tar -C $HARBOR_HOME -xvf harbor-online-installer-v1.10.1.tgz --strip-components 1
+> $ vim $HARBOR_HOME/harbor.yml
+> ```
+>
+> ```yaml
+> hostname: harbor-portal
+>
+> https:
+>   # port: 443
+>   # certificate: /your/certificate/path
+>   # private_key: /your/private/key/path
+>
+> data_volume: $HARBOR_HOME/data
+>
+> log:
+>   local:
+>     location: $HARBOR_HOME/logs
+> ```
+>
+> ```
+> $ $HARBOR_HOME/install.sh
+> ```
+
+1. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
+   ```
+   $ make docker-build
+   ```
+2. Create the config directory for the adapter service:
+   ```
+   $ mkdir -p $HARBOR_HOME/common/config/trivy-adapter
+   ```
+3. Create the `env` file to configure the adapter service:
+   ```
+   $ cat << EOF > $HARBOR_HOME/common/config/trivy-adapter/env
+   SCANNER_LOG_LEVEL=trace
+   SCANNER_STORE_REDIS_URL=redis://redis:6379
+   SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:6379
+   SCANNER_TRIVY_CACHE_DIR=/home/scanner/.cache/trivy
+   SCANNER_TRIVY_REPORTS_DIR=/home/scanner/.cache/reports
+   SCANNER_TRIVY_VULN_TYPE=os,library
+   SCANNER_TRIVY_SEVERITY=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+   SCANNER_TRIVY_IGNORE_UNFIXED=false
+   SCANNER_TRIVY_DEBUG_MODE=true
+   EOF
+   ```
+4. Create the data directories for the adapter service:
+   ```
+   $ mkdir -p $HARBOR_HOME/data/trivy-adapter/trivy
+   $ mkdir -p $HARBOR_HOME/data/trivy-adapter/reports
+   ```
+5. Create the `docker-compose.override.yml` to install the adapter service:
+   ```
+   $ cat << EOF > $HARBOR_HOME/docker-compose.override.yml
+   version: '2.3'
+   services:
+     trivy-adapter:
+       networks:
+         - harbor
+       container_name: trivy-adapter
+       image: docker.io/aquasec/harbor-scanner-trivy:dev
+       restart: always
+       cap_drop:
+         - ALL
+       cpu_quota: 50000
+       dns_search: .
+       depends_on:
+         - redis
+       volumes:
+         - type: bind
+           source: $HARBOR_HOME/data/trivy-adapter/trivy
+           target: /home/scanner/.cache/trivy
+         - type: bind
+           source: $HARBOR_HOME/data/trivy-adapter/reports
+           target: /home/scanner/.cache/reports
+       logging:
+         driver: "syslog"
+         options:
+           syslog-address: "tcp://127.0.0.1:1514"
+           tag: "trivy-adapter"
+       env_file:
+         $HARBOR_HOME/common/config/trivy-adapter/env
+   EOF
+   ```
+5. Start the adapter service:
+   ```
+   $ docker-compose \
+       -f $HARBOR_HOME/docker-compose.yml \
+       -f $HARBOR_HOME/docker-compose.override.yml \
+       up -d
+   ```
+
 ## Deployment
 
 ### Kubernetes
+
+> I assume that you installed Harbor >= 1.10 with [Helm chart for Harbor][harbor-helm-chart]
+> in the `harbor` namespace, and it's accessible at https://core.harbor.domain.
 
 1. Generate certificate and private key files:
    ```
@@ -166,7 +268,7 @@ correctly interacts with its collaborators, more coarse grained testing is requi
 Run `make test` to run all unit tests:
 
 ```
-make test
+$ make test
 ```
 
 ### Integration testing
@@ -174,7 +276,7 @@ make test
 Run `make test-integration` to run integration tests:
 
 ```
-make test-integration
+$ make test-integration
 ```
 
 ### Component testing
@@ -182,7 +284,7 @@ make test-integration
 Run `make test-component` to run component tests:
 
 ```
-make test-component
+$ make test-component
 ```
 
 ## Troubleshooting
