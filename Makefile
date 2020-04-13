@@ -17,7 +17,7 @@ test-component: container
 $(BINARY): $(SOURCES)
 	GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
 
-container: build
+docker-build: build
 	docker build --no-cache -t $(IMAGE) .
 
 lint:
