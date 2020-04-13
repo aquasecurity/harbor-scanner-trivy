@@ -2,9 +2,6 @@ language: go
 go:
   - "1.13"
 
-git:
-  depth: 1
-
 services:
   - docker
 
@@ -21,7 +18,7 @@ script:
   - make lint
   - make test
   - make test-integration
-  # Uncomment the line belowe when we resolve https://github.com/aquasecurity/harbor-scanner-trivy/issues/90
+  # Uncomment the line below when we resolve https://github.com/aquasecurity/harbor-scanner-trivy/issues/90
   # - make test-component
   - curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
 

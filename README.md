@@ -15,7 +15,7 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
 - [Getting started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Build](#build)
-  - [Running on minikube](#running-on-minikube)
+  - [Running on Kubernetes](#running-on-kubernetes)
 - [Deployment](#deployment)
   - [Kubernetes](#kubernetes)
 - [Configuration](#configuration)
@@ -37,22 +37,34 @@ and testing purposes. See [deployment](#deployment) for notes on how to deploy o
 
 * [Go (version 1.13)](https://golang.org/doc/devel/release.html#go1.13)
 * Docker
+* Harbor >= 1.10
 
 ### Build
 
 Run `make` to build the binary in `./scanner-trivy`:
 
 ```
-make
+$ make
 ```
 
 To build into a Docker container:
 
 ```
-make container
+$ make docker-build
 ```
 
-### Running on [minikube][minikube-url]
+### Running on Kubernetes
+
+> In the following instructions I assume that you installed Harbor >= 1.10 with [Helm chart for Harbor][harbor-helm-chart]
+> in the `harbor` namespace, and it's accessible at https://core.harbor.domain.
+> ```
+> $ helm repo add harbor https://helm.goharbor.io
+> $ helm repo update
+> $ kubectl create namespace harbor
+> $ helm install harbor harbor/harbor --version $HARBOR_CHART_VERSION \
+>     --namespace harbor \
+>     --set clair.enabled=false
+> ```
 
 1. Set up environment for the Docker client:
    ```
@@ -60,15 +72,15 @@ make container
    ```
 2. Build a Docker image `aquasec/harbor-scanner-trivy:dev`:
    ```
-   $ make container
+   $ make docker-build
    ```
 3. Install the `harbor-scanner-trivy` release with `helm`:
    ```
    $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
-                  --namespace harbor \
-                  --set "scanner.logLevel=trace" \
-                  --set "scanner.trivy.debugMode=true" \
-                  --set "image.tag=dev"
+       --namespace harbor \
+       --set "scanner.logLevel=trace" \
+       --set "scanner.trivy.debugMode=true" \
+       --set "image.tag=dev"
    ```
 
 ## Deployment
@@ -79,19 +91,19 @@ make container
    ```
    $ openssl genrsa -out tls.key 2048
    $ openssl req -new -x509 \
-                 -key tls.key \
-                 -out tls.crt \
-                 -days 365 \
-                 -subj /CN=harbor-scanner-trivy.harbor
+       -key tls.key \
+       -out tls.crt \
+       -days 365 \
+       -subj /CN=harbor-scanner-trivy.harbor
    ```
 2. Install the `harbor-scanner-trivy` chart:
    ```
    $ helm install harbor-scanner-trivy ./helm/harbor-scanner-trivy \
-                  --namespace harbor \
-                  --set service.port=8443 \
-                  --set scanner.api.tlsEnabled=true \
-                  --set scanner.api.tlsCertificate="`cat tls.crt`" \
-                  --set scanner.api.tlsKey="`cat tls.key`"
+       --namespace harbor \
+       --set service.port=8443 \
+       --set scanner.api.tlsEnabled=true \
+       --set scanner.api.tlsCertificate="$(cat tls.crt)" \
+       --set scanner.api.tlsKey="$(cat tls.key)"
    ```
 3. Configure the scanner adapter in Harbor web console.
    1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
@@ -101,7 +113,7 @@ make container
    3. If everything is fine click **ADD** to save the configuration.
 4. Select the **Trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
    ![Set Trivy as default scanner](docs/images/harbor_ui_set_trivy_as_default_scanner.png)
-   Make sure that the **Default** label is displayed next to the **Trivy** scanner's name.
+   Make sure the **Default** label is displayed next to the **Trivy** scanner's name.
 
 ## Configuration
 
@@ -140,8 +152,8 @@ Configuration of the adapter is done via environment variables at startup.
 
 ## Documentation
 
-- [Architecture](./docs/ARCHITECTURE.md): architectural decisions behind designing harbor-scanner-trivy.
-- [Releases](./docs/RELEASES.md): how to release a new version of harbor-scanner-trivy.
+- [Architecture](./docs/ARCHITECTURE.md) - architectural decisions behind designing harbor-scanner-trivy.
+- [Releases](./docs/RELEASES.md) - how to release a new version of harbor-scanner-trivy.
 
 ## Testing
 
@@ -193,7 +205,7 @@ requests.
 
 ## License
 
-This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [Apache 2.0](LICENSE) license.
 
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
@@ -208,11 +220,11 @@ This project is licensed under the Apache 2.0 license - see the [LICENSE](LICENS
 
 [minikube-url]: https://github.com/kubernetes/minikube
 [harbor]: https://github.com/goharbor/harbor
+[harbor-helm-chart]: https://github.com/goharbor/harbor-helm
 [trivy]: https://github.com/aquasecurity/trivy
 [trivy-db]: https://github.com/aquasecurity/trivy-db
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [harbor-pluggable-scanners]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
 [fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
-[issue-38]: https://github.com/aquasecurity/harbor-scanner-trivy/issues/38
 [gh-rate-limit]: https://github.com/aquasecurity/trivy#github-rate-limiting

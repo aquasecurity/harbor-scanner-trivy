@@ -90,10 +90,14 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "Should overwrite default config with environment variables",
 			envs: Envs{
-				"SCANNER_API_SERVER_ADDR":          ":4200",
-				"SCANNER_API_SERVER_READ_TIMEOUT":  "1h",
-				"SCANNER_API_SERVER_WRITE_TIMEOUT": "2m",
-				"SCANNER_API_SERVER_IDLE_TIMEOUT":  "3m10s",
+				"SCANNER_API_SERVER_ADDR":            ":4200",
+				"SCANNER_API_SERVER_TLS_CERTIFICATE": "/certs/tls.crt",
+				"SCANNER_API_SERVER_TLS_KEY":         "/certs/tls.key",
+				"SCANNER_API_SERVER_TLS_MIN_VERSION": "1.0",
+				"SCANNER_API_SERVER_TLS_MAX_VERSION": "1.2",
+				"SCANNER_API_SERVER_READ_TIMEOUT":    "1h",
+				"SCANNER_API_SERVER_WRITE_TIMEOUT":   "2m",
+				"SCANNER_API_SERVER_IDLE_TIMEOUT":    "3m10s",
 
 				"SCANNER_TRIVY_CACHE_DIR":      "/home/scanner/trivy-cache",
 				"SCANNER_TRIVY_REPORTS_DIR":    "/home/scanner/trivy-reports",
@@ -112,10 +116,12 @@ func TestGetConfig(t *testing.T) {
 			},
 			expectedConfig: Config{
 				API: API{
-					Addr:         ":4200",
-					ReadTimeout:  parseDuration(t, "1h"),
-					WriteTimeout: parseDuration(t, "2m"),
-					IdleTimeout:  parseDuration(t, "3m10s"),
+					Addr:           ":4200",
+					TLSCertificate: "/certs/tls.crt",
+					TLSKey:         "/certs/tls.key",
+					ReadTimeout:    parseDuration(t, "1h"),
+					WriteTimeout:   parseDuration(t, "2m"),
+					IdleTimeout:    parseDuration(t, "3m10s"),
 				},
 				Trivy: Trivy{
 					CacheDir:      "/home/scanner/trivy-cache",

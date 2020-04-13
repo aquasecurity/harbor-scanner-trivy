@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,7 +14,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
 )
 
 var (
@@ -49,7 +49,7 @@ func run(info etc.BuildInfo) error {
 
 	config, err := etc.GetConfig()
 	if err != nil {
-		return xerrors.Errorf("getting config: %w", err)
+		return fmt.Errorf("getting config: %w", err)
 	}
 
 	worker := queue.NewWorker(config.JobQueue)
