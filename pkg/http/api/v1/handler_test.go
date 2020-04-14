@@ -486,6 +486,51 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 }`,
 		},
 		{
+			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK, when there's no trivy Metadata present",
+			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			mockedVersion: trivy.VersionInfo{
+				Version: "v0.5.2-17-g3c9af62",
+			},
+			mockedConfig: etc.Config{Trivy: etc.Trivy{
+				SkipUpdate:    false,
+				IgnoreUnfixed: true,
+				DebugMode:     true,
+				VulnType:      "os,library",
+				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+			}},
+			expectedHTTPCode: http.StatusOK,
+			expectedResp: `{
+   "scanner":{
+      "name":"Trivy",
+      "vendor":"Aqua Security",
+      "version":"Unknown"
+   },
+   "capabilities":[
+      {
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+         ]
+      }
+   ],
+   "properties":{
+      "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+      "org.label-schema.build-date": "2019-01-03T13:40",
+      "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+      "org.label-schema.vcs-ref": "abc",
+      "org.label-schema.version": "0.1",
+      "com.github.aquasecurity.trivy.skipUpdate": "false",
+      "com.github.aquasecurity.trivy.ignoreUnfixed": "true",
+      "com.github.aquasecurity.trivy.debugMode": "true",
+      "com.github.aquasecurity.trivy.vulnType": "os,library",
+      "com.github.aquasecurity.trivy.severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+   }
+}`,
+		},
+		{
 			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK when GetVersion fails",
 			mockedError:     errors.New("get version failed"),
 			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
