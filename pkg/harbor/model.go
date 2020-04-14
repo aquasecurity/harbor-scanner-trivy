@@ -102,6 +102,11 @@ type ScanReport struct {
 	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
 }
 
+type Layer struct {
+	Digest string `json:"digest,omitempty"`
+	DiffID string `json:"diff_id,omitempty"`
+}
+
 // VulnerabilityItem is an item in the vulnerability result returned by vulnerability details API.
 type VulnerabilityItem struct {
 	ID          string   `json:"id"`
@@ -111,7 +116,7 @@ type VulnerabilityItem struct {
 	Severity    Severity `json:"severity"`
 	Description string   `json:"description"`
 	Links       []string `json:"links"`
-	LayerID     string   `json:"layer_id"`
+	Layer       *Layer   `json:"layer"`
 }
 
 type ScannerAdapterMetadata struct {

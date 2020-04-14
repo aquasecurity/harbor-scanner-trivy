@@ -51,7 +51,7 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanRepor
 			Severity:    t.toHarborSeverity(v.Severity),
 			Description: v.Description,
 			Links:       t.toLinks(v.References),
-			LayerID:     v.LayerID,
+			Layer:       t.toHarborLayer(v.Layer),
 		}
 	}
 
@@ -78,6 +78,17 @@ var trivyToHarborSeverityMap = map[string]harbor.Severity{
 	"MEDIUM":   harbor.SevMedium,
 	"LOW":      harbor.SevLow,
 	"UNKNOWN":  harbor.SevUnknown,
+}
+
+func (t *transformer) toHarborLayer(tLayer *trivy.Layer) (hLayer *harbor.Layer) {
+	if tLayer == nil {
+		return
+	}
+	hLayer = &harbor.Layer{
+		Digest: tLayer.Digest,
+		DiffID: tLayer.DiffID,
+	}
+	return
 }
 
 func (t *transformer) toHarborSeverity(severity string) harbor.Severity {

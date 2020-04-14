@@ -21,7 +21,9 @@ const (
 		"References": [
 			"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543"
 		],
-		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+		"Layer": {
+			"Digest": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+		}
 	}]
 },
 {
@@ -36,7 +38,9 @@ const (
 			"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
 			"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html"
 		],
-		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+		"Layer": {
+			"Digest": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+		}
 	}]
 },
 {
@@ -50,7 +54,9 @@ const (
 		"References": [
 			"http://linux.oracle.com/cve/CVE-2016-5385.html"
 		],
-		"LayerID": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11"
+		"Layer": {
+			"Digest": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11"
+		}
 	}]
 },
 {
@@ -82,7 +88,7 @@ func TestScanReportFrom(t *testing.T) {
 						References: []string{
 							"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6543",
 						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+						Layer: &Layer{Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"},
 					},
 					{
 						VulnerabilityID:  "CVE-2019-11358",
@@ -94,7 +100,7 @@ func TestScanReportFrom(t *testing.T) {
 							"http://packetstormsecurity.com/files/152787/dotCMS-5.1.1-Vulnerable-Dependencies.html",
 							"http://packetstormsecurity.com/files/153237/RetireJS-CORS-Issue-Script-Execution.html",
 						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+						Layer: &Layer{Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"},
 					},
 					{
 						VulnerabilityID:  "CVE-2016-5385",
@@ -105,7 +111,7 @@ func TestScanReportFrom(t *testing.T) {
 						References: []string{
 							"http://linux.oracle.com/cve/CVE-2016-5385.html",
 						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+						Layer: &Layer{Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11"},
 					},
 				},
 			},
