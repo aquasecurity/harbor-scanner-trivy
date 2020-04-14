@@ -15,13 +15,13 @@ type ScanReport struct {
 }
 
 type Metadata struct {
-	NextUpdate time.Time
-	UpdatedAt  time.Time
+	NextUpdate time.Time `json:"NextUpdate"`
+	UpdatedAt  time.Time `json:"UpdatedAt"`
 }
 
 type VersionInfo struct {
-	Trivy           string   `json:",omitempty"`
-	VulnerabilityDB Metadata `json:",omitempty"`
+	Version         string    `json:"Version,omitempty"`
+	VulnerabilityDB *Metadata `json:"VulnerabilityDB"`
 }
 
 type Vulnerability struct {

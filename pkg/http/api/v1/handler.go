@@ -221,11 +221,11 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		log.WithError(err).Error("Error while retrieving vulnerability DB version")
 	}
 
-	if err == nil {
+	if err == nil && vi.VulnerabilityDB != nil {
 		properties[propertyDBUpdatedAt] = vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339)
 	}
 
-	if err == nil && !h.config.Trivy.SkipUpdate {
+	if err == nil && vi.VulnerabilityDB != nil && !h.config.Trivy.SkipUpdate {
 		properties[propertyDBNextUpdateAt] = vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339)
 	}
 
