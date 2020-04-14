@@ -160,8 +160,8 @@ func TestRestApi(t *testing.T) {
 
 	t.Run("GET /api/v1/metadata", func(t *testing.T) {
 		wrapper.On("GetVersion").Return(trivy.VersionInfo{
-			Trivy: "v0.5.2-17-g3c9af62",
-			VulnerabilityDB: trivy.Metadata{
+			Version: "v0.5.2-17-g3c9af62",
+			VulnerabilityDB: &trivy.Metadata{
 				NextUpdate: time.Unix(1584507644, 0).UTC(),
 				UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 			},

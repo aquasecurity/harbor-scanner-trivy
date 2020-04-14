@@ -438,8 +438,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK",
 			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
 			mockedVersion: trivy.VersionInfo{
-				Trivy: "v0.5.2-17-g3c9af62",
-				VulnerabilityDB: trivy.Metadata{
+				Version: "v0.5.2-17-g3c9af62",
+				VulnerabilityDB: &trivy.Metadata{
 					NextUpdate: time.Unix(1584507644, 0).UTC(),
 					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 				},
