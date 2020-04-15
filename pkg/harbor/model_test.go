@@ -62,7 +62,7 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 					URL: `"http://foo%bar@www.example.com/"`,
 				},
 			},
-			expectedError: `parsing registry URL: parse "http://foo%bar@www.example.com/": first path segment in URL cannot contain colon`,
+			expectedError: `parsing registry URL: parse "\"http://foo%bar@www.example.com/\"": first path segment in URL cannot contain colon`,
 		},
 	}
 	for _, tc := range testCases {
@@ -70,12 +70,12 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 			imageRef, insecure, err := tc.request.GetImageRef()
 			switch {
 			case tc.expectedError != "":
-				assert.Equal(t, tc.expectedError, err.Error(), tc.name)
+				assert.EqualError(t, err, tc.expectedError)
 			default:
 				assert.NoError(t, err, tc.name)
+				assert.Equal(t, tc.expectedImageRef, imageRef, tc.name)
+				assert.Equal(t, tc.expectedInsecure, insecure)
 			}
-			assert.Equal(t, tc.expectedImageRef, imageRef, tc.name)
-			assert.Equal(t, tc.expectedInsecure, insecure)
 		})
 	}
 }

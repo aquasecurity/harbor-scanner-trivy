@@ -2,7 +2,6 @@ package queue
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
@@ -77,14 +76,6 @@ func (s *workerContext) controller() (controller scan.Controller, err error) {
 	config, err := etc.GetConfig()
 	if err != nil {
 		return nil, err
-	}
-
-	if _, err := os.Stat(config.Trivy.ReportsDir); os.IsNotExist(err) {
-		log.WithField("path", config.Trivy.ReportsDir).Debug("Creating reports dir")
-		err = os.MkdirAll(config.Trivy.ReportsDir, os.ModePerm)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
