@@ -66,6 +66,7 @@ func TestWrapper_Scan(t *testing.T) {
 		IgnoreUnfixed: true,
 		SkipUpdate:    true,
 		GitHubToken:   "<github_token>",
+		Insecure:      true,
 	}
 
 	imageRef := ImageRef{
@@ -99,6 +100,7 @@ func TestWrapper_Scan(t *testing.T) {
 		"TRIVY_PASSWORD=s3cret",
 		"TRIVY_NON_SSL=true",
 		"GITHUB_TOKEN=<github_token>",
+		"TRIVY_INSECURE=true",
 	}
 
 	ambassador.On("TempFile", "/home/scanner/.cache/reports", "scan_report_*.json").

@@ -69,6 +69,7 @@ func TestGetConfig(t *testing.T) {
 					ReportsDir:  "/home/scanner/.cache/reports",
 					VulnType:    "os,library",
 					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
 					GitHubToken: "",
 				},
 				RedisStore: RedisStore{
@@ -105,6 +106,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_VULN_TYPE":      "os,library",
 				"SCANNER_TRIVY_SEVERITY":       "CRITICAL",
 				"SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+				"SCANNER_TRIVY_INSECURE":       "true",
 				"SCANNER_TRIVY_SKIP_UPDATE":    "true",
 				"SCANNER_TRIVY_GITHUB_TOKEN":   "<GITHUB_TOKEN>",
 
@@ -131,6 +133,7 @@ func TestGetConfig(t *testing.T) {
 					Severity:      "CRITICAL",
 					IgnoreUnfixed: true,
 					SkipUpdate:    true,
+					Insecure:      true,
 					GitHubToken:   "<GITHUB_TOKEN>",
 				},
 				RedisStore: RedisStore{

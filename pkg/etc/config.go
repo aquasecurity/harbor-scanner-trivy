@@ -32,6 +32,7 @@ type Trivy struct {
 	IgnoreUnfixed bool   `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
 	SkipUpdate    bool   `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
 	GitHubToken   string `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
+	Insecure      bool   `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
 }
 
 type API struct {

@@ -90,6 +90,7 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`        |
 | `scanner.trivy.skipUpdate`            | The flag to enable or disable Trivy DB downloads from GitHub            | `false`        |
 | `scanner.trivy.gitHubToken`           | The GitHub access token to download Trivy DB                            |      |
+| `scanner.trivy.insecure`              | The flag to skip verifying registry certificate                         | `false` |
 | `scanner.store.redisURL`              | Redis server URI for a redis store                                      | `redis://harbor-harbor-redis:6379` |
 | `scanner.store.redisNamespace`        | A namespace for keys in a redis store                                   | `harbor.scanner.trivy:store`       |
 | `scanner.store.redisMaxActive`        | The max number of connections allocated by the pool for a redis store   | `5`  |

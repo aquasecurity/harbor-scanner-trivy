@@ -131,6 +131,11 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
 	}
+
+	if w.config.Insecure {
+		cmd.Env = append(cmd.Env, "TRIVY_INSECURE=true")
+	}
+
 	return cmd, nil
 }
 
