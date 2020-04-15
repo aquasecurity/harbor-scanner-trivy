@@ -71,6 +71,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "harbor-scanner-trivy.fullname" . }}
                   key: gitHubToken
+            - name: "SCANNER_TRIVY_INSECURE"
+              value: {{ .Values.scanner.trivy.insecure | default false | quote }}
             - name: "SCANNER_STORE_REDIS_URL"
               value: {{ .Values.scanner.store.redisURL | quote }}
             - name: "SCANNER_STORE_REDIS_NAMESPACE"

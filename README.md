@@ -136,6 +136,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
 | `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |
 | `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | The GitHub access token to download [Trivy DB][trivy-db] (see [GitHub rate limiting][gh-rate-limit]) |
+| `SCANNER_TRIVY_INSECURE`                  | `false`                            | The flag to skip verifying registry certificate                                      |
 | `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
 | `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |

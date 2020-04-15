@@ -74,6 +74,8 @@ scanner:
     # You can create a GitHub token by following the instructions in
     # https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line
     gitHubToken: ""
+    # insecure the flag to skip verifying registry certificate
+    insecure: false
   store:
     redisURL: "redis://harbor-harbor-redis:6379"
     redisNamespace: "harbor.scanner.trivy:store"
