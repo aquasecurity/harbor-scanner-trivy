@@ -51,6 +51,9 @@ func run(info etc.BuildInfo) error {
 	if err != nil {
 		return fmt.Errorf("getting config: %w", err)
 	}
+	if err = etc.Check(config); err != nil {
+		return fmt.Errorf("checking config: %w", err)
+	}
 
 	worker := queue.NewWorker(config.JobQueue)
 

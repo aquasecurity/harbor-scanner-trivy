@@ -166,7 +166,7 @@ correctly interacts with its collaborators, more coarse grained testing is requi
 Run `make test` to run all unit tests:
 
 ```
-make test
+$ make test
 ```
 
 ### Integration testing
@@ -174,7 +174,7 @@ make test
 Run `make test-integration` to run integration tests:
 
 ```
-make test-integration
+$ make test-integration
 ```
 
 ### Component testing
@@ -182,7 +182,7 @@ make test-integration
 Run `make test-component` to run component tests:
 
 ```
-make test-component
+$ make test-component
 ```
 
 ## Troubleshooting
