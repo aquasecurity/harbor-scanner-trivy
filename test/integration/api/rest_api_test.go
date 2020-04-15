@@ -35,13 +35,22 @@ func TestRestApi(t *testing.T) {
 	store := mock.NewStore()
 	wrapper := trivy.NewMockWrapper()
 
-	app := v1.NewAPIHandler(etc.BuildInfo{Version: "1.0", Commit: "abc", Date: "2019-01-04T12:40"}, etc.Config{Trivy: etc.Trivy{
-		SkipUpdate:    false,
-		IgnoreUnfixed: true,
-		DebugMode:     true,
-		VulnType:      "os,library",
-		Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-	}}, enqueuer, store, wrapper)
+	app := v1.NewAPIHandler(
+		etc.BuildInfo{
+			Version: "1.0",
+			Commit:  "abc",
+			Date:    "2019-01-04T12:40",
+		},
+		etc.Config{
+			Trivy: etc.Trivy{
+				SkipUpdate:    false,
+				IgnoreUnfixed: true,
+				DebugMode:     true,
+				Insecure:      true,
+				VulnType:      "os,library",
+				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+			},
+		}, enqueuer, store, wrapper)
 
 	ts := httptest.NewServer(app)
 	defer ts.Close()
@@ -112,7 +121,9 @@ func TestRestApi(t *testing.T) {
 						Links: []string{
 							"http://cve.com?id=CVE-2019-1111",
 						},
-						LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+						Layer: &harbor.Layer{
+							Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+						},
 					},
 				},
 			},
@@ -152,7 +163,9 @@ func TestRestApi(t *testing.T) {
       "links": [
         "http://cve.com?id=CVE-2019-1111"
       ],
-      "layer_id": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+      "layer": {
+        "digest": "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10"
+      }
     }
   ]
 }`, now.Format(time.RFC3339Nano)), string(bodyBytes))
@@ -202,6 +215,7 @@ func TestRestApi(t *testing.T) {
     "com.github.aquasecurity.trivy.skipUpdate": "false",
     "com.github.aquasecurity.trivy.ignoreUnfixed": "true",
     "com.github.aquasecurity.trivy.debugMode": "true",
+    "com.github.aquasecurity.trivy.insecure": "true",
     "com.github.aquasecurity.trivy.vulnType": "os,library",
     "com.github.aquasecurity.trivy.severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   }

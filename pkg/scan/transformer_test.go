@@ -40,7 +40,9 @@ func TestTransformer_Transform(t *testing.T) {
 					"http://cve.com?id=CVE-0000-0001",
 					"http://vendor.com?id=CVE-0000-0001",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				Layer: &trivy.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0002",
@@ -52,7 +54,9 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0002",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				Layer: &trivy.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0003",
@@ -64,7 +68,9 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0003",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				Layer: &trivy.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0004",
@@ -76,14 +82,18 @@ func TestTransformer_Transform(t *testing.T) {
 				References: []string{
 					"http://cve.com?id=CVE-0000-0004",
 				},
-				LayerID: "UNKNOWN",
+				Layer: &trivy.Layer{
+					Digest: "UNKNOWN",
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0005",
 				PkgName:          "PKG-05",
 				InstalledVersion: "PKG-05-VER",
 				Severity:         "~~~UNKNOWN~~~",
-				LayerID:          "",
+				Layer: &trivy.Layer{
+					Digest: "",
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0006",
@@ -117,7 +127,9 @@ func TestTransformer_Transform(t *testing.T) {
 					"http://cve.com?id=CVE-0000-0001",
 					"http://vendor.com?id=CVE-0000-0001",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				Layer: &harbor.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				},
 			},
 			{
 				ID:          "CVE-0000-0002",
@@ -129,7 +141,9 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0002",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				Layer: &harbor.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+				},
 			},
 			{
 				ID:          "CVE-0000-0003",
@@ -141,7 +155,9 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0003",
 				},
-				LayerID: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				Layer: &harbor.Layer{
+					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+				},
 			},
 			{
 				ID:          "CVE-0000-0004",
@@ -153,7 +169,9 @@ func TestTransformer_Transform(t *testing.T) {
 				Links: []string{
 					"http://cve.com?id=CVE-0000-0004",
 				},
-				LayerID: "UNKNOWN",
+				Layer: &harbor.Layer{
+					Digest: "UNKNOWN",
+				},
 			},
 			{
 				ID:       "CVE-0000-0005",
@@ -161,7 +179,9 @@ func TestTransformer_Transform(t *testing.T) {
 				Version:  "PKG-05-VER",
 				Severity: harbor.SevUnknown,
 				Links:    []string{},
-				LayerID:  "",
+				Layer: &harbor.Layer{
+					Digest: "",
+				},
 			},
 			{
 				ID:       "CVE-0000-0006",
@@ -169,7 +189,6 @@ func TestTransformer_Transform(t *testing.T) {
 				Version:  "PKG-06-VER",
 				Severity: harbor.SevUnknown,
 				Links:    []string{},
-				LayerID:  "",
 			},
 		},
 	}, hr)

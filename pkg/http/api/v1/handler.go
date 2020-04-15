@@ -212,6 +212,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"com.github.aquasecurity.trivy.skipUpdate":    strconv.FormatBool(h.config.Trivy.SkipUpdate),
 		"com.github.aquasecurity.trivy.ignoreUnfixed": strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
 		"com.github.aquasecurity.trivy.debugMode":     strconv.FormatBool(h.config.Trivy.DebugMode),
+		"com.github.aquasecurity.trivy.insecure":      strconv.FormatBool(h.config.Trivy.Insecure),
 		"com.github.aquasecurity.trivy.vulnType":      h.config.Trivy.VulnType,
 		"com.github.aquasecurity.trivy.severity":      h.config.Trivy.Severity,
 	}

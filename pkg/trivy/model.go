@@ -24,6 +24,11 @@ type VersionInfo struct {
 	VulnerabilityDB *Metadata `json:"VulnerabilityDB"`
 }
 
+type Layer struct {
+	Digest string `json:"Digest"`
+	DiffID string `json:"DiffID"`
+}
+
 type Vulnerability struct {
 	VulnerabilityID  string   `json:"VulnerabilityID"`
 	PkgName          string   `json:"PkgName"`
@@ -33,7 +38,7 @@ type Vulnerability struct {
 	Description      string   `json:"Description"`
 	Severity         string   `json:"Severity"`
 	References       []string `json:"References"`
-	LayerID          string   `json:"LayerID"`
+	Layer            *Layer   `json:"Layer"`
 }
 
 func ScanReportFrom(reportFile io.Reader) (report ScanReport, err error) {
