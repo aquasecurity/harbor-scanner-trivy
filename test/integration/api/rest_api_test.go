@@ -98,7 +98,7 @@ func TestRestApi(t *testing.T) {
 		store.On("Get", "job:123").Return(&job.ScanJob{
 			ID:     "job:123",
 			Status: job.Finished,
-			Report: harbor.ScanReport{
+			Report: &harbor.ScanReport{
 				GeneratedAt: now,
 				Artifact: harbor.Artifact{
 					Repository: "library/mongo",
