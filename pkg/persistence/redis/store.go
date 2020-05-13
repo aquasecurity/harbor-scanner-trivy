@@ -135,7 +135,7 @@ func (s *store) UpdateReport(scanJobID string, report harbor.ScanReport) error {
 		return err
 	}
 
-	scanJob.Report = report
+	scanJob.Report = &report
 	return s.update(*scanJob)
 }
 

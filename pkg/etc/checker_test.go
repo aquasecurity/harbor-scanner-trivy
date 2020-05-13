@@ -57,10 +57,12 @@ func TestCheck(t *testing.T) {
 		cacheDir := path.Join(tempDir, "cache")
 		reportsDir := path.Join(tempDir, "reports")
 
-		err = Check(Config{Trivy: Trivy{
-			CacheDir:   cacheDir,
-			ReportsDir: reportsDir,
-		}})
+		err = Check(Config{
+			DatabaseType: "redis",
+			Trivy: Trivy{
+				CacheDir:   cacheDir,
+				ReportsDir: reportsDir,
+			}})
 
 		assert.NoError(t, err)
 		assert.True(t, dirExists(cacheDir))
@@ -82,10 +84,13 @@ func TestCheck(t *testing.T) {
 		err = os.Mkdir(reportsDir, 0755)
 		require.NoError(t, err)
 
-		err = Check(Config{Trivy: Trivy{
-			CacheDir:   cacheDir,
-			ReportsDir: reportsDir,
-		}})
+		err = Check(Config{
+			DatabaseType: "redis",
+			Trivy: Trivy{
+				CacheDir:   cacheDir,
+				ReportsDir: reportsDir,
+			}})
+
 		assert.NoError(t, err)
 	})
 

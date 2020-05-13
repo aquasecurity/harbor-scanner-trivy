@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -50,7 +52,67 @@ func Check(config Config) (err error) {
 		}
 	}
 
+	dbType := strings.ToLower(config.DatabaseType)
+
+	if dbType != "redis" && dbType != "rethinkdb" {
+		return errors.New("DatabaseType must be either redis or rethinkdb")
+	}
+
+	if dbType == "rethinkdb" {
+		if err = checkRethinkConfig(config.Rethink); err != nil {
+			return fmt.Errorf("rethink configuration is invalid: %w", err)
+		}
+	}
+
 	return
+}
+
+func checkRethinkConfig(config Rethink) error {
+	if len(config.Addresses) == 0 {
+		return errors.New("at least one address must be provided")
+	}
+
+	if config.InitialCap < 0 {
+		return errors.New("InitialCap cannot be less than 0")
+	}
+
+	if config.MaxOpen < 1 {
+		return errors.New("MaxOpen cannot be less than 1")
+	}
+
+	if config.RootCA != "" && !fileExists(config.RootCA) {
+		return errors.New("RootCA file does not exist")
+	}
+
+	if config.ClientTLSCertificate != "" && !fileExists(config.ClientTLSCertificate) {
+		return errors.New("ClientTLSCertificate file does not exist")
+	}
+
+	if config.ClientTLSKey != "" && !fileExists(config.ClientTLSKey) {
+		return errors.New("ClientTLSKey file does not exist")
+	}
+
+	if config.Database == "" {
+		return errors.New("database is not configured")
+	}
+
+	if config.ScansTable == "" {
+		return errors.New("ScansTable is not configured")
+	}
+
+	if config.ScansTTL < time.Minute {
+		return errors.New("ScansTTL must be more than 1 minute")
+	}
+
+	if config.JobsTable == "" {
+		return errors.New("JobsTable is not configured")
+	}
+
+	if config.JobsConcurrency < 1 {
+		return errors.New("JobsConcurrency cannot be less than 1")
+	}
+
+	return nil
 }
 
 func ensureDirExists(path, description string) (err error) {

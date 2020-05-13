@@ -99,7 +99,7 @@ type ScanReport struct {
 	Artifact        Artifact            `json:"artifact"`
 	Scanner         Scanner             `json:"scanner"`
 	Severity        Severity            `json:"severity"`
-	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
+	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities,omitempty"`
 }
 
 type Layer struct {
@@ -114,9 +114,9 @@ type VulnerabilityItem struct {
 	Version     string   `json:"version"`
 	FixVersion  string   `json:"fix_version,omitempty"`
 	Severity    Severity `json:"severity"`
-	Description string   `json:"description"`
-	Links       []string `json:"links"`
-	Layer       *Layer   `json:"layer"`
+	Description string   `json:"description,omitempty"`
+	Links       []string `json:"links,omitempty"`
+	Layer       *Layer   `json:"layer,omitempty"`
 }
 
 type ScannerAdapterMetadata struct {

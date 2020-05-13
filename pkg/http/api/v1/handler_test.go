@@ -301,7 +301,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: job.Finished,
-					Report: harbor.ScanReport{
+					Report: &harbor.ScanReport{
 						GeneratedAt: now,
 						Artifact: harbor.Artifact{
 							Repository: "library/mongo",

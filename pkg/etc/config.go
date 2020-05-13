@@ -17,10 +17,12 @@ type BuildInfo struct {
 }
 
 type Config struct {
-	API        API
-	Trivy      Trivy
-	RedisStore RedisStore
-	JobQueue   JobQueue
+	DatabaseType   string `env:"SCANNER_DATABASE_TYPE" envDefault:"redis"`
+	API            API
+	Trivy          Trivy
+	RedisStore     RedisStore
+	JobQueue       JobQueue
+	Rethink        Rethink
 }
 
 type Trivy struct {
@@ -61,7 +63,26 @@ type JobQueue struct {
 	Namespace         string `env:"SCANNER_JOB_QUEUE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:job-queue"`
 	WorkerConcurrency int    `env:"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY" envDefault:"1"`
 	PoolMaxActive     int    `env:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
-	PoolMaxIdle       int    `end:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+	PoolMaxIdle       int    `env:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+}
+
+type Rethink struct {
+	Addresses            []string      `env:"SCANNER_RETHINK_ADDRESSES" envDefault:"localhost:28015"`
+
+	InitialCap           int           `env:"SCANNER_RETHINK_POOL_INITIAL_CAP" envDefault:"0"`
+	MaxOpen              int           `env:"SCANNER_RETHINK_POOL_MAX_OPEN" envDefault:"1"`
+
+	RootCA               string        `env:"SCANNER_RETHINK_ROOT_CA"`
+	ClientTLSCertificate string        `env:"SCANNER_RETHINK_CLIENT_TLS_CERTIFICATE"`
+	ClientTLSKey         string        `env:"SCANNER_RETHINK_CLIENT_TLS_KEY"`
+
+	Database             string        `env:"SCANNER_RETHINK_DATABASE" envDefault:"trivy"`
+
+	ScansTable           string        `env:"SCANNER_RETHINK_SCANS_TABLE" envDefault:"scans"`
+	ScansTTL             time.Duration `env:"SCANNER_RETHINK_SCANS_TTL" envDefault:"1h"`
+
+	JobsTable            string        `env:"SCANNER_RETHINK_JOBS_TABLE" envDefault:"jobs"`
+	JobsConcurrency      int           `env:"SCANNER_RETHINK_JOBS_CONCURRENCY" envDefault:"1"`
 }
 
 func GetLogLevel() logrus.Level {

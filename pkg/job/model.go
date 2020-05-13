@@ -23,6 +23,6 @@ func (s ScanJobStatus) String() string {
 type ScanJob struct {
 	ID     string            `json:"id"`
 	Status ScanJobStatus     `json:"status"`
-	Error  string            `json:"error"`
-	Report harbor.ScanReport `json:"report"`
+	Error  string            `json:"error,omitempty"`
+	Report *harbor.ScanReport `json:"report,omitempty"`
 }

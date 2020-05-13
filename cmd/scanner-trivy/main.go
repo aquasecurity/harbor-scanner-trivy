@@ -4,16 +4,22 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
+	rethinkdb2 "github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/rethinkdb"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue/rethinkdb"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -55,10 +61,21 @@ func run(info etc.BuildInfo) error {
 		return fmt.Errorf("checking config: %w", err)
 	}
 
-	worker := queue.NewWorker(config.JobQueue)
+	var (
+		store persistence.Store
+		worker queue.Worker
+		enqueuer queue.Enqueuer
+	)
 
-	store := redis.NewStore(config.RedisStore)
-	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
+	switch strings.ToLower(config.DatabaseType) {
+	case "redis":
+		store, worker, enqueuer = setupRedis(config)
+	case "rethinkdb":
+		store, worker, enqueuer = setupRethinkDb(config)
+	default:
+		return fmt.Errorf("invalid database type %s", config.DatabaseType)
+	}
+
 	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador))
 	apiServer := api.NewServer(config.API, apiHandler)
 
@@ -80,4 +97,27 @@ func run(info etc.BuildInfo) error {
 
 	<-shutdownComplete
 	return nil
+}
+
+func setupRedis(config etc.Config) (persistence.Store, queue.Worker, queue.Enqueuer) {
+	worker := queue.NewWorker(config.JobQueue)
+	store := redis.NewStore(config.RedisStore)
+	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
+
+	return store, worker, enqueuer
+}
+
+func setupRethinkDb(config etc.Config) (persistence.Store, queue.Worker, queue.Enqueuer) {
+	db, err := etc.GetRethinkdbConnection(config.Rethink)
+	if err != nil {
+		log.WithError(err).Fatalln("connection to rethinkdb failed")
+	}
+
+	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
+	store := rethinkdb2.NewStore(db, config.Rethink)
+	controller := scan.NewController(store, wrapper, scan.NewTransformer(&scan.SystemClock{}))
+	enqueuer := rethinkdb.NewEnqueuer(db, store, config.Rethink)
+	worker := rethinkdb.NewWorkerPool(db, controller, config.Rethink)
+
+	return store, worker, enqueuer
 }

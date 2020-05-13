@@ -17,4 +17,5 @@ require (
 	github.com/testcontainers/testcontainers-go v0.3.1
 	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+	gopkg.in/rethinkdb/rethinkdb-go.v6 v6.2.1
 )

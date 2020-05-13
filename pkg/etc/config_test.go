@@ -58,6 +58,7 @@ func TestGetConfig(t *testing.T) {
 		{
 			name: "Should return default config",
 			expectedConfig: Config{
+				DatabaseType: "redis",
 				API: API{
 					Addr:         ":8080",
 					ReadTimeout:  parseDuration(t, "15s"),
@@ -86,11 +87,26 @@ func TestGetConfig(t *testing.T) {
 					PoolMaxActive:     5,
 					PoolMaxIdle:       5,
 				},
+				Rethink: Rethink{
+					Addresses:            []string{"localhost:28015"},
+					InitialCap:           0,
+					MaxOpen:              1,
+					RootCA:               "",
+					ClientTLSCertificate: "",
+					ClientTLSKey:         "",
+					Database:             "trivy",
+					ScansTable:           "scans",
+					ScansTTL:             time.Hour,
+					JobsTable:            "jobs",
+					JobsConcurrency:      1,
+				},
 			},
 		},
 		{
 			name: "Should overwrite default config with environment variables",
 			envs: Envs{
+				"SCANNER_DATABASE_TYPE": "rethinkdb",
+
 				"SCANNER_API_SERVER_ADDR":            ":4200",
 				"SCANNER_API_SERVER_TLS_CERTIFICATE": "/certs/tls.crt",
 				"SCANNER_API_SERVER_TLS_KEY":         "/certs/tls.key",
@@ -115,8 +131,21 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_STORE_REDIS_POOL_MAX_ACTIVE": "3",
 				"SCANNER_STORE_REDIS_POOL_MAX_IDLE":   "7",
 				"SCANNER_STORE_REDIS_SCAN_JOB_TTL":    "2h45m15s",
+
+				"SCANNER_RETHINK_ADDRESSES":              "10.10.10.10:28015,20.20.20.20:28015",
+				"SCANNER_RETHINK_POOL_INITIAL_CAP":       "100",
+				"SCANNER_RETHINK_POOL_MAX_OPEN":          "200",
+				"SCANNER_RETHINK_ROOT_CA":                "path/to/some/folder/root.crt",
+				"SCANNER_RETHINK_CLIENT_TLS_CERTIFICATE": "path/to/some/folder/tls.crt",
+				"SCANNER_RETHINK_CLIENT_TLS_KEY":         "path/to/some/folder/tls.key",
+				"SCANNER_RETHINK_DATABASE":               "testDb",
+				"SCANNER_RETHINK_SCANS_TABLE":            "testScansTable",
+				"SCANNER_RETHINK_SCANS_TTL":              "10s",
+				"SCANNER_RETHINK_JOBS_TABLE":             "testJobsTable",
+				"SCANNER_RETHINK_JOBS_CONCURRENCY":       "11",
 			},
 			expectedConfig: Config{
+				DatabaseType: "rethinkdb",
 				API: API{
 					Addr:           ":4200",
 					TLSCertificate: "/certs/tls.crt",
@@ -149,6 +178,19 @@ func TestGetConfig(t *testing.T) {
 					WorkerConcurrency: 1,
 					PoolMaxActive:     5,
 					PoolMaxIdle:       5,
+				},
+				Rethink: Rethink{
+					Addresses:            []string{ "10.10.10.10:28015", "20.20.20.20:28015" },
+					InitialCap:           100,
+					MaxOpen:              200,
+					RootCA:               "path/to/some/folder/root.crt",
+					ClientTLSCertificate: "path/to/some/folder/tls.crt",
+					ClientTLSKey:         "path/to/some/folder/tls.key",
+					Database:             "testDb",
+					ScansTable:           "testScansTable",
+					ScansTTL:             10 * time.Second,
+					JobsTable:            "testJobsTable",
+					JobsConcurrency:      11,
 				},
 			},
 		},
