@@ -62,7 +62,7 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 					URL: `"http://foo%bar@www.example.com/"`,
 				},
 			},
-			expectedError: `parsing registry URL: parse \"http://foo%bar@www.example.com/\": first path segment in URL cannot contain colon`,
+			expectedError: `parsing registry URL: parse "\"http://foo%bar@www.example.com/\"": first path segment in URL cannot contain colon`,
 		},
 	}
 	for _, tc := range testCases {
