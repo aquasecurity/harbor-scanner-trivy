@@ -137,6 +137,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |
 | `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | The GitHub access token to download [Trivy DB][trivy-db] (see [GitHub rate limiting][gh-rate-limit]) |
 | `SCANNER_TRIVY_INSECURE`                  | `false`                            | The flag to skip verifying registry certificate                                      |
+| `SCANNER_DATABASE_TYPE`                   | `redis`                            | The underlying database used for Store and Job Queue (`redis` and `rethinkdb` supported)|
 | `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
 | `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
 | `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |
@@ -150,6 +151,17 @@ Configuration of the adapter is done via environment variables at startup.
 | `HTTP_PROXY`                              | N/A                                | The URL of the HTTP proxy server                                                     |
 | `HTTPS_PROXY`                             | N/A                                | The URL of the HTTPS proxy server                                                    |
 | `NO_PROXY`                                | N/A                                | The URLs that the proxy settings do not apply to                                     |
+| `SCANNER_RETHINK_ADDRESSES`               | `localhost:28015`                  | A list of comma-separated values specifying addresses to RethinkDB instances         |
+| `SCANNER_RETHINK_POOL_INITIAL_CAP`        | `0`                                | A limit on the number of connections opened when the session is created              |
+| `SCANNER_RETHINK_POOL_MAX_OPEN`           | `1`                                | A limit on the maximum number of connections kept open simultaneously                |
+| `SCANNER_RETHINK_ROOT_CA`                 | N/A                                | An absolute path to x509 RootCA to trust for TLS certificates sent by RethinkDB      |
+| `SCANNER_RETHINK_CLIENT_TLS_CERTIFICATE`  | N/A                                | An absolute path to x509 certificate file used for mTLS client authentication        |
+| `SCANNER_RETHINK_CLIENT_TLS_KEY`          | N/A                                | An absolute path to x509 private key file used for mTLS client authentication        |
+| `SCANNER_RETHINK_DATABASE`                | `trivy`                            | The database name used when executing queries                                        |
+| `SCANNER_RETHINK_SCANS_TABLE`             | `scans`                            | The name of the table where scan results are saved                                   |
+| `SCANNER_RETHINK_SCANS_TTL`               | `1h`                               | The time to live for persisting scan jobs and associated scan reports                |
+| `SCANNER_RETHINK_JOBS_TABLE`              | `jobs`                             | The name of the table where new jobs are saved                                       |
+| `SCANNER_RETHINK_JOBS_CONCURRENCY`        | `1`                                | The number of jobs that can be processed in parallel                                 |
 
 ## Documentation
 
