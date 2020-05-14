@@ -44,9 +44,17 @@ func Check(config Config) (err error) {
 			err = fmt.Errorf("TLS certificate file does not exist: %s", config.API.TLSCertificate)
 			return
 		}
+
 		if !fileExists(config.API.TLSKey) {
 			err = fmt.Errorf("TLS private key file does not exist: %s", config.API.TLSKey)
 			return
+		}
+
+		for _, path := range config.API.ClientCAs {
+			if !fileExists(path) {
+				err = fmt.Errorf("ClientCA file does not exist: %s", path)
+				return
+			}
 		}
 	}
 

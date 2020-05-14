@@ -2,7 +2,11 @@ package api
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	log "github.com/sirupsen/logrus"
@@ -14,7 +18,7 @@ type Server struct {
 	server *http.Server
 }
 
-func NewServer(config etc.API, handler http.Handler) (server *Server) {
+func NewServer(config etc.API, handler http.Handler) (server *Server, err error) {
 	server = &Server{
 		config: config,
 		server: &http.Server{
@@ -25,6 +29,7 @@ func NewServer(config etc.API, handler http.Handler) (server *Server) {
 			IdleTimeout:  config.IdleTimeout,
 		},
 	}
+
 	if config.IsTLSEnabled() {
 		server.server.TLSConfig = &tls.Config{
 			MinVersion:               tls.VersionTLS12,
@@ -46,7 +51,24 @@ func NewServer(config etc.API, handler http.Handler) (server *Server) {
 				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			},
 		}
+
+		if len(config.ClientCAs) > 0 {
+			certPool := x509.NewCertPool()
+
+			for _, clientCAPath := range config.ClientCAs {
+				clientCA, err := ioutil.ReadFile(clientCAPath)
+				if err != nil {
+					return nil, fmt.Errorf("cound not read file %s: %w", clientCAPath, err)
+				}
+
+				certPool.AppendCertsFromPEM(clientCA)
+			}
+
+			server.server.TLSConfig.ClientCAs = certPool
+			server.server.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
+		}
 	}
+
 	return
 }
 
@@ -64,6 +86,7 @@ func (s *Server) listenAndServe() error {
 		log.WithFields(log.Fields{
 			"certificate": s.config.TLSCertificate,
 			"key":         s.config.TLSKey,
+			"clientCAs":   strings.Join(s.config.ClientCAs, ", "),
 			"addr":        s.config.Addr,
 		}).Debug("Starting API server with TLS")
 		return s.server.ListenAndServeTLS(s.config.TLSCertificate, s.config.TLSKey)
