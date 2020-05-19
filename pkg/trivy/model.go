@@ -2,11 +2,11 @@ package trivy
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
 )
 
 type ScanReport struct {
@@ -45,11 +45,11 @@ func ScanReportFrom(reportFile io.Reader) (report ScanReport, err error) {
 	var scanReports []ScanReport
 	err = json.NewDecoder(reportFile).Decode(&scanReports)
 	if err != nil {
-		return report, xerrors.Errorf("decoding scan report from file %w", err)
+		return report, fmt.Errorf("decoding scan report from file: %w", err)
 	}
 
 	if len(scanReports) == 0 {
-		return report, xerrors.New("expected at least one report")
+		return
 	}
 
 	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor

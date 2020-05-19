@@ -1,11 +1,11 @@
 package trivy
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/xerrors"
 )
 
 const (
@@ -117,21 +117,31 @@ func TestScanReportFrom(t *testing.T) {
 			},
 		},
 		{
-			name:          "Should return error when scan report is empty",
-			jsonOutput:    emptyReport,
-			expectedError: xerrors.New("expected at least one report"),
+			name:           "Should parse empty scan report",
+			jsonOutput:     emptyReport,
+			expectedReport: ScanReport{},
+		},
+		{
+			name:           "Should parse null scan report",
+			jsonOutput:     "null",
+			expectedReport: ScanReport{},
+		},
+		{
+			name:          "Should return error when scan report is invalid",
+			jsonOutput:    "{",
+			expectedError: errors.New("decoding scan report from file: unexpected EOF"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			report, err := ScanReportFrom(strings.NewReader(tc.jsonOutput))
-			assert.Equal(t, tc.expectedReport, report)
 			switch {
 			case tc.expectedError != nil:
 				assert.EqualError(t, err, tc.expectedError.Error())
 			default:
 				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedReport, report)
 			}
 		})
 	}
