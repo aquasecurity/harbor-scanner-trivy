@@ -75,7 +75,7 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `image.tag`                           | Image tag                                                               | `{TAG_NAME}`   |
 | `image.pullPolicy`                    | Image pull policy                                                       | `IfNotPresent` |
 | `replicaCount`                        | Number of scanner adapter Pods to run                                   | `1`            |
-| `scanner.logLevel`                    | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it   | `info` |
+| `scanner.logLevel`                    | The log level of `trace`, `debug`, `info`, `warn`, `warning`, `error`, `fatal` or `panic`. The standard logger logs entries with that level or anything above it | `info` |
 | `scanner.api.tlsEnabled`              | The flag to enable or disable TLS for HTTP                              | `true`         |
 | `scanner.api.tlsCertificate`          | The absolute path to the x509 certificate file                          |                |
 | `scanner.api.tlsKey`                  | The absolute path to the x509 private key file                          |                |
