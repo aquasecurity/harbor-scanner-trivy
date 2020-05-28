@@ -39,6 +39,7 @@ type API struct {
 	Addr           string        `env:"SCANNER_API_SERVER_ADDR" envDefault:":8080"`
 	TLSCertificate string        `env:"SCANNER_API_SERVER_TLS_CERTIFICATE"`
 	TLSKey         string        `env:"SCANNER_API_SERVER_TLS_KEY"`
+	ClientCAs      []string      `env:"SCANNER_API_SERVER_CLIENT_CAS"`
 	ReadTimeout    time.Duration `env:"SCANNER_API_SERVER_READ_TIMEOUT" envDefault:"15s"`
 	WriteTimeout   time.Duration `env:"SCANNER_API_SERVER_WRITE_TIMEOUT" envDefault:"15s"`
 	IdleTimeout    time.Duration `env:"SCANNER_API_SERVER_IDLE_TIMEOUT" envDefault:"60s"`

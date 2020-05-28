@@ -125,6 +125,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_API_SERVER_ADDR`                 | `:8080`                            | Binding address for the API server                                                   |
 | `SCANNER_API_SERVER_TLS_CERTIFICATE`      | N/A                                | The absolute path to the x509 certificate file                                       |
 | `SCANNER_API_SERVER_TLS_KEY`              | N/A                                | The absolute path to the x509 private key file                                       |
+| `SCANNER_API_SERVER_CLIENT_CAS`           | N/A                                | A list of absolute paths to x509 root certificate authorities that the api use if required to verify a client certificate |
 | `SCANNER_API_SERVER_READ_TIMEOUT`         | `15s`                              | The maximum duration for reading the entire request, including the body              |
 | `SCANNER_API_SERVER_WRITE_TIMEOUT`        | `15s`                              | The maximum duration before timing out writes of the response                        |
 | `SCANNER_API_SERVER_IDLE_TIMEOUT`         | `60s`                              | The maximum amount of time to wait for the next request when keep-alives are enabled |
