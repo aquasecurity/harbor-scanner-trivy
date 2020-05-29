@@ -15,34 +15,21 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 		expectedError    string
 	}{
 		{
-			name: "mongo",
+			name: "Should get imageRef when URL scheme is HTTP and port is not specified",
 			request: ScanRequest{
 				Registry: Registry{
-					URL: "https://core.harbor.domain",
+					URL: "http://core.harbor.domain",
 				},
 				Artifact: Artifact{
 					Repository: "library/mongo",
 					Digest:     "test:ABC",
 				},
 			},
-			expectedImageRef: "core.harbor.domain/library/mongo@test:ABC",
-			expectedInsecure: false,
+			expectedImageRef: "core.harbor.domain:80/library/mongo@test:ABC",
+			expectedInsecure: true,
 		},
 		{
-			name: "nginx",
-			request: ScanRequest{
-				Registry: Registry{
-					URL: "https://core.harbor.domain:443",
-				},
-				Artifact: Artifact{Repository: "library/nginx",
-					Digest: "test:DEF",
-				},
-			},
-			expectedImageRef: "core.harbor.domain:443/library/nginx@test:DEF",
-			expectedInsecure: false,
-		},
-		{
-			name: "harbor",
+			name: "Should get imageRef when URL scheme is HTTP and port is specified",
 			request: ScanRequest{
 				Registry: Registry{
 					URL: "http://harbor-harbor-registry:5000",
@@ -56,7 +43,35 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 			expectedInsecure: true,
 		},
 		{
-			name: "invalid registry url",
+			name: "Should get imageRef when URL scheme is HTTPS and port is not specified",
+			request: ScanRequest{
+				Registry: Registry{
+					URL: "https://core.harbor.domain",
+				},
+				Artifact: Artifact{
+					Repository: "library/mongo",
+					Digest:     "test:ABC",
+				},
+			},
+			expectedImageRef: "core.harbor.domain:443/library/mongo@test:ABC",
+			expectedInsecure: false,
+		},
+		{
+			name: "Should get imageRef when URL scheme is HTTPS and port is specified",
+			request: ScanRequest{
+				Registry: Registry{
+					URL: "https://core.harbor.domain:8443",
+				},
+				Artifact: Artifact{Repository: "library/nginx",
+					Digest: "test:DEF",
+				},
+			},
+			expectedImageRef: "core.harbor.domain:8443/library/nginx@test:DEF",
+			expectedInsecure: false,
+		},
+
+		{
+			name: "Should return error when registry URL is invalid",
 			request: ScanRequest{
 				Registry: Registry{
 					URL: `"http://foo%bar@www.example.com/"`,
