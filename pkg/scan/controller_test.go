@@ -62,7 +62,7 @@ func TestController_Scan(t *testing.T) {
 				Method: "Scan",
 				Args: []interface{}{
 					trivy.ImageRef{
-						Name:     "core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},
@@ -109,7 +109,7 @@ func TestController_Scan(t *testing.T) {
 				Method: "Scan",
 				Args: []interface{}{
 					trivy.ImageRef{
-						Name:     "core.harbor.domain/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},

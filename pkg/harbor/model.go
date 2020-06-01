@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"time"
-
-	"golang.org/x/xerrors"
 )
 
 // Severity represents the severity of a image/component in terms of vulnerability.
@@ -83,9 +81,19 @@ type ScanRequest struct {
 func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err error) {
 	registryURL, err := url.Parse(c.Registry.URL)
 	if err != nil {
-		return imageRef, insecureRegistry, xerrors.Errorf("parsing registry URL: %w", err)
+		err = fmt.Errorf("parsing registry URL: %w", err)
+		return
 	}
-	imageRef = fmt.Sprintf("%s/%s@%s", registryURL.Host, c.Artifact.Repository, c.Artifact.Digest)
+
+	port := registryURL.Port()
+	if port == "" && registryURL.Scheme == "http" {
+		port = "80"
+	}
+	if port == "" && registryURL.Scheme == "https" {
+		port = "443"
+	}
+
+	imageRef = fmt.Sprintf("%s:%s/%s@%s", registryURL.Hostname(), port, c.Artifact.Repository, c.Artifact.Digest)
 	insecureRegistry = "http" == registryURL.Scheme
 	return
 }
