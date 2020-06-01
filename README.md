@@ -1,4 +1,5 @@
-[![GitHub release][release-img]][release]
+[![GitHub Release][release-img]][release]
+[![Build Actions][build-action-img]][build-action]
 [![Build Status][ci-img]][ci]
 [![Coverage Status][cov-img]][cov]
 [![Go Report Card][report-card-img]][report-card]
@@ -211,6 +212,8 @@ This project is licensed under the [Apache 2.0](LICENSE) license.
 
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
+[build-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/build/badge.svg
+[build-action]: https://github.com/aquasecurity/harbor-scanner-trivy/actions
 [ci-img]: https://travis-ci.org/aquasecurity/harbor-scanner-trivy.svg?branch=master
 [ci]: https://travis-ci.org/aquasecurity/harbor-scanner-trivy
 [cov-img]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy/branch/master/graph/badge.svg

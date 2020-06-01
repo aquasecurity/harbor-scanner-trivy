@@ -1,0 +1,48 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'NOTICE'
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'NOTICE'
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup make
+        run: make setup
+      - name: Run linter
+        run: make lint
+      - name: Run unit tests
+        run: make test
+      - name: Run integration tests
+        run: make test-integration
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.txt
+      - name: Release snapshot
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          args: release --snapshot --skip-publish --rm-dist
+      - name: Scan image for vulnerabilities
+        uses: docker://docker.io/aquasec/trivy
+        with: # TODO Configure GitHub Actions cache for the /var/lib/trivy path
+          args: --cache-dir /var/lib/trivy --exit-code 1 --severity CRITICAL --no-progress docker.io/aquasec/harbor-scanner-trivy:${{ github.sha }}
