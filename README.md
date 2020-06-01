@@ -1,5 +1,6 @@
 [![GitHub Release][release-img]][release]
-[![Build Actions][build-action-img]][build-action]
+[![GitHub Build Actions][build-action-img]][actions]
+[![GitHub Release Actions][release-action-img]][actions]
 [![Coverage Status][cov-img]][cov]
 [![Go Report Card][report-card-img]][report-card]
 [![License][license-img]][license]
@@ -17,7 +18,8 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
   - [Build](#build)
   - [Running on Kubernetes](#running-on-kubernetes)
 - [Deployment](#deployment)
-  - [Kubernetes](#kubernetes)
+  - [Harbor 2.0 on Kubernetes](#harbor-20-on-kubernetes)
+  - [Harbor 1.10 on Kubernetes](#harbor-110-on-kubernetes)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
 - [Testing](#testing)
@@ -85,7 +87,23 @@ $ make docker-build
 
 ## Deployment
 
-### Kubernetes
+### Harbor 2.0 on Kubernetes
+
+In Harbor >= 2.0 Trivy can be configured as the default vulnerability scanner, therefore you can install it with the
+official Harbor Helm chart, where `HARBOR_CHART_VERSION` >= 1.4:
+
+```
+$ helm install harbor harbor/harbor \
+    --version=$HARBOR_CHART_VERSION \
+    --namespace harbor \
+    --set clair.enabled=false \
+    --set trivy.enabled=true
+```
+
+The adapter service is automatically registered under the **Interrogation Service** in the Harbor interface and
+designated as the default scanner.
+
+### Harbor 1.10 on Kubernetes
 
 1. Generate certificate and private key files:
    ```
@@ -105,7 +123,7 @@ $ make docker-build
        --set scanner.api.tlsCertificate="$(cat tls.crt)" \
        --set scanner.api.tlsKey="$(cat tls.key)"
    ```
-3. Configure the scanner adapter in Harbor web console.
+3. Configure the scanner adapter in the Harbor interface.
    1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
       ![Scanners config](docs/images/harbor_ui_scanners_config.png)
    2. Enter https://harbor-scanner-trivy.harbor:8443 as the **Endpoint** URL and click **TEST CONNECTION**.
@@ -212,7 +230,8 @@ This project is licensed under the [Apache 2.0](LICENSE) license.
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg?logo=github
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
 [build-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/build/badge.svg
-[build-action]: https://github.com/aquasecurity/harbor-scanner-trivy/actions
+[release-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/release/badge.svg
+[actions]: https://github.com/aquasecurity/harbor-scanner-trivy/actions
 [cov-img]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy/branch/master/graph/badge.svg
 [cov]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy
 [report-card-img]: https://goreportcard.com/badge/github.com/aquasecurity/harbor-scanner-trivy
