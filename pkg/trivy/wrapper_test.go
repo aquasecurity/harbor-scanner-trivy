@@ -73,7 +73,7 @@ func TestWrapper_Scan(t *testing.T) {
 
 	imageRef := ImageRef{
 		Name:     "alpine:3.10.2",
-		Auth:     RegistryAuth{Username: "dave.loper", Password: "s3cret"},
+		Auth:     BasicAuth{Username: "dave.loper", Password: "s3cret"},
 		Insecure: true,
 	}
 

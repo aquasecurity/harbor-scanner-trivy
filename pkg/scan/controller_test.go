@@ -63,7 +63,7 @@ func TestController_Scan(t *testing.T) {
 				Args: []interface{}{
 					trivy.ImageRef{
 						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
+						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},
 				},
@@ -110,7 +110,7 @@ func TestController_Scan(t *testing.T) {
 				Args: []interface{}{
 					trivy.ImageRef{
 						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-						Auth:     trivy.RegistryAuth{Username: "user", Password: "password"},
+						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},
 				},
@@ -150,26 +150,44 @@ func TestController_ToRegistryAuth(t *testing.T) {
 		ExpectedAuth  trivy.RegistryAuth
 	}{
 		{
-			Name:          "A",
+			Name:          "No auth",
 			Authorization: "",
-			ExpectedAuth:  trivy.RegistryAuth{},
+			ExpectedAuth:  trivy.NoAuth{},
 		},
 		{
-			Name:          "B",
+			Name:          "Basic auth",
 			Authorization: "Basic aGFyYm9yOnMzY3JldA==",
-			ExpectedAuth: trivy.RegistryAuth{
+			ExpectedAuth: trivy.BasicAuth{
 				Username: "harbor",
 				Password: "s3cret",
 			},
 		},
+		{
+			Name:          "Bearer auth",
+			Authorization: "Bearer someToken",
+			ExpectedAuth: trivy.BearerAuth{
+				Token: "someToken",
+			},
+		},
+		{
+			Name:          "Invalid auth",
+			Authorization: "Invalid someToken",
+			ExpectedAuth: nil,
+			ExpectedError: "unrecognized authorization type: Invalid",
+		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			c := controller{}
+
 			auth, err := c.ToRegistryAuth(tc.Authorization)
 			if tc.ExpectedError != "" {
 				assert.EqualError(t, err, tc.ExpectedError)
+			} else {
+				assert.NoError(t, err)
 			}
+
 			assert.Equal(t, tc.ExpectedAuth, auth)
 		})
 	}

@@ -83,14 +83,24 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 }
 
 func (c *controller) ToRegistryAuth(authorization string) (auth trivy.RegistryAuth, err error) {
+	if authorization == "" {
+		return trivy.NoAuth{}, nil
+	}
+
 	tokens := strings.Split(authorization, " ")
 	if len(tokens) != 2 {
 		return auth, xerrors.Errorf("parsing authorization: expected <type> <credentials> got %s", authorization)
 	}
+
 	switch tokens[0] {
 	case "Basic":
 		return c.decodeBasicAuth(tokens[1])
+	case "Bearer":
+		return trivy.BearerAuth{
+			Token: tokens[1],
+		}, nil
 	}
+
 	return auth, xerrors.Errorf("unrecognized authorization type: %s", tokens[0])
 }
 
@@ -100,7 +110,7 @@ func (c *controller) decodeBasicAuth(value string) (auth trivy.RegistryAuth, err
 		return auth, err
 	}
 	tokens := strings.Split(string(creds), ":")
-	auth = trivy.RegistryAuth{
+	auth = trivy.BasicAuth{
 		Username: tokens[0],
 		Password: tokens[1],
 	}
