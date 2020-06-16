@@ -23,9 +23,19 @@ type ImageRef struct {
 }
 
 // RegistryAuth wraps registry credentials.
-type RegistryAuth struct {
+type RegistryAuth interface {
+}
+
+type NoAuth struct {
+}
+
+type BasicAuth struct {
 	Username string
 	Password string
+}
+
+type BearerAuth struct {
+	Token string
 }
 
 type Wrapper interface {
@@ -119,11 +129,20 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	cmd := exec.Command(name, args...)
 
 	cmd.Env = w.ambassador.Environ()
-	if imageRef.Auth.Username != "" && imageRef.Auth.Password != "" {
+
+	switch a := imageRef.Auth.(type) {
+	case NoAuth:
+	case BasicAuth:
 		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("TRIVY_USERNAME=%s", imageRef.Auth.Username),
-			fmt.Sprintf("TRIVY_PASSWORD=%s", imageRef.Auth.Password))
+			fmt.Sprintf("TRIVY_USERNAME=%s", a.Username),
+			fmt.Sprintf("TRIVY_PASSWORD=%s", a.Password))
+	case BearerAuth:
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("TRIVY_REGISTRY_TOKEN=%s", a.Token))
+	default:
+		return nil, fmt.Errorf("invalid type %T", a)
 	}
+
 	if imageRef.Insecure {
 		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
 	}
