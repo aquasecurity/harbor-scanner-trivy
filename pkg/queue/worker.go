@@ -2,17 +2,19 @@ package queue
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-	store "github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
+)
+
+const (
+	scanJobDefaultPriority = 1 // The highest
+	scanJobMaxFailures     = 1
 )
 
 type Worker interface {
@@ -24,7 +26,7 @@ type worker struct {
 	workerPool *work.WorkerPool
 }
 
-func NewWorker(config etc.JobQueue) Worker {
+func NewWorker(config etc.JobQueue, controller scan.Controller) Worker {
 	redisPool := &redis.Pool{
 		MaxActive: config.PoolMaxActive,
 		MaxIdle:   config.PoolMaxIdle,
@@ -35,7 +37,19 @@ func NewWorker(config etc.JobQueue) Worker {
 	}
 	workerPool := work.NewWorkerPool(workerContext{}, uint(config.WorkerConcurrency), config.Namespace, redisPool)
 
-	workerPool.JobWithOptions(scanArtifactJobName, work.JobOptions{Priority: 1, MaxFails: 1}, (*workerContext).ScanArtifact)
+	// Note: For each scan job a new instance of the workerContext struct is created.
+	// Therefore, the only way to do a proper dependency injection is to use such closure
+	// and the following middleware as the first step in the processing chain.
+	workerPool.Middleware(func(ctx *workerContext, job *work.Job, next work.NextMiddlewareFunc) error {
+		ctx.controller = controller
+		return next()
+	})
+
+	workerPool.JobWithOptions(scanArtifactJobName,
+		work.JobOptions{
+			Priority: scanJobDefaultPriority,
+			MaxFails: scanJobMaxFailures,
+		}, (*workerContext).ScanArtifact)
 
 	return &worker{
 		workerPool: workerPool,
@@ -52,43 +66,29 @@ func (w *worker) Stop() {
 	log.Trace("Job queue shutdown completed")
 }
 
+// workerContext is a context for running scan jobs.
 type workerContext struct {
+	controller scan.Controller
 }
 
+// ScanArtifact is a handler function for the specified scan Job with the given workerContext.
 func (s *workerContext) ScanArtifact(job *work.Job) (err error) {
 	log.WithField("scan_job_id", job.ID).Debug("Executing enqueued scan job")
-
-	controller, err := s.controller()
-	if err != nil {
-		return
-	}
 
 	request, err := s.unmarshalScanRequest(job)
 	if err != nil {
 		return
 	}
 
-	err = controller.Scan(job.ID, request)
-	return
-}
-
-func (s *workerContext) controller() (controller scan.Controller, err error) {
-	config, err := etc.GetConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
-	dataStore := store.NewStore(config.RedisStore)
-
-	controller = scan.NewController(dataStore, wrapper, scan.NewTransformer(&scan.SystemClock{}))
+	err = s.controller.Scan(job.ID, request)
 	return
 }
 
 func (s *workerContext) unmarshalScanRequest(job *work.Job) (request harbor.ScanRequest, err error) {
+	// TODO Fail fast and assert that the scan_request arg was set by the enqueuer.
 	err = json.Unmarshal([]byte(job.ArgString(scanRequestJobArg)), &request)
 	if err != nil {
-		return request, xerrors.Errorf("unmarshalling scan request: %v", err)
+		return request, fmt.Errorf("unmarshalling scan request: %v", err)
 	}
 	return
 }
