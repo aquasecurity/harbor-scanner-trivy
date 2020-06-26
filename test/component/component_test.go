@@ -114,6 +114,7 @@ func TestComponent(t *testing.T) {
 			"SCANNER_LOG_LEVEL":           "trace",
 			"SCANNER_STORE_REDIS_URL":     "redis://redis:6379",
 			"SCANNER_JOB_QUEUE_REDIS_URL": "redis://redis:6379",
+			"SCANNER_TRIVY_INSECURE":      "true",
 		},
 		WaitingFor: wait.ForLog("Starting API server without TLS"),
 	})

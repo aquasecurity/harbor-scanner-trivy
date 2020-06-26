@@ -31,13 +31,15 @@ jobs:
         run: make lint
       - name: Run unit tests
         run: make test
-      - name: Run integration tests
-        run: make test-integration
       - name: Upload code coverage
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.txt
+      - name: Run integration tests
+        run: make test-integration
+      - name: Run component tests
+        run: make test-component
       - name: Release snapshot
         uses: goreleaser/goreleaser-action@v2
         with:

@@ -24,6 +24,8 @@ jobs:
         run: make test
       - name: Run integration tests
         run: make test-integration
+      - name: Run component tests
+        run: make test-component
       - name: Login to DockerHub Registry
         run: |
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login --username ${{ secrets.DOCKERHUB_USER }} --password-stdin
