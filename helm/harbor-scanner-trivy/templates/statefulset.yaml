@@ -43,27 +43,27 @@ spec:
           {{- end }}
           env:
             - name: "SCANNER_LOG_LEVEL"
-              value: {{ .Values.scanner.logLevel | quote }}
+              value: {{ .Values.scanner.logLevel | default "info" | quote }}
             - name: "SCANNER_API_SERVER_ADDR"
-              value: ":{{ .Values.service.port }}"
+              value: ":{{ .Values.service.port | default "8080" }}"
             - name: "SCANNER_API_SERVER_READ_TIMEOUT"
-              value: {{ .Values.scanner.api.readTimeout | quote }}
+              value: {{ .Values.scanner.api.readTimeout | default "15s" | quote }}
             - name: "SCANNER_API_SERVER_WRITE_TIMEOUT"
-              value: {{ .Values.scanner.api.writeTimeout | quote }}
+              value: {{ .Values.scanner.api.writeTimeout | default "15s" | quote }}
             - name: "SCANNER_API_SERVER_IDLE_TIMEOUT"
-              value: {{ .Values.scanner.api.idleTimeout | quote }}
+              value: {{ .Values.scanner.api.idleTimeout | default "60s" | quote }}
             - name: "SCANNER_TRIVY_CACHE_DIR"
               value: {{ .Values.scanner.trivy.cacheDir | quote }}
             - name: "SCANNER_TRIVY_REPORTS_DIR"
               value: {{ .Values.scanner.trivy.reportsDir | quote }}
             - name: "SCANNER_TRIVY_DEBUG_MODE"
-              value: {{ .Values.scanner.trivy.debugMode | quote }}
+              value: {{ .Values.scanner.trivy.debugMode | default false | quote }}
             - name: "SCANNER_TRIVY_VULN_TYPE"
-              value: {{ .Values.scanner.trivy.vulnType | quote }}
+              value: {{ .Values.scanner.trivy.vulnType | default "os,library" | quote }}
             - name: "SCANNER_TRIVY_SEVERITY"
-              value: {{ .Values.scanner.trivy.severity | quote }}
+              value: {{ .Values.scanner.trivy.severity | default "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" | quote }}
             - name: "SCANNER_TRIVY_IGNORE_UNFIXED"
-              value: {{ .Values.scanner.trivy.ignoreUnfixed | quote }}
+              value: {{ .Values.scanner.trivy.ignoreUnfixed | default false | quote }}
             - name: "SCANNER_TRIVY_SKIP_UPDATE"
               value: {{ .Values.scanner.trivy.skipUpdate | default false | quote }}
             - name: "SCANNER_TRIVY_GITHUB_TOKEN"
@@ -73,26 +73,22 @@ spec:
                   key: gitHubToken
             - name: "SCANNER_TRIVY_INSECURE"
               value: {{ .Values.scanner.trivy.insecure | default false | quote }}
-            - name: "SCANNER_STORE_REDIS_URL"
-              value: {{ .Values.scanner.store.redisURL | quote }}
             - name: "SCANNER_STORE_REDIS_NAMESPACE"
-              value: {{ .Values.scanner.store.redisNamespace | quote }}
-            - name: "SCANNER_STORE_REDIS_POOL_MAX_ACTIVE"
-              value: {{ .Values.scanner.store.redisPoolMaxActive | quote }}
-            - name: "SCANNER_STORE_REDIS_POOL_MAX_IDLE"
-              value: {{ .Values.scanner.store.redisPoolMaxIdle | quote }}
+              value: {{ .Values.scanner.store.redisNamespace | default "harbor.scanner.trivy:store" | quote }}
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"
-              value: {{ .Values.scanner.store.redisScanJobTTL | quote }}
-            - name: "SCANNER_JOB_QUEUE_REDIS_URL"
-              value: {{ .Values.scanner.jobQueue.redisURL | quote }}
+              value: {{ .Values.scanner.store.redisScanJobTTL | default "1h" | quote }}
             - name: "SCANNER_JOB_QUEUE_REDIS_NAMESPACE"
-              value: {{ .Values.scanner.jobQueue.redisNamespace | quote }}
-            - name: "SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE"
-              value: {{ .Values.scanner.jobQueue.redisPoolMaxActive | quote }}
-            - name: "SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE"
-              value: {{ .Values.scanner.jobQueue.redisPoolMaxIdle | quote }}
+              value: {{ .Values.scanner.jobQueue.redisNamespace | default "harbor.scanner.trivy:job-queue" | quote }}
             - name: "SCANNER_JOB_QUEUE_WORKER_CONCURRENCY"
-              value: {{ .Values.scanner.jobQueue.workerConcurrency | quote }}
+              value: {{ .Values.scanner.jobQueue.workerConcurrency | default 1 | quote }}
+            - name: "SCANNER_REDIS_URL"
+              value: {{ .Values.scanner.redis.poolURL | default "redis://harbor-harbor-redis:6379" | quote }}
+            - name: "SCANNER_REDIS_POOL_MAX_ACTIVE"
+              value: {{ .Values.scanner.redis.poolMaxActive | default 5 | quote }}
+            - name: "SCANNER_REDIS_POOL_MAX_IDLE"
+              value: {{ .Values.scanner.redis.poolMaxIdle | default 5 | quote }}
+            - name: "SCANNER_REDIS_POOL_IDLE_TIMEOUT"
+              value: {{ .Values.scanner.redis.poolIdleTimeout | default "5m" | quote }}
             - name: "HTTP_PROXY"
               value: {{ .Values.httpProxy | quote }}
             - name: "HTTPS_PROXY"

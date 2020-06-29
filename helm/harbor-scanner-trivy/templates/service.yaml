@@ -5,12 +5,12 @@ metadata:
   labels:
 {{ include "harbor-scanner-trivy.labels" . | indent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.type | default "ClusterIP" }}
   selector:
     app.kubernetes.io/name: {{ include "harbor-scanner-trivy.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: api-server
       protocol: TCP
-      port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+      port: {{ .Values.service.port | default 8080 }}
+      targetPort: {{ .Values.service.port | default 8080 }}

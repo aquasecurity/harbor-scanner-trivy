@@ -111,10 +111,9 @@ func TestComponent(t *testing.T) {
 		Networks:     []string{testNetwork},
 		ExposedPorts: []string{adapterPort},
 		Env: map[string]string{
-			"SCANNER_LOG_LEVEL":           "trace",
-			"SCANNER_STORE_REDIS_URL":     "redis://redis:6379",
-			"SCANNER_JOB_QUEUE_REDIS_URL": "redis://redis:6379",
-			"SCANNER_TRIVY_INSECURE":      "true",
+			"SCANNER_LOG_LEVEL":      "trace",
+			"SCANNER_REDIS_URL":      "redis://redis:6379",
+			"SCANNER_TRIVY_INSECURE": "true",
 		},
 		WaitingFor: wait.ForLog("Starting API server without TLS"),
 	})
@@ -161,6 +160,14 @@ func TestComponent(t *testing.T) {
 		{
 			repository: "gcr.io/distroless/java",
 			tag:        "11",
+		},
+		{
+			repository: "debian",
+			tag:        "9",
+		},
+		{
+			repository: "amazonlinux",
+			tag:        "2.0.20200406.0",
 		},
 	}
 

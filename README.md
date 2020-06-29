@@ -156,16 +156,14 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |
 | `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | The GitHub access token to download [Trivy DB][trivy-db] (see [GitHub rate limiting][gh-rate-limit]) |
 | `SCANNER_TRIVY_INSECURE`                  | `false`                            | The flag to skip verifying registry certificate                                      |
-| `SCANNER_STORE_REDIS_URL`                 | `redis://harbor-harbor-redis:6379` | Redis server URI for a redis store                                                   |
-| `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | A namespace for keys in a redis store                                                |
-| `SCANNER_STORE_REDIS_POOL_MAX_ACTIVE`     | `5`                                | The max number of connections allocated by the pool for a redis store                |
-| `SCANNER_STORE_REDIS_POOL_MAX_IDLE`       | `5`                                | The max number of idle connections in the pool for a redis store                     |
+| `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | The namespace for keys in the Redis store                                            |
 | `SCANNER_STORE_REDIS_SCAN_JOB_TTL`        | `1h`                               | The time to live for persisting scan jobs and associated scan reports                |
-| `SCANNER_JOB_QUEUE_REDIS_URL`             | `redis://harbor-harbor-redis:6379` | Redis server URI for a jobs queue                                                    |
-| `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`       | `harbor.scanner.trivy:job-queue`   | A namespace for keys in a jobs queue                                                 |
-| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE` | `5`                                | The max number of connections allocated by the pool for a jobs queue                 |
-| `SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE`   | `5`                                | The max number of idle connections in the pool for a jobs queue                      |
-| `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1`                                | The number of workers to spin-up for a jobs queue                                    |
+| `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`       | `harbor.scanner.trivy:job-queue`   | The namespace for keys in the scan jobs queue backed by Redis                        |
+| `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1`                                | The number of workers to spin-up for the scan jobs queue                             |
+| `SCANNER_REDIS_URL`                       | `redis://harbor-harbor-redis:6379` | The Redis server URI. The URI scheme currently supports connections to a standalone Redis server, i.e. `redis://user:password@host:port/db-number`. |
+| `SCANNER_REDIS_POOL_MAX_ACTIVE`           | `5`                                | The max number of connections allocated by the Redis connection pool                 |
+| `SCANNER_REDIS_POOL_MAX_IDLE`             | `5`                                | The max number of idle connections in the Redis connection pool                      |
+| `SCANNER_REDIS_POOL_IDLE_TIMEOUT`         | `5m`                               | The duration after which idle connections to the Redis server are closed. If the value is zero, then idle connections are not closed. |
 | `HTTP_PROXY`                              | N/A                                | The URL of the HTTP proxy server                                                     |
 | `HTTPS_PROXY`                             | N/A                                | The URL of the HTTPS proxy server                                                    |
 | `NO_PROXY`                                | N/A                                | The URLs that the proxy settings do not apply to                                     |

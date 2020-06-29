@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gomodule/redigo/redis"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"github.com/gocraft/work"
-	"github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,15 +27,8 @@ type worker struct {
 	workerPool *work.WorkerPool
 }
 
-func NewWorker(config etc.JobQueue, controller scan.Controller) Worker {
-	redisPool := &redis.Pool{
-		MaxActive: config.PoolMaxActive,
-		MaxIdle:   config.PoolMaxIdle,
-		Wait:      true,
-		Dial: func() (redis.Conn, error) {
-			return redis.DialURL(config.RedisURL)
-		},
-	}
+func NewWorker(config etc.JobQueue, redisPool *redis.Pool, controller scan.Controller) Worker {
+
 	workerPool := work.NewWorkerPool(workerContext{}, uint(config.WorkerConcurrency), config.Namespace, redisPool)
 
 	// Note: For each scan job a new instance of the workerContext struct is created.
