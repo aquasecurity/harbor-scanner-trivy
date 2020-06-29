@@ -61,10 +61,13 @@ type JobQueue struct {
 }
 
 type RedisPool struct {
-	URL         string        `env:"SCANNER_REDIS_URL" envDefault:"redis://localhost:6379"`
-	MaxActive   int           `env:"SCANNER_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
-	MaxIdle     int           `env:"SCANNER_REDIS_POOL_MAX_IDLE" envDefault:"5"`
-	IdleTimeout time.Duration `env:"SCANNER_REDIS_POOL_IDLE_TIMEOUT" envDefault:"5m"`
+	URL               string        `env:"SCANNER_REDIS_URL" envDefault:"redis://localhost:6379"`
+	MaxActive         int           `env:"SCANNER_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
+	MaxIdle           int           `env:"SCANNER_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+	IdleTimeout       time.Duration `env:"SCANNER_REDIS_POOL_IDLE_TIMEOUT" envDefault:"5m"`
+	ConnectionTimeout time.Duration `env:"SCANNER_REDIS_POOL_CONNECTION_TIMEOUT" envDefault:"1s"`
+	ReadTimeout       time.Duration `env:"SCANNER_REDIS_POOL_READ_TIMEOUT" envDefault:"1s"`
+	WriteTimeout      time.Duration `env:"SCANNER_REDIS_POOL_WRITE_TIMEOUT" envDefault:"1s"`
 }
 
 func GetLogLevel() logrus.Level {

@@ -97,8 +97,9 @@ scanner:
     ## workerConcurrency The number of workers to spin-up for the scan jobs queue
     workerConcurrency: 1
   redis:
-    ## poolURL The Redis server URI. The URI scheme currently supports connections to a standalone Redis server,
-    ## i.e. `redis://user:password@host:port/db-number`.
+    ## poolURL the Redis server URI. The URI supports schemas to connect to a standalone Redis server,
+    ## i.e. `redis://:password@standalone_host:port/db-number` and Redis Sentinel deployment,
+    ## i.e. `redis+sentinel://:password@sentinel_host1:port1,sentinel_host2:port2/monitor-name/db-number`.
     poolURL: "redis://harbor-harbor-redis:6379"
     ## poolMaxActive the max number of connections allocated by the Redis connection pool
     poolMaxActive: 5
@@ -107,6 +108,12 @@ scanner:
     ## poolIdleTimeout the duration after which idle connections to the Redis server are closed.
     ## If the value is zero, then idle connections are not closed.
     poolIdleTimeout: 5m
+    ## poolConnectionTimeout the timeout for connecting to the Redis server
+    poolConnectionTimeout: 1s
+    ## poolReadTimeout the timeout for reading a single Redis command reply
+    poolReadTimeout: 1s
+    ## poolWriteTimeout The timeout for writing a single Redis command
+    poolWriteTimeout: 1s
 service:
   ## type Kubernetes service type
   type: ClusterIP

@@ -160,10 +160,13 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_STORE_REDIS_SCAN_JOB_TTL`        | `1h`                               | The time to live for persisting scan jobs and associated scan reports                |
 | `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`       | `harbor.scanner.trivy:job-queue`   | The namespace for keys in the scan jobs queue backed by Redis                        |
 | `SCANNER_JOB_QUEUE_WORKER_CONCURRENCY`    | `1`                                | The number of workers to spin-up for the scan jobs queue                             |
-| `SCANNER_REDIS_URL`                       | `redis://harbor-harbor-redis:6379` | The Redis server URI. The URI scheme currently supports connections to a standalone Redis server, i.e. `redis://user:password@host:port/db-number`. |
+| `SCANNER_REDIS_URL`                       | `redis://harbor-harbor-redis:6379` | The Redis server URI. The URI supports schemas to connect to a standalone Redis server, i.e. `redis://:password@standalone_host:port/db-number` and Redis Sentinel deployment, i.e. `redis+sentinel://:password@sentinel_host1:port1,sentinel_host2:port2/monitor-name/db-number`. |
 | `SCANNER_REDIS_POOL_MAX_ACTIVE`           | `5`                                | The max number of connections allocated by the Redis connection pool                 |
 | `SCANNER_REDIS_POOL_MAX_IDLE`             | `5`                                | The max number of idle connections in the Redis connection pool                      |
 | `SCANNER_REDIS_POOL_IDLE_TIMEOUT`         | `5m`                               | The duration after which idle connections to the Redis server are closed. If the value is zero, then idle connections are not closed. |
+| `SCANNER_REDIS_POOL_CONNECTION_TIMEOUT`   | `1s`                               | The timeout for connecting to the Redis server                                       |
+| `SCANNER_REDIS_POOL_READ_TIMEOUT`         | `1s`                               | The timeout for reading a single Redis command reply                                 |
+| `SCANNER_REDIS_POOL_WRITE_TIMEOUT`        | `1s`                               | The timeout for writing a single Redis command.                                      |
 | `HTTP_PROXY`                              | N/A                                | The URL of the HTTP proxy server                                                     |
 | `HTTPS_PROXY`                             | N/A                                | The URL of the HTTPS proxy server                                                    |
 | `NO_PROXY`                                | N/A                                | The URLs that the proxy settings do not apply to                                     |
