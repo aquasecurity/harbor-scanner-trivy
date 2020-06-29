@@ -172,7 +172,7 @@ func TestController_ToRegistryAuth(t *testing.T) {
 		{
 			Name:          "Invalid auth",
 			Authorization: "Invalid someToken",
-			ExpectedAuth: nil,
+			ExpectedAuth:  nil,
 			ExpectedError: "unrecognized authorization type: Invalid",
 		},
 	}

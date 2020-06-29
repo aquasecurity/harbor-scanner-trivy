@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"os"
 	"os/signal"
 	"syscall"
@@ -55,11 +56,13 @@ func run(info etc.BuildInfo) error {
 		return fmt.Errorf("checking config: %w", err)
 	}
 
-	worker := queue.NewWorker(config.JobQueue)
-
+	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
 	store := redis.NewStore(config.RedisStore)
+	controller := scan.NewController(store, wrapper, scan.NewTransformer(&scan.SystemClock{}))
 	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
-	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador))
+	worker := queue.NewWorker(config.JobQueue, controller)
+
+	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, wrapper)
 	apiServer, err := api.NewServer(config.API, apiHandler)
 	if err != nil {
 		return fmt.Errorf("new api server: %w", err)
