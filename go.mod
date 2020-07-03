@@ -3,7 +3,7 @@ module github.com/aquasecurity/harbor-scanner-trivy
 go 1.14
 
 require (
-	github.com/caarlos0/env/v6 v6.2.1
+	github.com/caarlos0/env/v6 v6.3.0
 	github.com/docker/docker v0.7.3-0.20190506211059-b20a14b54661
 	github.com/docker/go-connections v0.4.0
 	github.com/gocraft/work v0.5.1

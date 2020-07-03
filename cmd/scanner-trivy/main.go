@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/redisx"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
@@ -56,11 +58,16 @@ func run(info etc.BuildInfo) error {
 		return fmt.Errorf("checking config: %w", err)
 	}
 
+	pool, err := redisx.NewPool(config.RedisPool)
+	if err != nil {
+		return fmt.Errorf("constructing connection pool: %w", err)
+	}
+
 	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
-	store := redis.NewStore(config.RedisStore)
+	store := redis.NewStore(config.RedisStore, pool)
 	controller := scan.NewController(store, wrapper, scan.NewTransformer(&scan.SystemClock{}))
-	enqueuer := queue.NewEnqueuer(config.JobQueue, store)
-	worker := queue.NewWorker(config.JobQueue, controller)
+	enqueuer := queue.NewEnqueuer(config.JobQueue, pool, store)
+	worker := queue.NewWorker(config.JobQueue, pool, controller)
 
 	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, wrapper)
 	apiServer, err := api.NewServer(config.API, apiHandler)

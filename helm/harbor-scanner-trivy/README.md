@@ -91,18 +91,16 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.trivy.skipUpdate`            | The flag to enable or disable Trivy DB downloads from GitHub            | `false`        |
 | `scanner.trivy.gitHubToken`           | The GitHub access token to download Trivy DB                            |      |
 | `scanner.trivy.insecure`              | The flag to skip verifying registry certificate                         | `false` |
-| `scanner.store.redisURL`              | Redis server URI for a redis store                                      | `redis://harbor-harbor-redis:6379` |
-| `scanner.store.redisNamespace`        | A namespace for keys in a redis store                                   | `harbor.scanner.trivy:store`       |
-| `scanner.store.redisMaxActive`        | The max number of connections allocated by the pool for a redis store   | `5`  |
-| `scanner.store.redisMaxIdle`          | The max number of idle connections in the pool for a redis store        | `5`  |
+| `scanner.store.redisNamespace`        | The namespace for keys in the Redis store                               | `harbor.scanner.trivy:store`       |
 | `scanner.store.redisScanJobTTL`       | The time to live for persisting scan jobs and associated scan reports   | `1h` |
-| `scanner.jobQueue.redisURL`           | Redis server URI for a jobs queue                                       | `redis://harbor-harbor-redis:6379` |
-| `scanner.jobQueue.redisNamespace`     | A namespace for keys in a jobs queue                                    | `harbor.scanner.trivy:job-queue`   |
-| `scanner.jobQueue.redisPoolMaxActive` | The max number of connections allocated by the pool for a jobs queue    | `5` |
-| `scanner.jobQueue.redisPoolMaxIdle`   | The max number of idle connections in the pool for a jobs queue         | `5` |
-| `scanner.jobQueue.workerConcurrency`  | The number of workers to spin-up for a jobs queue                       | `1` |
-| `service.type`                        | Kubernetes service type                                                 | `LoadBalancer` |
-| `service.port`                        | Kubernetes service port                                                 | `8443`         |
+| `scanner.jobQueue.redisNamespace`     | The namespace for keys in the scan jobs queue backed by Redis           | `harbor.scanner.trivy:job-queue`   |
+| `scanner.jobQueue.workerConcurrency`  | The number of workers to spin-up for a jobs queue                       | `1`  |
+| `scanner.redis.poolURL`               | The Redis server URI. The URI scheme currently supports connections to a standalone Redis server, i.e. `redis://user:password@host:port/db-number`. | `redis://harbor-harbor-redis:6379` |
+| `scanner.redis.poolMaxActive`         | The max number of connections allocated by the Redis connection pool    | `5`  |
+| `scanner.redis.poolMaxIdle`           | The max number of idle connections in the Redis connection pool         | `5`  |
+| `scanner.redis.poolIdleTimeout`       | The duration after which idle connections to the Redis server are closed. If the value is zero, then idle connections are not closed. | `5m` |
+| `service.type`                        | Kubernetes service type                                                 | `ClusterIP` |
+| `service.port`                        | Kubernetes service port                                                 | `8080`      |
 | `httpProxy`                           | The URL of the HTTP proxy server                                        |     |
 | `httpsProxy`                          | The URL of the HTTPS proxy server                                       |     |
 | `noProxy`                             | The URLs that the proxy settings do not apply to                        |     |

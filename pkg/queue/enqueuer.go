@@ -27,16 +27,7 @@ type enqueuer struct {
 	store    persistence.Store
 }
 
-func NewEnqueuer(config etc.JobQueue, store persistence.Store) Enqueuer {
-	redisPool := &redis.Pool{
-		Dial: func() (redis.Conn, error) {
-			return redis.DialURL(config.RedisURL)
-		},
-		MaxActive: config.PoolMaxActive,
-		MaxIdle:   config.PoolMaxIdle,
-		Wait:      true,
-	}
-
+func NewEnqueuer(config etc.JobQueue, redisPool *redis.Pool, store persistence.Store) Enqueuer {
 	return &enqueuer{
 		enqueuer: work.NewEnqueuer(config.Namespace, redisPool),
 		store:    store,

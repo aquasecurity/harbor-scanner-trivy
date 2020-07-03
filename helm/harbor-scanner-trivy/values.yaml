@@ -87,20 +87,30 @@ scanner:
     ## insecure the flag to skip verifying registry certificate
     insecure: false
   store:
-    redisURL: "redis://harbor-harbor-redis:6379"
+    ## redisNamespace the namespace for keys in the Redis store
     redisNamespace: "harbor.scanner.trivy:store"
-    redisPoolMaxActive: 5
-    redisPoolMaxIdle: 5
+    ## redisScanJobTTL the time to live for persisting scan jobs and associated scan reports
     redisScanJobTTL: "1h"
   jobQueue:
-    redisURL: "redis://harbor-harbor-redis:6379"
+    ## redisNamespace the namespace for keys in the scan jobs queue backed by Redis
     redisNamespace: "harbor.scanner.trivy:job-queue"
-    redisPoolMaxActive: 5
-    redisPoolMaxIdle: 5
+    ## workerConcurrency The number of workers to spin-up for the scan jobs queue
     workerConcurrency: 1
-
+  redis:
+    ## poolURL The Redis server URI. The URI scheme currently supports connections to a standalone Redis server,
+    ## i.e. `redis://user:password@host:port/db-number`.
+    poolURL: "redis://harbor-harbor-redis:6379"
+    ## poolMaxActive the max number of connections allocated by the Redis connection pool
+    poolMaxActive: 5
+    ## poolMaxIdle the max number of idle connections in the Redis connection pool
+    poolMaxIdle: 5
+    ## poolIdleTimeout the duration after which idle connections to the Redis server are closed.
+    ## If the value is zero, then idle connections are not closed.
+    poolIdleTimeout: 5m
 service:
+  ## type Kubernetes service type
   type: ClusterIP
+  ## port Kubernetes service port
   port: 8080
 
 # httpProxy the URL of the HTTP proxy server

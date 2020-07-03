@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/redisx"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
@@ -40,13 +42,17 @@ func TestStore(t *testing.T) {
 
 	redisURL := getRedisURL(t, ctx, redisC)
 
-	store := redis.NewStore(etc.RedisStore{
-		RedisURL:      redisURL,
-		Namespace:     "harbor.scanner.trivy:store",
-		PoolMaxActive: 5,
-		PoolMaxIdle:   5,
-		ScanJobTTL:    parseDuration(t, "10s"),
+	config := etc.RedisStore{
+		Namespace:  "harbor.scanner.trivy:store",
+		ScanJobTTL: parseDuration(t, "10s"),
+	}
+
+	pool, err := redisx.NewPool(etc.RedisPool{
+		URL: redisURL,
 	})
+	require.NoError(t, err)
+
+	store := redis.NewStore(config, pool)
 
 	t.Run("CRUD", func(t *testing.T) {
 		scanJobID := "123"

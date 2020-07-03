@@ -21,6 +21,7 @@ type Config struct {
 	Trivy      Trivy
 	RedisStore RedisStore
 	JobQueue   JobQueue
+	RedisPool  RedisPool
 }
 
 type Trivy struct {
@@ -50,19 +51,20 @@ func (c *API) IsTLSEnabled() bool {
 }
 
 type RedisStore struct {
-	RedisURL      string        `env:"SCANNER_STORE_REDIS_URL" envDefault:"redis://localhost:6379"`
-	Namespace     string        `env:"SCANNER_STORE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:data-store"`
-	PoolMaxActive int           `env:"SCANNER_STORE_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
-	PoolMaxIdle   int           `env:"SCANNER_STORE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
-	ScanJobTTL    time.Duration `env:"SCANNER_STORE_REDIS_SCAN_JOB_TTL" envDefault:"1h"`
+	Namespace  string        `env:"SCANNER_STORE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:data-store"`
+	ScanJobTTL time.Duration `env:"SCANNER_STORE_REDIS_SCAN_JOB_TTL" envDefault:"1h"`
 }
 
 type JobQueue struct {
-	RedisURL          string `env:"SCANNER_JOB_QUEUE_REDIS_URL" envDefault:"redis://localhost:6379"`
 	Namespace         string `env:"SCANNER_JOB_QUEUE_REDIS_NAMESPACE" envDefault:"harbor.scanner.trivy:job-queue"`
 	WorkerConcurrency int    `env:"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY" envDefault:"1"`
-	PoolMaxActive     int    `env:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
-	PoolMaxIdle       int    `end:"SCANNER_JOB_QUEUE_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+}
+
+type RedisPool struct {
+	URL         string        `env:"SCANNER_REDIS_URL" envDefault:"redis://localhost:6379"`
+	MaxActive   int           `env:"SCANNER_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
+	MaxIdle     int           `env:"SCANNER_REDIS_POOL_MAX_IDLE" envDefault:"5"`
+	IdleTimeout time.Duration `env:"SCANNER_REDIS_POOL_IDLE_TIMEOUT" envDefault:"5m"`
 }
 
 func GetLogLevel() logrus.Level {
