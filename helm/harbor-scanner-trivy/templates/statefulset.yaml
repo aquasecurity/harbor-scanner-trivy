@@ -45,7 +45,7 @@ spec:
             - name: "SCANNER_LOG_LEVEL"
               value: {{ .Values.scanner.logLevel | default "info" | quote }}
             - name: "SCANNER_API_SERVER_ADDR"
-              value: ":{{ .Values.service.port | default "8080" }}"
+              value: ":{{ .Values.service.port | default 8080 }}"
             - name: "SCANNER_API_SERVER_READ_TIMEOUT"
               value: {{ .Values.scanner.api.readTimeout | default "15s" | quote }}
             - name: "SCANNER_API_SERVER_WRITE_TIMEOUT"
