@@ -88,10 +88,8 @@ func newSentinelPool(configURL *url.URL, config etc.RedisPool) (pool *redis.Pool
 
 	redisOpts := commonOpts
 
-	redisOpts = append(redisOpts, redis.DialDatabase(db))
-	if password := sentinelURL.Password; password != "" {
-		redisOpts = append(redisOpts, redis.DialPassword(password))
-	}
+	redisOpts = append(redisOpts, redis.DialDatabase(sentinelURL.Database))
+	redisOpts = append(redisOpts, redis.DialPassword(sentinelURL.Password))
 
 	pool = &redis.Pool{
 		Dial: func() (conn redis.Conn, err error) {
