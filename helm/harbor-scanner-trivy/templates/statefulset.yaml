@@ -89,6 +89,12 @@ spec:
               value: {{ .Values.scanner.redis.poolMaxIdle | default 5 | quote }}
             - name: "SCANNER_REDIS_POOL_IDLE_TIMEOUT"
               value: {{ .Values.scanner.redis.poolIdleTimeout | default "5m" | quote }}
+            - name: SCANNER_REDIS_POOL_CONNECTION_TIMEOUT
+              value: {{ .Values.scanner.redis.poolConnectionTimeout | default "1s" | quote }}
+            - name: SCANNER_REDIS_POOL_READ_TIMEOUT
+              value: {{ .Values.scanner.redis.poolReadTimeout | default "1s" | quote }}
+            - name: SCANNER_REDIS_POOL_WRITE_TIMEOUT
+              value: {{ .Values.scanner.redis.poolWriteTimeout | default "1s" | quote }}
             - name: "HTTP_PROXY"
               value: {{ .Values.httpProxy | quote }}
             - name: "HTTPS_PROXY"

@@ -95,10 +95,13 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.store.redisScanJobTTL`       | The time to live for persisting scan jobs and associated scan reports   | `1h` |
 | `scanner.jobQueue.redisNamespace`     | The namespace for keys in the scan jobs queue backed by Redis           | `harbor.scanner.trivy:job-queue`   |
 | `scanner.jobQueue.workerConcurrency`  | The number of workers to spin-up for a jobs queue                       | `1`  |
-| `scanner.redis.poolURL`               | The Redis server URI. The URI scheme currently supports connections to a standalone Redis server, i.e. `redis://user:password@host:port/db-number`. | `redis://harbor-harbor-redis:6379` |
+| `scanner.redis.poolURL`               | The Redis server URI. The URI supports schemas to connect to a standalone Redis server, i.e. `redis://:password@standalone_host:port/db-number` and Redis Sentinel deployment, i.e. `redis+sentinel://:password@sentinel_host1:port1,sentinel_host2:port2/monitor-name/db-number`. |
 | `scanner.redis.poolMaxActive`         | The max number of connections allocated by the Redis connection pool    | `5`  |
 | `scanner.redis.poolMaxIdle`           | The max number of idle connections in the Redis connection pool         | `5`  |
 | `scanner.redis.poolIdleTimeout`       | The duration after which idle connections to the Redis server are closed. If the value is zero, then idle connections are not closed. | `5m` |
+| `scanner.redis.poolConnectionTimeout` | The timeout for connecting to the Redis server       | `1s` |
+| `scanner.redis.poolReadTimeout`       | The timeout for reading a single Redis command reply | `1s` |
+| `scanner.redis.poolWriteTimeout`      | The timeout for writing a single Redis command       | `1s` |
 | `service.type`                        | Kubernetes service type                                                 | `ClusterIP` |
 | `service.port`                        | Kubernetes service port                                                 | `8080`      |
 | `httpProxy`                           | The URL of the HTTP proxy server                                        |     |
