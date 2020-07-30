@@ -4,6 +4,8 @@
 [![Coverage Status][cov-img]][cov]
 [![Go Report Card][report-card-img]][report-card]
 [![License][license-img]][license]
+![Docker Pulls / Aqua][docker-pulls-aqua]
+![Docker Pulls / Harbor][docker-pulls-harbor]
 
 # Harbor Scanner Adapter for Trivy
 
@@ -237,6 +239,8 @@ This project is licensed under the [Apache 2.0](LICENSE) license.
 [cov]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy
 [report-card-img]: https://goreportcard.com/badge/github.com/aquasecurity/harbor-scanner-trivy
 [report-card]: https://goreportcard.com/report/github.com/aquasecurity/harbor-scanner-trivy
+[docker-pulls-aqua]: https://img.shields.io/docker/pulls/aquasec/harbor-scanner-trivy?logo=docker&label=docker%20pulls%20%2F%20aquasec
+[docker-pulls-harbor]: https://img.shields.io/docker/pulls/goharbor/trivy-adapter-photon?logo=docker&label=docker%20pulls%20%2F%20goharbor
 [license-img]: https://img.shields.io/github/license/aquasecurity/harbor-scanner-trivy.svg
 [license]: https://github.com/aquasecurity/harbor-scanner-trivy/blob/master/LICENSE
 
