@@ -43,6 +43,18 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &trivy.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
 				},
+				CVSS: map[string]trivy.CVSSInfo {
+					"nvd": {
+						V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
+						V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+						V2Score:  1.9,
+						V3Score:  4.7,
+					},
+					"redhat": {
+						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+						V3Score: 5.5,
+					},
+				},
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0002",
@@ -129,6 +141,18 @@ func TestTransformer_Transform(t *testing.T) {
 				},
 				Layer: &harbor.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				},
+				CVSS: map[string]harbor.CVSSInfo {
+					"nvd": {
+						V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
+						V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+						V2Score:  1.9,
+						V3Score:  4.7,
+					},
+					"redhat": {
+						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+						V3Score: 5.5,
+					},
 				},
 			},
 			{
