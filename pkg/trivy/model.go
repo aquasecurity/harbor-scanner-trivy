@@ -29,16 +29,24 @@ type Layer struct {
 	DiffID string `json:"DiffID"`
 }
 
+type CVSSInfo struct {
+	V2Vector string  `json:"V2Vector,omitempty"`
+	V3Vector string  `json:"V3Vector,omitempty"`
+	V2Score  float32 `json:"V2Score,omitempty"`
+	V3Score  float32 `json:"V3Score,omitempty"`
+}
+
 type Vulnerability struct {
-	VulnerabilityID  string   `json:"VulnerabilityID"`
-	PkgName          string   `json:"PkgName"`
-	InstalledVersion string   `json:"InstalledVersion"`
-	FixedVersion     string   `json:"FixedVersion"`
-	Title            string   `json:"Title"`
-	Description      string   `json:"Description"`
-	Severity         string   `json:"Severity"`
-	References       []string `json:"References"`
-	Layer            *Layer   `json:"Layer"`
+	VulnerabilityID  string              `json:"VulnerabilityID"`
+	PkgName          string              `json:"PkgName"`
+	InstalledVersion string              `json:"InstalledVersion"`
+	FixedVersion     string              `json:"FixedVersion"`
+	Title            string              `json:"Title"`
+	Description      string              `json:"Description"`
+	Severity         string              `json:"Severity"`
+	References       []string            `json:"References"`
+	Layer            *Layer              `json:"Layer"`
+	CVSS             map[string]CVSSInfo `json:"CVSS"`
 }
 
 func ScanReportFrom(reportFile io.Reader) (report ScanReport, err error) {
