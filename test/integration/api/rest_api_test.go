@@ -212,12 +212,12 @@ func TestRestApi(t *testing.T) {
     "org.label-schema.build-date": "2019-01-04T12:40",
     "org.label-schema.vcs-ref": "abc",
     "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
-    "com.github.aquasecurity.trivy.skipUpdate": "false",
-    "com.github.aquasecurity.trivy.ignoreUnfixed": "true",
-    "com.github.aquasecurity.trivy.debugMode": "true",
-    "com.github.aquasecurity.trivy.insecure": "true",
-    "com.github.aquasecurity.trivy.vulnType": "os,library",
-    "com.github.aquasecurity.trivy.severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+    "env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+    "env.SCANNER_TRIVY_DEBUG_MODE": "true",
+    "env.SCANNER_TRIVY_INSECURE": "true",
+    "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+    "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   }
 }`, string(bodyBytes))
 	})
