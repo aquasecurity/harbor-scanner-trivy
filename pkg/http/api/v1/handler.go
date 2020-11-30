@@ -209,12 +209,12 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"org.label-schema.vcs-ref":    h.info.Commit,
 		"org.label-schema.vcs":        "https://github.com/aquasecurity/harbor-scanner-trivy",
 
-		"com.github.aquasecurity.trivy.skipUpdate":    strconv.FormatBool(h.config.Trivy.SkipUpdate),
-		"com.github.aquasecurity.trivy.ignoreUnfixed": strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
-		"com.github.aquasecurity.trivy.debugMode":     strconv.FormatBool(h.config.Trivy.DebugMode),
-		"com.github.aquasecurity.trivy.insecure":      strconv.FormatBool(h.config.Trivy.Insecure),
-		"com.github.aquasecurity.trivy.vulnType":      h.config.Trivy.VulnType,
-		"com.github.aquasecurity.trivy.severity":      h.config.Trivy.Severity,
+		"env.SCANNER_TRIVY_SKIP_UPDATE":    strconv.FormatBool(h.config.Trivy.SkipUpdate),
+		"env.SCANNER_TRIVY_IGNORE_UNFIXED": strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
+		"env.SCANNER_TRIVY_DEBUG_MODE":     strconv.FormatBool(h.config.Trivy.DebugMode),
+		"env.SCANNER_TRIVY_INSECURE":       strconv.FormatBool(h.config.Trivy.Insecure),
+		"env.SCANNER_TRIVY_VULN_TYPE":      h.config.Trivy.VulnType,
+		"env.SCANNER_TRIVY_SEVERITY":       h.config.Trivy.Severity,
 	}
 
 	vi, err := h.wrapper.GetVersion()
