@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,6 +55,46 @@ func TestGetConfig(t *testing.T) {
 		expectedConfig Config
 	}{
 		{
+			name: "Should enable Trivy debug mode when log level is set to debug",
+			envs: Envs{
+				"SCANNER_LOG_LEVEL": "debug",
+			},
+			expectedConfig: Config{
+				API: API{
+					Addr:         ":8080",
+					ReadTimeout:  parseDuration(t, "15s"),
+					WriteTimeout: parseDuration(t, "15s"),
+					IdleTimeout:  parseDuration(t, "60s"),
+				},
+				Trivy: Trivy{
+					DebugMode:   true,
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os,library",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
+					GitHubToken: "",
+				},
+				RedisPool: RedisPool{
+					URL:               "redis://localhost:6379",
+					MaxActive:         5,
+					MaxIdle:           5,
+					IdleTimeout:       parseDuration(t, "5m"),
+					ConnectionTimeout: parseDuration(t, "1s"),
+					ReadTimeout:       parseDuration(t, "1s"),
+					WriteTimeout:      parseDuration(t, "1s"),
+				},
+				RedisStore: RedisStore{
+					Namespace:  "harbor.scanner.trivy:data-store",
+					ScanJobTTL: parseDuration(t, "1h"),
+				},
+				JobQueue: JobQueue{
+					Namespace:         "harbor.scanner.trivy:job-queue",
+					WorkerConcurrency: 1,
+				},
+			},
+		},
+		{
 			name: "Should return default config",
 			expectedConfig: Config{
 				API: API{
@@ -65,6 +104,7 @@ func TestGetConfig(t *testing.T) {
 					IdleTimeout:  parseDuration(t, "60s"),
 				},
 				Trivy: Trivy{
+					DebugMode:   false,
 					CacheDir:    "/home/scanner/.cache/trivy",
 					ReportsDir:  "/home/scanner/.cache/reports",
 					VulnType:    "os,library",

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/caarlos0/env/v6"
 	"github.com/sirupsen/logrus"
 )
@@ -81,9 +80,20 @@ func GetLogLevel() logrus.Level {
 	return logrus.InfoLevel
 }
 
-func GetConfig() (cfg Config, err error) {
-	err = env.Parse(&cfg)
-	return
+func GetConfig() (Config, error) {
+	var cfg Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		return cfg, err
+	}
+
+	if _, ok := os.LookupEnv("SCANNER_TRIVY_DEBUG_MODE"); !ok {
+		if GetLogLevel() == logrus.DebugLevel {
+			cfg.Trivy.DebugMode = true
+		}
+	}
+
+	return cfg, nil
 }
 
 func GetScannerMetadata() harbor.Scanner {
