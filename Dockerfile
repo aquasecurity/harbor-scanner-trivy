@@ -1,5 +1,5 @@
 # That's the only place where you're supposed to specify version of Trivy.
-ARG TRIVY_VERSION=0.13.0
+ARG TRIVY_VERSION=0.14.0
 
 FROM aquasec/trivy:${TRIVY_VERSION}
 

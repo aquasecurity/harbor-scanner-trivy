@@ -53,6 +53,7 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanRepor
 			Links:       t.toLinks(v.References),
 			Layer:       t.toHarborLayer(v.Layer),
 			CVSS:        t.toHarborCVSS(v.CVSS),
+			CweIDs:      v.CweIDs,
 		}
 	}
 

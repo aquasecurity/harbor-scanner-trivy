@@ -47,6 +47,7 @@ type Vulnerability struct {
 	References       []string            `json:"References"`
 	Layer            *Layer              `json:"Layer"`
 	CVSS             map[string]CVSSInfo `json:"CVSS"`
+	CweIDs           []string            `json:"CweIDs"`
 }
 
 func ScanReportFrom(reportFile io.Reader) (report ScanReport, err error) {
