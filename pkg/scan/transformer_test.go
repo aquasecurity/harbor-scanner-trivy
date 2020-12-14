@@ -6,7 +6,6 @@ import (
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,6 +53,10 @@ func TestTransformer_Transform(t *testing.T) {
 						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
 						V3Score:  5.5,
 					},
+				},
+				CweIDs: []string{
+					"CWE-20",
+					"CWE-1289",
 				},
 			},
 			{
@@ -153,6 +156,10 @@ func TestTransformer_Transform(t *testing.T) {
 						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
 						V3Score:  5.5,
 					},
+				},
+				CweIDs: []string{
+					"CWE-20",
+					"CWE-1289",
 				},
 			},
 			{

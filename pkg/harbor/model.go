@@ -133,6 +133,7 @@ type VulnerabilityItem struct {
 	Links       []string            `json:"links"`
 	Layer       *Layer              `json:"layer"`
 	CVSS        map[string]CVSSInfo `json:"cvss,omitempty"`
+	CweIDs      []string            `json:"cwe_ids,omitempty"`
 }
 
 type ScannerAdapterMetadata struct {
