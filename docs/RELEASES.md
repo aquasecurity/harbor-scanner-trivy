@@ -57,7 +57,7 @@ $ travis encrypt DOCKERHUB_TOKEN="***" --repo aquasecurity/harbor-scanner-trivy
 
 ## Build and test the next release locally
 
-1. Make sure that your fork's `master` branch is up to date with `upstream/master` and your working tree is clean.
+1. Make sure that your fork's `main` branch is up to date with `upstream/main` and your working tree is clean.
 2. Run unit tests and make sure that they're passing:
    ```
    $ make test

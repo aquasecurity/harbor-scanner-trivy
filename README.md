@@ -235,14 +235,14 @@ This project is licensed under the [Apache 2.0](LICENSE) license.
 [build-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/build/badge.svg
 [release-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/release/badge.svg
 [actions]: https://github.com/aquasecurity/harbor-scanner-trivy/actions
-[cov-img]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy/branch/master/graph/badge.svg
+[cov-img]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy/branch/main/graph/badge.svg
 [cov]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy
 [report-card-img]: https://goreportcard.com/badge/github.com/aquasecurity/harbor-scanner-trivy
 [report-card]: https://goreportcard.com/report/github.com/aquasecurity/harbor-scanner-trivy
 [docker-pulls-aqua]: https://img.shields.io/docker/pulls/aquasec/harbor-scanner-trivy?logo=docker&label=docker%20pulls%20%2F%20aquasec
 [docker-pulls-harbor]: https://img.shields.io/docker/pulls/goharbor/trivy-adapter-photon?logo=docker&label=docker%20pulls%20%2F%20goharbor
 [license-img]: https://img.shields.io/github/license/aquasecurity/harbor-scanner-trivy.svg
-[license]: https://github.com/aquasecurity/harbor-scanner-trivy/blob/master/LICENSE
+[license]: https://github.com/aquasecurity/harbor-scanner-trivy/blob/main/LICENSE
 
 [minikube-url]: https://github.com/kubernetes/minikube
 [harbor]: https://github.com/goharbor/harbor
@@ -251,6 +251,6 @@ This project is licensed under the [Apache 2.0](LICENSE) license.
 [trivy-db]: https://github.com/aquasecurity/trivy-db
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [harbor-pluggable-scanners]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
-[coc-url]: https://github.com/aquasecurity/.github/blob/master/CODE_OF_CONDUCT.md
+[coc-url]: https://github.com/aquasecurity/.github/blob/main/CODE_OF_CONDUCT.md
 [fowler-testing-strategies]: https://www.martinfowler.com/articles/microservice-testing/
 [gh-rate-limit]: https://github.com/aquasecurity/trivy#github-rate-limiting
