@@ -115,25 +115,37 @@ type Layer struct {
 	DiffID string `json:"diff_id,omitempty"`
 }
 
+// Deprecated use CVSSDetails instead.
+// This struct is not defined by Scanners API.
 type CVSSInfo struct {
-	V2Vector string  `json:"v2_vector,omitempty"`
-	V3Vector string  `json:"v3_vector,omitempty"`
-	V2Score  float32 `json:"v2_score,omitempty"`
-	V3Score  float32 `json:"v3_score,omitempty"`
+	V2Vector string   `json:"v2_vector,omitempty"`
+	V3Vector string   `json:"v3_vector,omitempty"`
+	V2Score  *float32 `json:"v2_score,omitempty"`
+	V3Score  *float32 `json:"v3_score,omitempty"`
+}
+
+type CVSSDetails struct {
+	ScoreV2  *float32 `json:"score_v2,omitempty"`
+	ScoreV3  *float32 `json:"score_v3,omitempty"`
+	VectorV2 string   `json:"vector_v2"`
+	VectorV3 string   `json:"vector_v3"`
 }
 
 // VulnerabilityItem is an item in the vulnerability result returned by vulnerability details API.
 type VulnerabilityItem struct {
-	ID          string              `json:"id"`
-	Pkg         string              `json:"package"`
-	Version     string              `json:"version"`
-	FixVersion  string              `json:"fix_version,omitempty"`
-	Severity    Severity            `json:"severity"`
-	Description string              `json:"description"`
-	Links       []string            `json:"links"`
-	Layer       *Layer              `json:"layer"`
-	CVSS        map[string]CVSSInfo `json:"cvss,omitempty"`
-	CweIDs      []string            `json:"cwe_ids,omitempty"`
+	ID          string   `json:"id"`
+	Pkg         string   `json:"package"`
+	Version     string   `json:"version"`
+	FixVersion  string   `json:"fix_version,omitempty"`
+	Severity    Severity `json:"severity"`
+	Description string   `json:"description"`
+	Links       []string `json:"links"`
+	Layer       *Layer   `json:"layer"` // Not defined by Scanners API
+	// Deprecated use VendorAttributes instead
+	CVSS             map[string]CVSSInfo    `json:"cvss,omitempty"` // Not defined by Scanners API
+	PreferredCVSS    *CVSSDetails           `json:"preferred_cvss,omitempty"`
+	CweIDs           []string               `json:"cwe_ids,omitempty"`
+	VendorAttributes map[string]interface{} `json:"vendor_attributes,omitempty"`
 }
 
 type ScannerAdapterMetadata struct {

@@ -200,7 +200,8 @@ func TestRestApi(t *testing.T) {
         "application/vnd.docker.distribution.manifest.v2+json"
       ],
       "produces_mime_types": [
-        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+        "application/vnd.security.vulnerability.report; version=1.1"
       ]
     }
   ],

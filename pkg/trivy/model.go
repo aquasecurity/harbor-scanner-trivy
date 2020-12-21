@@ -30,10 +30,10 @@ type Layer struct {
 }
 
 type CVSSInfo struct {
-	V2Vector string  `json:"V2Vector,omitempty"`
-	V3Vector string  `json:"V3Vector,omitempty"`
-	V2Score  float32 `json:"V2Score,omitempty"`
-	V3Score  float32 `json:"V3Score,omitempty"`
+	V2Vector string   `json:"V2Vector,omitempty"`
+	V3Vector string   `json:"V3Vector,omitempty"`
+	V2Score  *float32 `json:"V2Score,omitempty"`
+	V3Score  *float32 `json:"V3Score,omitempty"`
 }
 
 type Vulnerability struct {

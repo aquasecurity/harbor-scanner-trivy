@@ -17,6 +17,10 @@ func (c *fixedClock) Now() time.Time {
 	return c.fixedTime
 }
 
+func float32Ptr(f float32) *float32 {
+	return &f
+}
+
 func TestTransformer_Transform(t *testing.T) {
 	fixedTime := time.Now()
 	tf := NewTransformer(&fixedClock{
@@ -46,12 +50,8 @@ func TestTransformer_Transform(t *testing.T) {
 					"nvd": {
 						V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
 						V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
-						V2Score:  1.9,
-						V3Score:  4.7,
-					},
-					"redhat": {
-						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
-						V3Score:  5.5,
+						V2Score:  float32Ptr(1.9),
+						V3Score:  float32Ptr(4.7),
 					},
 				},
 				CweIDs: []string{
@@ -149,17 +149,29 @@ func TestTransformer_Transform(t *testing.T) {
 					"nvd": {
 						V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
 						V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
-						V2Score:  1.9,
-						V3Score:  4.7,
-					},
-					"redhat": {
-						V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
-						V3Score:  5.5,
+						V2Score:  float32Ptr(1.9),
+						V3Score:  float32Ptr(4.7),
 					},
 				},
 				CweIDs: []string{
 					"CWE-20",
 					"CWE-1289",
+				},
+				PreferredCVSS: &harbor.CVSSDetails{
+					VectorV2: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
+					VectorV3: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+					ScoreV2:  float32Ptr(1.9),
+					ScoreV3:  float32Ptr(4.7),
+				},
+				VendorAttributes: map[string]interface{}{
+					"CVSS": map[string]trivy.CVSSInfo{
+						"nvd": {
+							V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
+							V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+							V2Score:  float32Ptr(1.9),
+							V3Score:  float32Ptr(4.7),
+						},
+					},
 				},
 			},
 			{
@@ -175,6 +187,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &harbor.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
 				},
+				VendorAttributes: map[string]interface{}{},
 			},
 			{
 				ID:          "CVE-0000-0003",
@@ -189,6 +202,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &harbor.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
 				},
+				VendorAttributes: map[string]interface{}{},
 			},
 			{
 				ID:          "CVE-0000-0004",
@@ -203,6 +217,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &harbor.Layer{
 					Digest: "UNKNOWN",
 				},
+				VendorAttributes: map[string]interface{}{},
 			},
 			{
 				ID:       "CVE-0000-0005",
@@ -213,13 +228,15 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &harbor.Layer{
 					Digest: "",
 				},
+				VendorAttributes: map[string]interface{}{},
 			},
 			{
-				ID:       "CVE-0000-0006",
-				Pkg:      "PKG-06",
-				Version:  "PKG-06-VER",
-				Severity: harbor.SevUnknown,
-				Links:    []string{},
+				ID:               "CVE-0000-0006",
+				Pkg:              "PKG-06",
+				Version:          "PKG-06-VER",
+				Severity:         harbor.SevUnknown,
+				Links:            []string{},
+				VendorAttributes: map[string]interface{}{},
 			},
 		},
 	}, hr)

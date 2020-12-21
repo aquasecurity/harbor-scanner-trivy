@@ -1,10 +1,11 @@
 package ext
 
 import (
-	"github.com/stretchr/testify/mock"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type FakeFile struct {

@@ -78,6 +78,10 @@ const (
 ]`
 )
 
+func float32Ptr(f float32) *float32 {
+	return &f
+}
+
 func TestScanReportFrom(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -105,14 +109,14 @@ func TestScanReportFrom(t *testing.T) {
 							"nvd": {
 								V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
 								V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
-								V2Score:  1.9,
-								V3Score:  4.7,
+								V2Score:  float32Ptr(1.9),
+								V3Score:  float32Ptr(4.7),
 							},
 							"redhat": {
 								V2Vector: "",
 								V3Vector: "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
-								V2Score:  0,
-								V3Score:  5.5,
+								V2Score:  nil,
+								V3Score:  float32Ptr(5.5),
 							},
 						},
 					},

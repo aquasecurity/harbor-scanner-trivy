@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/FZambia/sentinel v1.1.0
 	github.com/caarlos0/env/v6 v6.3.0
+	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gocraft/work v0.5.1

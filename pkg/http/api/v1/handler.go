@@ -8,9 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
@@ -140,6 +139,17 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 }
 
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
+	var reportMimeType api.MimeType
+
+	err := reportMimeType.FromAcceptHeader(req.Header.Get(api.HeaderAccept))
+	if err != nil {
+		h.WriteJSONError(res, harbor.Error{
+			HTTPCode: http.StatusUnsupportedMediaType,
+			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
+		})
+		return
+	}
+
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
@@ -197,7 +207,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	h.WriteJSON(res, scanJob.Report, api.MimeTypeHarborVulnerabilityReport, http.StatusOK)
+	h.WriteJSON(res, scanJob.Report, reportMimeType, http.StatusOK)
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
@@ -236,10 +246,11 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 			{
 				ConsumesMIMETypes: []string{
 					api.MimeTypeOCIImageManifest.String(),
-					api.MimeTypeDockerImageManifest.String(),
+					api.MimeTypeDockerImageManifestV2.String(),
 				},
 				ProducesMIMETypes: []string{
 					api.MimeTypeHarborVulnerabilityReport.String(),
+					api.MimeTypeSecurityVulnerabilityReport.String(),
 				},
 			},
 		},
