@@ -25,6 +25,8 @@ jobs:
           go-version: 1.14
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: yaml-lint
+        uses: ibiqlik/action-yamllint@v3
       - name: Setup make
         run: make setup
       - name: Run linter
