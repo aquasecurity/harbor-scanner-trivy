@@ -226,10 +226,6 @@ value of the `SCANNER_TRIVY_GITHUB_TOKEN` environment variable (authenticated re
 Please read [CODE_OF_CONDUCT.md][coc-url] for details on our code of conduct, and the process for submitting pull
 requests.
 
-## License
-
-This project is licensed under the [Apache 2.0](LICENSE) license.
-
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg?logo=github
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
 [build-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/build/badge.svg
