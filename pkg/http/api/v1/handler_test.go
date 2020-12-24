@@ -9,14 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -470,7 +468,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+            "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
    ],
@@ -519,7 +518,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+            "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
    ],
@@ -562,7 +562,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+            "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
    ],
@@ -584,26 +585,28 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		enqueuer := mock.NewEnqueuer()
-		store := mock.NewStore()
-		wrapper := trivy.NewMockWrapper()
-		wrapper.On("GetVersion").Return(tc.mockedVersion, tc.mockedError)
+		t.Run(tc.name, func(t *testing.T) {
+			enqueuer := mock.NewEnqueuer()
+			store := mock.NewStore()
+			wrapper := trivy.NewMockWrapper()
+			wrapper.On("GetVersion").Return(tc.mockedVersion, tc.mockedError)
 
-		rr := httptest.NewRecorder()
+			rr := httptest.NewRecorder()
 
-		r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
-		require.NoError(t, err, tc.name)
+			r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
+			require.NoError(t, err, tc.name)
 
-		NewAPIHandler(tc.mockedBuildInfo, tc.mockedConfig, enqueuer, store, wrapper).ServeHTTP(rr, r)
+			NewAPIHandler(tc.mockedBuildInfo, tc.mockedConfig, enqueuer, store, wrapper).ServeHTTP(rr, r)
 
-		rs := rr.Result()
+			rs := rr.Result()
 
-		assert.Equal(t, tc.expectedHTTPCode, rs.StatusCode, tc.name)
-		assert.JSONEq(t, tc.expectedResp, rr.Body.String(), tc.name)
+			assert.Equal(t, tc.expectedHTTPCode, rs.StatusCode, tc.name)
+			assert.JSONEq(t, tc.expectedResp, rr.Body.String(), tc.name)
 
-		enqueuer.AssertExpectations(t)
-		store.AssertExpectations(t)
-		wrapper.AssertExpectations(t)
+			enqueuer.AssertExpectations(t)
+			store.AssertExpectations(t)
+			wrapper.AssertExpectations(t)
+		})
 	}
 
 }
