@@ -45,6 +45,7 @@ type Vulnerability struct {
 	Description      string              `json:"Description"`
 	Severity         string              `json:"Severity"`
 	References       []string            `json:"References"`
+	PrimaryURL       string              `json:"PrimaryURL"`
 	Layer            *Layer              `json:"Layer"`
 	CVSS             map[string]CVSSInfo `json:"CVSS"`
 	CweIDs           []string            `json:"CweIDs"`
