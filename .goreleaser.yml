@@ -5,7 +5,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - id: build-scanner-trivy
+  - id: scanner-trivy
     main: ./cmd/scanner-trivy/main.go
     binary: scanner-trivy
     env:
@@ -31,7 +31,7 @@ dockers:
   - image_templates:
       - "docker.io/aquasec/harbor-scanner-trivy:{{ .Version }}"
       - "public.ecr.aws/aquasecurity/harbor-scanner-trivy:{{ .Version }}"
-    binaries:
+    ids:
       - scanner-trivy
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
