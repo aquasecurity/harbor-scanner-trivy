@@ -48,8 +48,8 @@ jobs:
           version: v0.148.0
           args: release --snapshot --skip-publish --rm-dist
       - name: Scan image for vulnerabilities
-        uses: docker://docker.io/aquasec/trivy
-        with: # TODO Configure GitHub Actions cache for the /var/lib/trivy path
-          args: --cache-dir /var/lib/trivy --exit-code 1 --severity CRITICAL --no-progress docker.io/aquasec/harbor-scanner-trivy:${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "docker.io/aquasec/harbor-scanner-trivy:${{ github.sha }}"
+          severity: "CRITICAL"
+          exit-code: "1"

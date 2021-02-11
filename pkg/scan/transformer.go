@@ -50,7 +50,7 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanRepor
 			FixVersion:       v.FixedVersion,
 			Severity:         t.toHarborSeverity(v.Severity),
 			Description:      v.Description,
-			Links:            t.toLinks(v.References),
+			Links:            t.toLinks(v.PrimaryURL, v.References),
 			Layer:            t.toHarborLayer(v.Layer),
 			CVSS:             t.toHarborCVSS(v.CVSS),
 			PreferredCVSS:    t.toHarborPreferredCVSS(v.CVSS),
@@ -68,11 +68,13 @@ func (t *transformer) Transform(artifact harbor.Artifact, source trivy.ScanRepor
 	}
 }
 
-func (t *transformer) toLinks(references []string) []string {
+func (t *transformer) toLinks(primaryURL string, references []string) []string {
+	if primaryURL != "" {
+		return []string{primaryURL}
+	}
 	if references == nil {
 		return []string{}
 	}
-
 	return references
 }
 

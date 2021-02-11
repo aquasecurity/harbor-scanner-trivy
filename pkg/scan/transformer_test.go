@@ -86,6 +86,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Layer: &trivy.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
 				},
+				PrimaryURL: "https://avd.aquasec.com/nvd/cve-0000-0003/",
 			},
 			{
 				VulnerabilityID:  "CVE-0000-0004",
@@ -197,7 +198,7 @@ func TestTransformer_Transform(t *testing.T) {
 				Severity:    harbor.SevMedium,
 				Description: "CVE-0000-0003.DESC",
 				Links: []string{
-					"http://cve.com?id=CVE-0000-0003",
+					"https://avd.aquasec.com/nvd/cve-0000-0003/",
 				},
 				Layer: &harbor.Layer{
 					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
