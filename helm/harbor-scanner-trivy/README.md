@@ -4,10 +4,15 @@ Trivy as a plug-in vulnerability scanner in the Harbor registry.
 
 ## TL;DR;
 
+```
+$ helm repo add aqua https://helm.aquasec.com
+```
+
 ### Without TLS
 
 ```
-$ helm install harbor-scanner-trivy . --namespace harbor
+$ helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
+    --namespace harbor
 ```
 
 ### With TLS
@@ -16,19 +21,19 @@ $ helm install harbor-scanner-trivy . --namespace harbor
    ```
    $ openssl genrsa -out tls.key 2048
    $ openssl req -new -x509 \
-                 -key tls.key \
-                 -out tls.crt \
-                 -days 365 \
-                 -subj /CN=harbor-scanner-trivy.harbor
+       -key tls.key \
+       -out tls.crt \
+       -days 365 \
+       -subj /CN=harbor-scanner-trivy.harbor
    ```
 2. Install the `harbor-scanner-trivy` chart:
    ```
-   $ helm install harbor-scanner-trivy . \
-                  --namespace harbor \
-                  --set service.port=8443 \
-                  --set scanner.api.tlsEnabled=true \
-                  --set scanner.api.tlsCertificate="`cat tls.crt`" \
-                  --set scanner.api.tlsKey="`cat tls.key`"
+   $ helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
+       --namespace harbor \
+       --set service.port=8443 \
+       --set scanner.api.tlsEnabled=true \
+       --set scanner.api.tlsCertificate="`cat tls.crt`" \
+       --set scanner.api.tlsKey="`cat tls.key`"
    ```
 
 ## Introduction
@@ -46,7 +51,7 @@ This chart bootstraps a scanner adapter deployment on a [Kubernetes](http://kube
 To install the chart with the release name `my-release`:
 
 ```
-$ helm install my-release .
+$ helm install my-release aqua/harbor-scanner-trivy
 ```
 
 The command deploys scanner adapter on the Kubernetes cluster in the default configuration. The [Parameters](#parameters)
@@ -113,8 +118,8 @@ The above parameters map to the env variables defined in [harbor-scanner-trivy](
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
 ```
-$ helm install my-release . \
-       --namespace my-namespace \
-       --set "service.port=9090" \
-       --set "scanner.trivy.vulnType=os\,library"
+$ helm install my-release aqua/harbor-scanner-trivy \
+    --namespace my-namespace \
+    --set "service.port=9090" \
+    --set "scanner.trivy.vulnType=os\,library"
 ```
