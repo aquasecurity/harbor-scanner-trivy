@@ -61,6 +61,10 @@ spec:
               value: {{ .Values.scanner.trivy.debugMode | default false | quote }}
             - name: "SCANNER_TRIVY_VULN_TYPE"
               value: {{ .Values.scanner.trivy.vulnType | default "os,library" | quote }}
+          {{- if (.Values.scanner.trivy.ignorePolicy) }}
+            - name: "SCANNER_TRIVY_IGNORE_POLICY"
+              value: "/home/scanner/opa/policy.rego"
+          {{- end }}
             - name: "SCANNER_TRIVY_SEVERITY"
               value: {{ .Values.scanner.trivy.severity | default "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" | quote }}
             - name: "SCANNER_TRIVY_IGNORE_UNFIXED"
@@ -141,6 +145,10 @@ spec:
               name: certs
               readOnly: true
             {{- end }}
+            {{- if (.Values.scanner.trivy.ignorePolicy) }}
+            - name: trivy-ignorepolicy
+              mountPath: /home/scanner/opa/
+            {{- end }}
           {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -156,4 +164,9 @@ spec:
         - name: certs
           secret:
             secretName: {{ include "harbor-scanner-trivy.fullname" . }}-tls
+        {{- end }}
+        {{- if (.Values.scanner.trivy.ignorePolicy) }}
+        - name: trivy-ignorepolicy
+          configMap:
+            name: {{ include "harbor-scanner-trivy.fullname" . }}-ignorepolicy
         {{- end }}
