@@ -91,7 +91,7 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.trivy.reportsDir`            | Trivy reports directory                                                 | `/home/scanner/.cache/reports` |
 | `scanner.trivy.debugMode`             | The flag to enable or disable Trivy debug mode                          | `false` |
 | `scanner.trivy.vulnType`              | Comma-separated list of vulnerability types. Possible values are `os` and `library`. | `os,library` |
-| `scanner.trivy.ignorepolicy`          | The OPA rego file which will be added to a ConfigMap and mapped into Trivy | `     ` |
+| `scanner.trivy.ignorepolicy`          | The OPA rego script used by Trivy to evaluate each vulnerability | `     ` |
 | `scanner.trivy.severity`              | Comma-separated list of vulnerabilities severities to be displayed      | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
 | `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`        |
 | `scanner.trivy.skipUpdate`            | The flag to enable or disable Trivy DB downloads from GitHub            | `false`        |
