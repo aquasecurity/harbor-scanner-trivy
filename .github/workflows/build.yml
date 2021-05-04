@@ -45,7 +45,7 @@ jobs:
       - name: Release snapshot
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v0.155.2
+          version: v0.164.0
           args: release --snapshot --skip-publish --rm-dist
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@master
