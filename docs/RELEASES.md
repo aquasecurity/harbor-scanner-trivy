@@ -42,18 +42,7 @@ GoReleaser requires the following environment variables to be set.
 | `DOCKERHUB_USER`     | DockerHub username |
 | `DOCKERHUB_TOKEN`    | DockerHub access token to push images |
 
-Those can be stored as encrypted environment variable in `.travis.yml`. The easiest way to encrypt something with the
-public key is to use Travis CLI:
-
-```
-$ gem install travis
-```
-
-```
-$ travis encrypt GITHUB_TOKEN="***" --repo aquasecurity/harbor-scanner-trivy
-$ travis encrypt DOCKERHUB_USER="***" --repo aquasecurity/harbor-scanner-trivy
-$ travis encrypt DOCKERHUB_TOKEN="***" --repo aquasecurity/harbor-scanner-trivy
-```
+These can be stored as secrets in GitHub repository settings.
 
 ## Build and test the next release locally
 
