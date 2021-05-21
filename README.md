@@ -14,7 +14,7 @@ the [Harbor][harbor] scanning API into Trivy commands and allows Harbor to use T
 reports on images stored in Harbor registry as part of its vulnerability scan feature.
 
 ## TOC
-
+- [Version Matrix](#version-matrix)
 - [Deployment](#deployment)
   - [Harbor >= 2.0 on Kubernetes](#harbor--20-on-kubernetes)
   - [Harbor 1.10 on Kubernetes](#harbor-110-on-kubernetes)
@@ -23,6 +23,29 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 
+## Version Matrix
+
+The following matrix indicates the version of Trivy and Trivy adapter installed in each Harbor
+[release](https://github.com/goharbor/harbor/releases).
+
+| Harbor                  | Trivy Adapter | Trivy                    |
+|-------------------------|---------------|--------------------------|
+| -                       | v0.19.0       | [v0.17.2][trivy v0.17.2] |
+| [v2.2.2][harbor v2.2.2] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
+| [v2.2.1][harbor v2.2.1] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
+| [v2.2.0][harbor v2.2.0] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
+| [v2.1.5][harbor v2.1.5] | v0.14.1       | [v0.9.2][trivy v0.9.2]   |
+| [v2.1.0][harbor v2.1.0] | v0.14.1       | [v0.9.2][trivy v0.9.2]   |
+
+[harbor v2.2.2]: https://github.com/goharbor/harbor/releases/tag/v2.2.2
+[harbor v2.2.1]: https://github.com/goharbor/harbor/releases/tag/v2.2.1
+[harbor v2.2.0]: https://github.com/goharbor/harbor/releases/tag/v2.2.0
+[harbor v2.1.5]: https://github.com/goharbor/harbor/releases/tag/v2.1.5
+[harbor v2.1.0]: https://github.com/goharbor/harbor/releases/tag/v2.1.0
+
+[trivy v0.17.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.17.2
+[trivy v0.16.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.16.0
+[trivy v0.9.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.9.2
 
 ## Deployment
 
@@ -36,10 +59,8 @@ $ helm repo add harbor https://helm.goharbor.io
 ```
 
 ```
-$ HARBOR_CHART_VERSION=<chart version>
-$
 $ helm install harbor harbor/harbor \
-    --version=$HARBOR_CHART_VERSION \
+    --create-namespace \
     --namespace harbor \
     --set clair.enabled=false \
     --set trivy.enabled=true
