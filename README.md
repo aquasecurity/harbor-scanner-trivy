@@ -30,7 +30,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 
 | Harbor                  | Trivy Adapter | Trivy                    |
 |-------------------------|---------------|--------------------------|
-| -                       | -             | [v0.18.3][trivy v0.18.3] |
+| -                       | v0.20.0       | [v0.18.3][trivy v0.18.3] |
 | [v2.3.0][harbor v2.3.0] | v0.19.0       | [v0.17.2][trivy v0.17.2] |
 | [v2.2.2][harbor v2.2.2] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
 | [v2.2.1][harbor v2.2.1] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
