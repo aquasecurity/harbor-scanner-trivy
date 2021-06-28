@@ -24,9 +24,9 @@ resources:
     memory: 1Gi
 
 podSecurityContext:
-  runAsUser: 1000
+  runAsUser: 10000
   runAsNonRoot: true
-  fsGroup: 1000
+  fsGroup: 10000
 
 securityContext:
   privileged: false
