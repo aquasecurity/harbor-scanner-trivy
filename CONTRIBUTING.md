@@ -2,7 +2,8 @@
 
 ## Table of Contents
 
-* [Set up your Development Environment](#set-up-your-development-environment)
+* [Set up Local Development Environment](#set-up-local-development-environment)
+* [Set up Development Environment with Vagrant](#setup-development-environment-with-vagrant)
 * [Build Binaries](#build-binaries)
 * [Test Scanner Adapter](#test-scanner-adapter)
   * [Prerequisites](#prerequisites)
@@ -12,68 +13,88 @@
   * [Run Integration Tests](#run-integration-tests)
   * [Run Component Tests](#run-component-tests)
 
-## Set up your Development Environment
+## Set up Local Development Environment
 
-1. Install Go
+1. Install Go.
 
-   The project requires [Go 1.14][go-download] or later. We also assume that you're familiar with
+   The project requires [Go 1.16][go-download] or later. We also assume that you're familiar with
    Go's [GOPATH workspace][go-code] convention, and have the appropriate environment variables set.
-2. Get the source code:
+2. Install Docker, Docker Compose, and Make.
+3. Get the source code.
+   ```
+   git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
+   cd harbor-scanner-trivy
+   ```
 
+## Setup Development Environment with Vagrant
+
+1. Get the source code.
    ```
-   $ git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
-   $ cd harbor-scanner-trivy
+   git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
+   cd harbor-scanner-trivy
    ```
-3. Install Docker and Docker Compose
+2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
+   Make, and Harbor v2.3.2 preinstalled. Harbor is installed in the `/opt/harbor` directory.
+   ```
+   vagrant up
+   ```
+3. SSH into a running Vagrant machine.
+   ```
+   vagrant ssh
+   ```
+4. Change directory to `/vagrant` in the development machine, which is shared between host and guest.
+   ```
+   vagrant@ubuntu-focal:~$ cd /vagrant
+   ```
 
 ## Build Binaries
 
 Run `make` to build the binary in `./scanner-trivy`:
 
 ```
-$ make
+make
 ```
 
 To build into a Docker container `aquasec/harbor-scanner-trivy:dev`:
 
 ```
-$ make docker-build
+make docker-build
 ```
 
 ## Test Scanner Adapter
 
 ### Prerequisites
 
-Install Harbor with [Harbor installer](https://goharbor.io/docs/2.1.0/install-config/download-installer/).
+Install Harbor with [Harbor installer](https://goharbor.io/docs/2.3.0/install-config/download-installer/).
 Make sure that you install Harbor with Trivy, i.e. `sudo ./install.sh --with-trivy`.
 
-```
+```console
 $ docker ps
-CONTAINER ID   IMAGE                                  COMMAND                  CREATED              STATUS                        PORTS                       NAMES
-d9f49e0f6e91   goharbor/harbor-jobservice:v2.1.1      "/harbor/entrypoint.…"   About a minute ago   Up About a minute (healthy)                               harbor-jobservice
-599b2a030413   goharbor/nginx-photon:v2.1.1           "nginx -g 'daemon of…"   About a minute ago   Up About a minute (healthy)   0.0.0.0:80->8080/tcp        nginx
-dfc40b34a5b9   goharbor/harbor-core:v2.1.1            "/harbor/entrypoint.…"   About a minute ago   Up About a minute (healthy)                               harbor-core
-ef409cf2e131   goharbor/trivy-adapter-photon:v2.1.1   "/home/scanner/entry…"   About a minute ago   Up About a minute (healthy)                               trivy-adapter
-d580ffa61f80   goharbor/harbor-registryctl:v2.1.1     "/home/harbor/start.…"   About a minute ago   Up About a minute (healthy)                               registryctl
-45f0c9c877bd   goharbor/registry-photon:v2.1.1        "/home/harbor/entryp…"   About a minute ago   Up About a minute (healthy)                               registry
-55e123d51250   goharbor/harbor-portal:v2.1.1          "nginx -g 'daemon of…"   About a minute ago   Up About a minute (healthy)                               harbor-portal
-2afdf3ad0d35   goharbor/redis-photon:v2.1.1           "redis-server /etc/r…"   About a minute ago   Up About a minute (healthy)                               redis
-e473ae5119b1   goharbor/harbor-db:v2.1.1              "/docker-entrypoint.…"   About a minute ago   Up About a minute (healthy)                               harbor-db
-c302f3cd1907   goharbor/harbor-log:v2.1.1             "/bin/sh -c /usr/loc…"   About a minute ago   Up About a minute (healthy)   127.0.0.1:1514->10514/tcp   harbor-log
+CONTAINER ID   IMAGE                                  COMMAND                  CREATED          STATUS                    PORTS                                   NAMES
+c4acd5694606   goharbor/nginx-photon:v2.3.2           "nginx -g 'daemon of…"   32 seconds ago   Up 31 seconds (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
+c6060e31d2e3   goharbor/harbor-jobservice:v2.3.2      "/harbor/entrypoint.…"   32 seconds ago   Up 31 seconds (healthy)                                           harbor-jobservice
+878cc280e634   goharbor/trivy-adapter-photon:v2.3.2   "/home/scanner/entry…"   32 seconds ago   Up 32 seconds (healthy)                                           trivy-adapter
+377922e00aa1   goharbor/harbor-core:v2.3.2            "/harbor/entrypoint.…"   32 seconds ago   Up 32 seconds (healthy)                                           harbor-core
+c8530be38c0c   goharbor/harbor-registryctl:v2.3.2     "/home/harbor/start.…"   33 seconds ago   Up 33 seconds (healthy)                                           registryctl
+fa6015b28ea7   goharbor/harbor-db:v2.3.2              "/docker-entrypoint.…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-db
+acb198e326f7   goharbor/registry-photon:v2.3.2        "/home/harbor/entryp…"   33 seconds ago   Up 32 seconds (healthy)                                           registry
+fb445cb08b1c   goharbor/harbor-portal:v2.3.2          "nginx -g 'daemon of…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-portal
+34f4ed9a3ac1   goharbor/redis-photon:v2.3.2           "redis-server /etc/r…"   33 seconds ago   Up 32 seconds (healthy)                                           redis
+157a023611ae   goharbor/harbor-log:v2.3.2             "/bin/sh -c /usr/loc…"   34 seconds ago   Up 33 seconds (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
 ```
 
 ### Update Container Image
 
 1. Navigate to Harbor installation directory.
-2. Stop Harbor services:
+2. Stop Harbor services.
    ```
-   $ docker-compose down
+   sudo docker-compose down
    ```
-3. Build a new version of the adapter service into a Docker container `aquasec/harbor-scanner-trivy:dev`:
+3. Build a new version of the adapter service into a Docker container `aquasec/harbor-scanner-trivy:dev`.
    ```
-   $ make docker-build
+   make docker-build
    ```
-4. Edit the `docker-compose.yml` file and replace the adapter's image with the one that we've just built:
+4. Edit the `docker-compose.yml` file and replace the adapter's image with the one that we've just built.
    ```yaml
    version: '2.3'
    services:
@@ -83,9 +104,9 @@ c302f3cd1907   goharbor/harbor-log:v2.1.1             "/bin/sh -c /usr/loc…"  
        image: aquasec/harbor-scanner-trivy:dev
        restart: always
    ```
-5. Restart Harbor services:
+5. Restart Harbor services.
    ```
-   $ docker-compose up -d
+   sudo docker-compose up --detach
    ```
 
 ## Run Tests
@@ -99,23 +120,23 @@ correctly interacts with its collaborators, more coarse grained testing is requi
 Run `make test` to run all unit tests:
 
 ```
-$ make test
+make test
 ```
 
 ### Run Integration Tests
 
-Run `make test-integration` to run integration tests:
+Run `make test-integration` to run integration tests.
 
 ```
-$ make test-integration
+make test-integration
 ```
 
 ### Run Component Tests
 
-Run `make test-component` to run component tests:
+Run `make test-component` to run component tests.
 
 ```
-$ make test-component
+make test-component
 ```
 
 [go-download]: https://golang.org/dl/

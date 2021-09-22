@@ -11,3 +11,5 @@ coverage.txt
 thumbs.db
 
 bin
+
+.vagrant/
