@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/stretchr/testify/assert"
 )
 

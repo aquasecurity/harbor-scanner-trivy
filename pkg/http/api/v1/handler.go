@@ -249,7 +249,6 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 					api.MimeTypeDockerImageManifestV2.String(),
 				},
 				ProducesMIMETypes: []string{
-					api.MimeTypeHarborVulnerabilityReport.String(),
 					api.MimeTypeSecurityVulnerabilityReport.String(),
 				},
 			},

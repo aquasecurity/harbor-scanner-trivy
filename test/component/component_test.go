@@ -1,3 +1,4 @@
+//go:build component
 // +build component
 
 package component

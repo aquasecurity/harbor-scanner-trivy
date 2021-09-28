@@ -1,3 +1,4 @@
+//go:build component
 // +build component
 
 package scanner
@@ -38,7 +39,7 @@ func (c *Client) RequestScan(request harbor.ScanRequest) (scanResp harbor.ScanRe
 	if err != nil {
 		return
 	}
-	req.Header.Set("Content-Type", "application/vnd.scanner.adapter.scan.request+json; version=1.0")
+	req.Header.Set("Content-Type", "application/vnd.security.vulnerability.report; version=1.1")
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
@@ -82,7 +83,7 @@ func (c *Client) doGetScanReport(scanRequestID string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0")
+	req.Header.Set("Accept", "application/vnd.security.vulnerability.report; version=1.1")
 
 	return http.DefaultTransport.RoundTrip(req)
 }

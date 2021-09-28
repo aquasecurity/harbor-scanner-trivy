@@ -331,7 +331,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				}, nil},
 			},
 			expectedStatus:      http.StatusOK,
-			expectedContentType: "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
+			expectedContentType: "application/vnd.security.vulnerability.report; version=1.1",
 			expectedResponse: fmt.Sprintf(`{
   "generated_at": "%s",
   "artifact": {
@@ -468,7 +468,6 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
             "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
@@ -518,7 +517,6 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
             "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
@@ -562,7 +560,6 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
             "application/vnd.security.vulnerability.report; version=1.1"
          ]
       }
