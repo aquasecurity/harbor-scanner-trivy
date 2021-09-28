@@ -92,7 +92,7 @@ func TestWrapper_Scan(t *testing.T) {
 		VulnType:      "os,library",
 		Severity:      "CRITICAL,MEDIUM",
 		IgnoreUnfixed: true,
-		IgnorePolicy: "/home/scanner/opa/policy.rego",
+		IgnorePolicy:  "/home/scanner/opa/policy.rego",
 		SkipUpdate:    true,
 		GitHubToken:   "<github_token>",
 		Insecure:      true,

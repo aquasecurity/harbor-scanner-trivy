@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package api
@@ -11,15 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
-	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
-
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	v1 "github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api/v1"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -135,7 +133,7 @@ func TestRestApi(t *testing.T) {
 
 		// then
 		assert.Equal(t, http.StatusOK, rs.StatusCode)
-		assert.Equal(t, "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0", rs.Header.Get("Content-Type"))
+		assert.Equal(t, "application/vnd.security.vulnerability.report; version=1.1", rs.Header.Get("Content-Type"))
 
 		bodyBytes, err := ioutil.ReadAll(rs.Body)
 		require.NoError(t, err)
@@ -200,7 +198,6 @@ func TestRestApi(t *testing.T) {
         "application/vnd.docker.distribution.manifest.v2+json"
       ],
       "produces_mime_types": [
-        "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
         "application/vnd.security.vulnerability.report; version=1.1"
       ]
     }

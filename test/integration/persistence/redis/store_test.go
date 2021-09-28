@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package redis
@@ -8,12 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/redisx"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence/redis"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/redisx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go"

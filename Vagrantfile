@@ -9,8 +9,7 @@ Vagrant.configure("2") do |config|
     vb.memory = "2096"
   end
 
-  config.vm.provision "install-docker-ce", type: "shell", path: "vagrant/install-docker-ce.sh"
-  config.vm.provision "install-docker-compose", type: "shell", path: "vagrant/install-docker-compose.sh"
+  config.vm.provision "install-docker", type: "shell", path: "vagrant/install-docker.sh"
   config.vm.provision "install-harbor", type: "shell", path: "vagrant/install-harbor.sh"
   config.vm.provision "install-go", type: "shell", path: "vagrant/install-go.sh"
 

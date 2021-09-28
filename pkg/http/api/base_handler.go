@@ -24,8 +24,6 @@ var MimeTypeDockerImageManifestV2 = MimeType{Type: "application", Subtype: "vnd.
 
 var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeVersion}
 
-// Deprecated
-var MimeTypeHarborVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.vuln.report.harbor+json", Params: MimeTypeVersion}
 var MimeTypeSecurityVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.security.vulnerability.report", Params: map[string]string{"version": "1.1"}}
 var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeVersion}
 var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeVersion}
@@ -50,10 +48,10 @@ func (mt MimeType) String() string {
 
 func (mt *MimeType) FromAcceptHeader(value string) error {
 	switch value {
-	case "", "*/*", MimeTypeHarborVulnerabilityReport.String():
-		mt.Type = MimeTypeHarborVulnerabilityReport.Type
-		mt.Subtype = MimeTypeHarborVulnerabilityReport.Subtype
-		mt.Params = MimeTypeHarborVulnerabilityReport.Params
+	case "", "*/*", MimeTypeSecurityVulnerabilityReport.String():
+		mt.Type = MimeTypeSecurityVulnerabilityReport.Type
+		mt.Subtype = MimeTypeSecurityVulnerabilityReport.Subtype
+		mt.Params = MimeTypeSecurityVulnerabilityReport.Params
 		return nil
 	case MimeTypeSecurityVulnerabilityReport.String():
 		mt.Type = MimeTypeSecurityVulnerabilityReport.Type
