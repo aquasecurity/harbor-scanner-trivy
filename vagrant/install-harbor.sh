@@ -2,6 +2,11 @@
 
 HARBOR_VERSION="v2.3.2"
 
+# Keep in sync with vagrant/harbor.yml.
+HARBOR_HOSTNAME="harbor.dev.io"
+HARBOR_USERNAME="admin"
+HARBOR_PASSWORD="Harbor12345"
+
 # Download the Harbor installer.
 # The online installer downloads the Harbor images from DockerHub. For this reason, the installer is very small in size.
 wget https://github.com/goharbor/harbor/releases/download/$HARBOR_VERSION/harbor-online-installer-$HARBOR_VERSION.tgz
@@ -17,12 +22,13 @@ gpg --verbose --keyserver hkps://keyserver.ubuntu.com --verify harbor-online-ins
 
 tar -C /opt -xzf harbor-online-installer-$HARBOR_VERSION.tgz
 rm harbor-online-installer-$HARBOR_VERSION.tgz
+rm harbor-online-installer-$HARBOR_VERSION.tgz.asc
 
 rm /opt/harbor/harbor.yml.tmpl
 cp /vagrant/vagrant/harbor.yml /opt/harbor/harbor.yml
 
-cat >> /etc/hosts <<EOF
-127.0.0.1  harbor.dev.io
+cat << EOF >> /etc/hosts
+127.0.0.1  $HARBOR_HOSTNAME
 EOF
 
 cd /opt/harbor
@@ -31,8 +37,8 @@ cd /opt/harbor
 
 sleep 30s
 
-echo 'Harbor12345' | docker login --username=admin --password-stdin harbor.dev.io
+echo "$HARBOR_PASSWORD" | docker login --username=$HARBOR_USERNAME --password-stdin $HARBOR_HOSTNAME
 
 docker image pull nginx:1.16
-docker image tag nginx:1.16 harbor.dev.io/library/nginx:1.16
-docker image push harbor.dev.io/library/nginx:1.16
+docker image tag nginx:1.16 $HARBOR_HOSTNAME/library/nginx:1.16
+docker image push $HARBOR_HOSTNAME/library/nginx:1.16

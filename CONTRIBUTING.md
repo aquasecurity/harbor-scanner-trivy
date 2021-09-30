@@ -38,13 +38,17 @@
    ```
    vagrant up
    ```
-3. SSH into a running Vagrant machine.
+   If everything goes well Harbor will be accessible at http://localhost:8181 (admin/Harbor12345).
+
+   To SSH into a running Vagrant machine.
    ```
    vagrant ssh
    ```
-4. Change directory to `/vagrant` in the development machine, which is shared between host and guest.
+   The `/vagrant` directory in the development machine is shared between host and guest. This, for example, allows you
+   to rebuild a container image for testing.
    ```
    vagrant@ubuntu-focal:~$ cd /vagrant
+   vagrant@ubuntu-focal:/vagrant$ make docker-build
    ```
 
 ## Build Binaries

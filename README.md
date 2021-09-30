@@ -130,10 +130,11 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_VULN_TYPE`                 | `os,library`                       | Comma-separated list of vulnerability types. Possible values are `os` and `library`. |
 | `SCANNER_TRIVY_SEVERITY`                  | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` | Comma-separated list of vulnerabilities severities to be displayed                   |
 | `SCANNER_TRIVY_IGNORE_UNFIXED`            | `false`                            | The flag to display only fixed vulnerabilities                                       |
-| `SCANNER_TRIVY_IGNORE_POLICY`             | ``                                 | The path for the Trivy ignore policy OPA Rego file                                        |
+| `SCANNER_TRIVY_IGNORE_POLICY`             | ``                                 | The path for the Trivy ignore policy OPA Rego file                                   |
 | `SCANNER_TRIVY_SKIP_UPDATE`               | `false`                            | The flag to enable or disable [Trivy DB][trivy-db] downloads from GitHub             |
 | `SCANNER_TRIVY_GITHUB_TOKEN`              | N/A                                | The GitHub access token to download [Trivy DB][trivy-db] (see [GitHub rate limiting][gh-rate-limit]) |
 | `SCANNER_TRIVY_INSECURE`                  | `false`                            | The flag to skip verifying registry certificate                                      |
+| `SCANNER_TRIVY_TIMEOUT`                   | `5m0s`                             | The duration to wait for scan completion                                             |
 | `SCANNER_STORE_REDIS_NAMESPACE`           | `harbor.scanner.trivy:store`       | The namespace for keys in the Redis store                                            |
 | `SCANNER_STORE_REDIS_SCAN_JOB_TTL`        | `1h`                               | The time to live for persisting scan jobs and associated scan reports                |
 | `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`       | `harbor.scanner.trivy:job-queue`   | The namespace for keys in the scan jobs queue backed by Redis                        |

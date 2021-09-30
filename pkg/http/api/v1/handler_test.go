@@ -428,31 +428,32 @@ func TestRequestHandler_GetReady(t *testing.T) {
 func TestRequestHandler_GetMetadata(t *testing.T) {
 	testCases := []struct {
 		name             string
-		mockedBuildInfo  etc.BuildInfo
-		mockedVersion    trivy.VersionInfo
-		mockedConfig     etc.Config
+		buildInfo        etc.BuildInfo
+		version          trivy.VersionInfo
+		config           etc.Config
 		mockedError      error
 		expectedHTTPCode int
 		expectedResp     string
 		expectedError    error
 	}{
 		{
-			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK",
-			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
-			mockedVersion: trivy.VersionInfo{
+			name:      "Should respond with a valid Metadata JSON and HTTP 200 OK",
+			buildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			version: trivy.VersionInfo{
 				Version: "v0.5.2-17-g3c9af62",
 				VulnerabilityDB: &trivy.Metadata{
 					NextUpdate: time.Unix(1584507644, 0).UTC(),
 					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 				},
 			},
-			mockedConfig: etc.Config{Trivy: etc.Trivy{
+			config: etc.Config{Trivy: etc.Trivy{
 				SkipUpdate:    false,
 				IgnoreUnfixed: true,
 				DebugMode:     true,
 				Insecure:      true,
 				VulnType:      "os,library",
 				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				Timeout:       5 * time.Minute,
 			}},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
@@ -485,23 +486,25 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "true",
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
 }`,
 		},
 		{
-			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK, when there's no trivy Metadata present",
-			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
-			mockedVersion: trivy.VersionInfo{
+			name:      "Should respond with a valid Metadata JSON and HTTP 200 OK, when there's no trivy Metadata present",
+			buildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			version: trivy.VersionInfo{
 				Version: "v0.5.2-17-g3c9af62",
 			},
-			mockedConfig: etc.Config{Trivy: etc.Trivy{
+			config: etc.Config{Trivy: etc.Trivy{
 				SkipUpdate:    false,
 				IgnoreUnfixed: true,
 				DebugMode:     true,
 				Insecure:      true,
 				VulnType:      "os,library",
 				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				Timeout:       5 * time.Minute,
 			}},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
@@ -532,18 +535,20 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "true",
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
 }`,
 		},
 		{
-			name:            "Should respond with a valid Metadata JSON and HTTP 200 OK when GetVersion fails",
-			mockedError:     errors.New("get version failed"),
-			mockedBuildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
-			mockedConfig: etc.Config{
+			name:        "Should respond with a valid Metadata JSON and HTTP 200 OK when GetVersion fails",
+			mockedError: errors.New("get version failed"),
+			buildInfo:   etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			config: etc.Config{
 				Trivy: etc.Trivy{
 					VulnType: "os,library",
 					Severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Timeout:  5 * time.Minute,
 				},
 			},
 			expectedHTTPCode: http.StatusOK,
@@ -575,7 +580,8 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "false",
       "env.SCANNER_TRIVY_INSECURE": "false",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
 }`,
 		},
@@ -586,14 +592,14 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			enqueuer := mock.NewEnqueuer()
 			store := mock.NewStore()
 			wrapper := trivy.NewMockWrapper()
-			wrapper.On("GetVersion").Return(tc.mockedVersion, tc.mockedError)
+			wrapper.On("GetVersion").Return(tc.version, tc.mockedError)
 
 			rr := httptest.NewRecorder()
 
 			r, err := http.NewRequest(http.MethodGet, "/api/v1/metadata", nil)
 			require.NoError(t, err, tc.name)
 
-			NewAPIHandler(tc.mockedBuildInfo, tc.mockedConfig, enqueuer, store, wrapper).ServeHTTP(rr, r)
+			NewAPIHandler(tc.buildInfo, tc.config, enqueuer, store, wrapper).ServeHTTP(rr, r)
 
 			rs := rr.Result()
 
