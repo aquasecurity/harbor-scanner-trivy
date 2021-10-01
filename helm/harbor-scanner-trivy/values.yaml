@@ -66,6 +66,8 @@ scanner:
     severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
     ## ignoreUnfixed the flag to display only fixed vulnerabilities
     ignoreUnfixed: false
+    ## timeout the duration to wait for scan completion
+    timeout: 5m0s
     ## skipUpdate the flag to enable or disable Trivy DB downloads from GitHub
     ##
     ## You might want to enable this flag in test or CI/CD environments to avoid GitHub rate limiting issues.

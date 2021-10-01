@@ -94,6 +94,7 @@ The following table lists the configurable parameters of the scanner adapter cha
 | `scanner.trivy.ignorepolicy`          | The OPA rego script used by Trivy to evaluate each vulnerability | `     ` |
 | `scanner.trivy.severity`              | Comma-separated list of vulnerabilities severities to be displayed      | `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL` |
 | `scanner.trivy.ignoreUnfixed`         | The flag to display only fixed vulnerabilities                          | `false`        |
+| `scanner.trivy.timeout`               | The duration to wait for scan completion                                | `5m0s`         |
 | `scanner.trivy.skipUpdate`            | The flag to enable or disable Trivy DB downloads from GitHub            | `false`        |
 | `scanner.trivy.gitHubToken`           | The GitHub access token to download Trivy DB                            |      |
 | `scanner.trivy.insecure`              | The flag to skip verifying registry certificate                         | `false` |

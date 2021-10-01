@@ -96,6 +96,7 @@ func TestWrapper_Scan(t *testing.T) {
 		SkipUpdate:    true,
 		GitHubToken:   "<github_token>",
 		Insecure:      true,
+		Timeout:       5 * time.Minute,
 	}
 
 	imageRef := ImageRef{
@@ -127,6 +128,7 @@ func TestWrapper_Scan(t *testing.T) {
 
 	expectedCmdEnvs := []string{
 		"HTTP_PROXY=http://someproxy:7777",
+		"TRIVY_TIMEOUT=5m0s",
 		"TRIVY_USERNAME=dave.loper",
 		"TRIVY_PASSWORD=s3cret",
 		"TRIVY_NON_SSL=true",

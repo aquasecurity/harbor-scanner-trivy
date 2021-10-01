@@ -74,6 +74,7 @@ func TestGetConfig(t *testing.T) {
 					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
 					Insecure:    false,
 					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -111,6 +112,7 @@ func TestGetConfig(t *testing.T) {
 					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
 					Insecure:    false,
 					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -153,6 +155,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_INSECURE":       "true",
 				"SCANNER_TRIVY_SKIP_UPDATE":    "true",
 				"SCANNER_TRIVY_GITHUB_TOKEN":   "<GITHUB_TOKEN>",
+				"SCANNER_TRIVY_TIMEOUT":        "15m30s",
 
 				"SCANNER_STORE_REDIS_NAMESPACE":    "store.ns",
 				"SCANNER_STORE_REDIS_SCAN_JOB_TTL": "2h45m15s",
@@ -185,6 +188,7 @@ func TestGetConfig(t *testing.T) {
 					SkipUpdate:    true,
 					Insecure:      true,
 					GitHubToken:   "<GITHUB_TOKEN>",
+					Timeout:       parseDuration(t, "15m30s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://harbor-harbor-redis:6379",

@@ -134,6 +134,8 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 
 	cmd.Env = w.ambassador.Environ()
 
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_TIMEOUT=%s", w.config.Timeout.String()))
+
 	switch a := imageRef.Auth.(type) {
 	case NoAuth:
 	case BasicAuth:
@@ -144,7 +146,7 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		cmd.Env = append(cmd.Env,
 			fmt.Sprintf("TRIVY_REGISTRY_TOKEN=%s", a.Token))
 	default:
-		return nil, fmt.Errorf("invalid type %T", a)
+		return nil, fmt.Errorf("invalid auth type %T", a)
 	}
 
 	if imageRef.Insecure {
