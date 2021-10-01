@@ -1,3 +1,4 @@
+---
 # Configuration file of Harbor
 
 # The IP address or hostname to access admin UI and registry service.
@@ -85,7 +86,7 @@ log:
     # The directory on your host that store log
     location: /var/log/harbor
 
-#This attribute is for migrator to detect the version of the .cfg file, DO NOT MODIFY!
+# This attribute is for migrator to detect the version of the .cfg file, DO NOT MODIFY!
 _version: 2.3.0
 
 # Global proxy
