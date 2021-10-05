@@ -5,6 +5,11 @@ name: Publish Helm Chart
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Version to be published
+        required: true
+
 env:
   HELM_REP: helm-charts
   GH_OWNER: aquasecurity
@@ -16,14 +21,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          ref: "${{ github.event.inputs.version }}"
+          fetch-depth: 1
       - name: Install Helm
         uses: azure/setup-helm@v1
         with:
           version: v3.7.0
       - name: Install chart-releaser
         run: |
-          wget https://github.com/helm/chart-releaser/releases/download/v1.1.1/chart-releaser_1.2.1_linux_amd64.tar.gz
+          wget https://github.com/helm/chart-releaser/releases/download/v1.2.1/chart-releaser_1.2.1_linux_amd64.tar.gz
           tar xzvf chart-releaser_1.2.1_linux_amd64.tar.gz cr
       - name: Package helm chart
         run: |
