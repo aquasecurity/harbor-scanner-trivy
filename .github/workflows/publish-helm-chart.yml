@@ -6,8 +6,8 @@ name: Publish Helm Chart
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: Version to be published
+      ref:
+        description: Git revision to be published
         required: true
 
 env:
@@ -21,15 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: "${{ github.event.inputs.version }}"
+          ref: "${{ github.event.inputs.ref }}"
           fetch-depth: 1
       - name: Install Helm
         uses: azure/setup-helm@v1
         with:
           version: v3.7.0
-      - name: Install chart-releaser
+      - name: Download Chart Releaser
         run: |
           wget https://github.com/helm/chart-releaser/releases/download/v1.2.1/chart-releaser_1.2.1_linux_amd64.tar.gz
+          echo 'b6d1916db690ccd789b17b75a66db0dc6a171e6f971a06872b87a3e31592cb08  chart-releaser_1.2.1_linux_amd64.tar.gz' | sha256sum --check
+      - name: Install Chart Releaser
+        run: |
           tar xzvf chart-releaser_1.2.1_linux_amd64.tar.gz cr
       - name: Package helm chart
         run: |
@@ -49,7 +52,7 @@ jobs:
             --charts-repo https://${{ env.GH_OWNER }}.github.io/${{ env.HELM_REP }}/ \
             --index-path index.yaml
       - name: Push index file
-        uses: dmnemec/copy_file_to_another_repo_action@v1.1.1
+        uses: dmnemec/copy_file_to_another_repo_action@c93037aa10fa8893de271f19978c980d0c1a9b37
         env:
           API_TOKEN_GITHUB: ${{ secrets.ORG_REPO_TOKEN }}
         with:
