@@ -14,7 +14,7 @@ func NewTransformer() *Transformer {
 	return &Transformer{}
 }
 
-func (t *Transformer) Transform(artifact harbor.Artifact, source trivy.ScanReport) harbor.ScanReport {
+func (t *Transformer) Transform(artifact harbor.Artifact, source []trivy.Vulnerability) harbor.ScanReport {
 	args := t.Called(artifact, source)
 	return args.Get(0).(harbor.ScanReport)
 }

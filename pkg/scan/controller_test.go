@@ -17,7 +17,7 @@ func TestController_Scan(t *testing.T) {
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
-	trivyReport := trivy.ScanReport{}
+	trivyReport := []trivy.Vulnerability{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
@@ -115,7 +115,7 @@ func TestController_Scan(t *testing.T) {
 					},
 				},
 				ReturnArgs: []interface{}{
-					trivy.ScanReport{},
+					[]trivy.Vulnerability{},
 					xerrors.New("out of memory"),
 				},
 			},

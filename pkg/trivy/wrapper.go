@@ -3,13 +3,13 @@ package trivy
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
 )
 
 const (
@@ -39,7 +39,7 @@ type BearerAuth struct {
 }
 
 type Wrapper interface {
-	Scan(imageRef ImageRef) (ScanReport, error)
+	Scan(imageRef ImageRef) ([]Vulnerability, error)
 	GetVersion() (VersionInfo, error)
 }
 
@@ -55,12 +55,12 @@ func NewWrapper(config etc.Trivy, ambassador ext.Ambassador) Wrapper {
 	}
 }
 
-func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
+func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
 	log.WithField("image_ref", imageRef.Name).Debug("Started scanning")
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return
+		return nil, err
 	}
 	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
@@ -73,7 +73,7 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 
 	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name())
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	log.WithFields(log.Fields{"path": cmd.Path, "args": cmd.Args}).Trace("Exec command with args")
@@ -85,7 +85,7 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 			"exit_code": cmd.ProcessState.ExitCode(),
 			"std_out":   string(stdout),
 		}).Error("Running trivy failed")
-		return report, xerrors.Errorf("running trivy: %v: %v", err, string(stdout))
+		return nil, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
 	}
 
 	log.WithFields(log.Fields{
@@ -94,8 +94,27 @@ func (w *wrapper) Scan(imageRef ImageRef) (report ScanReport, err error) {
 		"std_out":   string(stdout),
 	}).Debug("Running trivy finished")
 
-	report, err = ScanReportFrom(reportFile)
-	return
+	return w.parseVulnerabilities(reportFile)
+}
+
+func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, error) {
+	var scanReport ScanReport
+	err := json.NewDecoder(reportFile).Decode(&scanReport)
+	if err != nil {
+		return nil, fmt.Errorf("decoding scan report from file: %w", err)
+	}
+
+	if scanReport.SchemaVersion != SchemaVersion {
+		return nil, fmt.Errorf("unsupported schema %d, expected %d", scanReport.SchemaVersion, SchemaVersion)
+	}
+
+	var vulnerabilities []Vulnerability
+	for _, scanResult := range scanReport.Results {
+		log.WithField("target", scanResult.Target).Trace("Parsing vulnerabilities")
+		vulnerabilities = append(vulnerabilities, scanResult.Vulnerabilities...)
+	}
+
+	return vulnerabilities, nil
 }
 
 func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cmd, error) {
@@ -176,7 +195,7 @@ func (w *wrapper) GetVersion() (VersionInfo, error) {
 			"exit_code": cmd.ProcessState.ExitCode(),
 			"std_out":   string(versionOutput),
 		}).Error("Running trivy failed")
-		return VersionInfo{}, xerrors.Errorf("running trivy: %v: %v", err, string(versionOutput))
+		return VersionInfo{}, fmt.Errorf("running trivy: %w: %v", err, string(versionOutput))
 	}
 
 	var vi VersionInfo

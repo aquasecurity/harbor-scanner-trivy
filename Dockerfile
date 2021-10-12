@@ -1,10 +1,7 @@
 # That's the only place where you're supposed to specify version of Trivy.
-ARG TRIVY_VERSION=0.19.2
+ARG TRIVY_VERSION=0.20.0
 
 FROM aquasec/trivy:${TRIVY_VERSION}
-
-# Fix CVE-2021-36159 and CVE-2021-3711 in Trivy base image v0.19.2.
-RUN apk update && apk upgrade apk-tools libcrypto1.1 libssl1.1
 
 # An ARG declared before a FROM is outside of a build stage, so it can't be used in any
 # instruction after a FROM. To use the default value of an ARG declared before the first
