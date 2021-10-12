@@ -148,12 +148,6 @@ func TestTransformer_Transform(t *testing.T) {
 					"CWE-20",
 					"CWE-1289",
 				},
-				PreferredCVSS: &harbor.CVSSDetails{
-					VectorV2: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
-					VectorV3: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
-					ScoreV2:  float32Ptr(1.9),
-					ScoreV3:  float32Ptr(4.7),
-				},
 				VendorAttributes: map[string]interface{}{
 					"CVSS": map[string]trivy.CVSSInfo{
 						"nvd": {
