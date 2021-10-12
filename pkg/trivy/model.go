@@ -1,15 +1,17 @@
 package trivy
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
+const SchemaVersion = 2
+
 type ScanReport struct {
+	SchemaVersion int
+	Results       []ScanResult `json:"Results"`
+}
+
+type ScanResult struct {
 	Target          string          `json:"Target"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities"`
 }
@@ -49,26 +51,4 @@ type Vulnerability struct {
 	Layer            *Layer              `json:"Layer"`
 	CVSS             map[string]CVSSInfo `json:"CVSS"`
 	CweIDs           []string            `json:"CweIDs"`
-}
-
-func ScanReportFrom(reportFile io.Reader) (report ScanReport, err error) {
-	var scanReports []ScanReport
-	err = json.NewDecoder(reportFile).Decode(&scanReports)
-	if err != nil {
-		return report, fmt.Errorf("decoding scan report from file: %w", err)
-	}
-
-	if len(scanReports) == 0 {
-		return
-	}
-
-	// Collect all vulnerabilities to single scanReport to allow showing those in Harbor
-	report.Target = scanReports[0].Target
-	report.Vulnerabilities = make([]Vulnerability, 0, len(scanReports[0].Vulnerabilities))
-	for _, scanReport := range scanReports {
-		log.WithField("target", scanReport.Target).Trace("Parsing vulnerabilities")
-		report.Vulnerabilities = append(report.Vulnerabilities, scanReport.Vulnerabilities...)
-	}
-
-	return
 }
