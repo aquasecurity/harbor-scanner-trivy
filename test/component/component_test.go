@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/scanner"
 	"github.com/docker/go-connections/nat"
@@ -152,23 +151,7 @@ func TestComponent(t *testing.T) {
 	}{
 		{
 			repository: "alpine",
-			tag:        "3.10.2",
-		},
-		{
-			repository: "photon",
-			tag:        "3.0-20200202",
-		},
-		{
-			repository: "gcr.io/distroless/java",
-			tag:        "11",
-		},
-		{
-			repository: "debian",
-			tag:        "9",
-		},
-		{
-			repository: "amazonlinux",
-			tag:        "2.0.20200406.0",
+			tag:        "3.14",
 		},
 	}
 
