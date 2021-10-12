@@ -52,7 +52,6 @@ func (t *transformer) Transform(artifact harbor.Artifact, source []trivy.Vulnera
 			Description:      v.Description,
 			Links:            t.toLinks(v.PrimaryURL, v.References),
 			Layer:            t.toHarborLayer(v.Layer),
-			CVSS:             t.toHarborCVSS(v.CVSS),
 			PreferredCVSS:    t.toHarborPreferredCVSS(v.CVSS),
 			CweIDs:           v.CweIDs,
 			VendorAttributes: t.toVendorAttributes(v.CVSS),
@@ -104,24 +103,6 @@ func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
 
 	log.WithField("severity", severity).Warn("Unknown trivy severity")
 	return harbor.SevUnknown
-}
-
-func (t *transformer) toHarborCVSS(trivyCVSS map[string]trivy.CVSSInfo) map[string]harbor.CVSSInfo {
-	if trivyCVSS == nil {
-		return nil
-	}
-
-	harborCVSS := make(map[string]harbor.CVSSInfo, len(trivyCVSS))
-	for k, v := range trivyCVSS {
-		harborCVSS[k] = harbor.CVSSInfo{
-			V2Vector: v.V2Vector,
-			V3Vector: v.V3Vector,
-			V2Score:  v.V2Score,
-			V3Score:  v.V3Score,
-		}
-	}
-
-	return harborCVSS
 }
 
 func (t *transformer) toHarborPreferredCVSS(trivyCVSS map[string]trivy.CVSSInfo) *harbor.CVSSDetails {
