@@ -28,17 +28,18 @@ reports on images stored in Harbor registry as part of its vulnerability scan fe
 The following matrix indicates the version of Trivy and Trivy adapter installed in each Harbor
 [release](https://github.com/goharbor/harbor/releases).
 
-| Harbor                  | Trivy Adapter | Trivy                    |
-|-------------------------|---------------|--------------------------|
-| -                       | v0.22.0       | [v0.19.2][trivy v0.19.2] |
-| -                       | v0.21.0       | [v0.19.2][trivy v0.19.2] |
-| -                       | v0.20.0       | [v0.18.3][trivy v0.18.3] |
-| [v2.3.3][harbor v2.3.3] | v0.19.0       | [v0.17.2][trivy v0.17.2] |
-| [v2.3.0][harbor v2.3.0] | v0.19.0       | [v0.17.2][trivy v0.17.2] |
-| [v2.2.3][harbor v2.2.3] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
-| [v2.2.0][harbor v2.2.0] | v0.18.0       | [v0.16.0][trivy v0.16.0] |
-| [v2.1.6][harbor v2.1.6] | v0.14.1       | [v0.9.2][trivy v0.9.2]   |
-| [v2.1.0][harbor v2.1.0] | v0.14.1       | [v0.9.2][trivy v0.9.2]   |
+| Harbor          | Trivy Adapter | Trivy           |
+|-----------------|---------------|-----------------|
+| -               | v0.23.0       | [trivy v0.20.0] |
+| -               | v0.22.0       | [trivy v0.19.2] |
+| -               | v0.21.0       | [trivy v0.19.2] |
+| -               | v0.20.0       | [trivy v0.18.3] |
+| [harbor v2.3.3] | v0.19.0       | [trivy v0.17.2] |
+| [harbor v2.3.0] | v0.19.0       | [trivy v0.17.2] |
+| [harbor v2.2.3] | v0.18.0       | [trivy v0.16.0] |
+| [harbor v2.2.0] | v0.18.0       | [trivy v0.16.0] |
+| [harbor v2.1.6] | v0.14.1       | [trivy v0.9.2]  |
+| [harbor v2.1.0] | v0.14.1       | [trivy v0.9.2]  |
 
 [harbor v2.3.3]: https://github.com/goharbor/harbor/releases/tag/v2.3.3
 [harbor v2.3.0]: https://github.com/goharbor/harbor/releases/tag/v2.3.0
@@ -47,6 +48,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 [harbor v2.1.6]: https://github.com/goharbor/harbor/releases/tag/v2.1.6
 [harbor v2.1.0]: https://github.com/goharbor/harbor/releases/tag/v2.1.0
 
+[trivy v0.20.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.20.0
 [trivy v0.19.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.19.2
 [trivy v0.18.3]: https://github.com/aquasecurity/trivy/releases/tag/v0.18.3
 [trivy v0.17.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.17.2
@@ -61,15 +63,15 @@ In Harbor >= 2.0 Trivy can be configured as the default vulnerability scanner, t
 official Harbor [Helm chart][harbor-helm-chart], where `HARBOR_CHART_VERSION` >= 1.4:
 
 ```
-$ helm repo add harbor https://helm.goharbor.io
+helm repo add harbor https://helm.goharbor.io
 ```
 
 ```
-$ helm install harbor harbor/harbor \
-    --create-namespace \
-    --namespace harbor \
-    --set clair.enabled=false \
-    --set trivy.enabled=true
+helm install harbor harbor/harbor \
+  --create-namespace \
+  --namespace harbor \
+  --set clair.enabled=false \
+  --set trivy.enabled=true
 ```
 
 The adapter service is automatically registered under the **Interrogation Service** in the Harbor interface and
@@ -79,27 +81,27 @@ designated as the default scanner.
 
 1. Generate certificate and private key files:
    ```
-   $ openssl genrsa -out tls.key 2048
-   $ openssl req -new -x509 \
-       -key tls.key \
-       -out tls.crt \
-       -days 365 \
-       -subj /CN=harbor-scanner-trivy.harbor
+   openssl genrsa -out tls.key 2048
+   openssl req -new -x509 \
+     -key tls.key \
+     -out tls.crt \
+     -days 365 \
+     -subj /CN=harbor-scanner-trivy.harbor
    ```
    > **NOTE:** The Common Name (CN) is the fully qualified domain name of the
    > adapter service. In this example we assumed that it is exposed as the
    > `harbor-scanner-trivy` service in the `harbor` namespace.
 2. Install the `harbor-scanner-trivy` chart:
    ```
-   $ helm repo add aqua https://helm.aquasec.com
+   helm repo add aqua https://aquasecurity.github.io/helm-charts
    ```
    ```
-   $ helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
-       --namespace harbor \
-       --set service.port=8443 \
-       --set scanner.api.tlsEnabled=true \
-       --set scanner.api.tlsCertificate="$(cat tls.crt)" \
-       --set scanner.api.tlsKey="$(cat tls.key)"
+   helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
+     --namespace harbor \
+     --set service.port=8443 \
+     --set scanner.api.tlsEnabled=true \
+     --set scanner.api.tlsCertificate="$(cat tls.crt)" \
+     --set scanner.api.tlsKey="$(cat tls.key)"
    ```
 3. Configure the scanner adapter in the Harbor interface.
    1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
