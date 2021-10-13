@@ -13,6 +13,14 @@ The Harbor [Scanner Adapter][harbor-pluggable-scanners] for [Trivy][trivy] is a 
 the [Harbor][harbor] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
 reports on images stored in Harbor registry as part of its vulnerability scan feature.
 
+Harbor Scanner Adapter for Trivy is the default static vulnerability scanner in Harbor >= 2.2.
+
+![Vulnerabilities](docs/images/vulnerabilities.png)
+
+For compliance with core services Harbor builds the adapter service binaries into Docker images based on
+Photos OS (`goharbor/trivy-adapter-photon`), whereas in this repository we build Docker images based on Alpine
+(`aquasec/harbor-scanner-trivy`). There is no difference in functionality though.
+
 ## TOC
 - [Version Matrix](#version-matrix)
 - [Deployment](#deployment)
@@ -79,38 +87,22 @@ designated as the default scanner.
 
 ### Harbor 1.10 on Kubernetes
 
-1. Generate certificate and private key files:
-   ```
-   openssl genrsa -out tls.key 2048
-   openssl req -new -x509 \
-     -key tls.key \
-     -out tls.crt \
-     -days 365 \
-     -subj /CN=harbor-scanner-trivy.harbor
-   ```
-   > **NOTE:** The Common Name (CN) is the fully qualified domain name of the
-   > adapter service. In this example we assumed that it is exposed as the
-   > `harbor-scanner-trivy` service in the `harbor` namespace.
-2. Install the `harbor-scanner-trivy` chart:
+1. Install the `harbor-scanner-trivy` chart:
    ```
    helm repo add aqua https://aquasecurity.github.io/helm-charts
    ```
    ```
    helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
-     --namespace harbor \
-     --set service.port=8443 \
-     --set scanner.api.tlsEnabled=true \
-     --set scanner.api.tlsCertificate="$(cat tls.crt)" \
-     --set scanner.api.tlsKey="$(cat tls.key)"
+     --namespace harbor --create-namespace
    ```
-3. Configure the scanner adapter in the Harbor interface.
+2. Configure the scanner adapter in the Harbor interface.
    1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
-      ![Scanners config](docs/images/harbor_ui_scanners_config.png)
-   2. Enter https://harbor-scanner-trivy.harbor:8443 as the **Endpoint** URL and click **TEST CONNECTION**.
-      ![Add scanner](docs/images/harbor_ui_add_scanner.png)
+      ![Interrogation Services](docs/images/interrogation_services.png)
+   2. Enter http://harbor-scanner-trivy.harbor:8080 as the **Endpoint** URL and click **TEST CONNECTION**.
+      ![Add scanner](docs/images/add_scanner.png)
    3. If everything is fine click **ADD** to save the configuration.
-4. Select the **Trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
-   ![Set Trivy as default scanner](docs/images/harbor_ui_set_trivy_as_default_scanner.png)
+3. Select the **Trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
+   ![Set Trivy as default scanner](docs/images/default_scanner.png)
    Make sure the **Default** label is displayed next to the **Trivy** scanner's name.
 
 ## Configuration
@@ -175,6 +167,10 @@ value of the `SCANNER_TRIVY_GITHUB_TOKEN` environment variable (authenticated re
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull
 requests.
+
+---
+Harbor Scanner Adapter for Trivy is an [Aqua Security](https://aquasec.com) open source project.  
+Learn about our open source work and portfolio [here](https://www.aquasec.com/products/open-source-projects/).
 
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg?logo=github
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
