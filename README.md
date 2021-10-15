@@ -9,19 +9,20 @@
 
 # Harbor Scanner Adapter for Trivy
 
-The Harbor [Scanner Adapter][harbor-pluggable-scanners] for [Trivy][trivy] is a service that translates
-the [Harbor][harbor] scanning API into Trivy commands and allows Harbor to use Trivy for providing vulnerability
-reports on images stored in Harbor registry as part of its vulnerability scan feature.
+The Harbor [Scanner Adapter][harbor-pluggable-scanners] for [Trivy] is a service that translates the [Harbor] scanning
+API into Trivy commands and allows Harbor to use Trivy for providing vulnerability reports on images stored in Harbor
+registry as part of its vulnerability scan feature.
 
 Harbor Scanner Adapter for Trivy is the default static vulnerability scanner in Harbor >= 2.2.
 
 ![Vulnerabilities](docs/images/vulnerabilities.png)
 
-For compliance with core services Harbor builds the adapter service binaries into Docker images based on
-Photos OS (`goharbor/trivy-adapter-photon`), whereas in this repository we build Docker images based on Alpine
+For compliance with core components Harbor builds the adapter service binaries into Docker images based on Photos OS
+(`goharbor/trivy-adapter-photon`), whereas in this repository we build Docker images based on Alpine
 (`aquasec/harbor-scanner-trivy`). There is no difference in functionality though.
 
 ## TOC
+
 - [Version Matrix](#version-matrix)
 - [Deployment](#deployment)
   - [Harbor >= 2.0 on Kubernetes](#harbor--20-on-kubernetes)
@@ -68,7 +69,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 ### Harbor >= 2.0 on Kubernetes
 
 In Harbor >= 2.0 Trivy can be configured as the default vulnerability scanner, therefore you can install it with the
-official Harbor [Helm chart][harbor-helm-chart], where `HARBOR_CHART_VERSION` >= 1.4:
+official [Harbor Helm chart], where `HARBOR_CHART_VERSION` >= 1.4:
 
 ```
 helm repo add harbor https://helm.goharbor.io
@@ -157,6 +158,26 @@ Configuration of the adapter is done via environment variables at startup.
 If you set the value of the `SCANNER_TRIVY_SKIP_UPDATE` to `true`, make sure that you download the Trivy DB
 from [GitHub][trivy-db] and mount it in the `/home/scanner/.cache/trivy/db/trivy.db` path.
 
+### Error: failed to list releases: Get https://api.github.com/repos/aquasecurity/trivy-db/releases: dial tcp: lookup api.github.com on 127.0.0.11:53: read udp 127.0.0.1:39070->127.0.0.11:53: i/o timeout
+
+Most likely it's a Docker DNS server or network firewall configuration issue. Trivy requires internet connection to
+periodically download vulnerability database from GitHub to show up-to-date risks.
+
+Try adding a DNS server to `docker-compose.yml` created by Harbor installer.
+
+```yaml
+version: 2
+services:
+  trivy-adapter:
+    # NOTE Adjust IPs to your environment.
+    dns:
+      - 8.8.8.8
+      - 192.168.1.1
+```
+
+Alternatively, configure Docker daemon to use the same DNS server as host operating system. See [DNS services][docker-dns]
+section in the Docker container networking documentation for more details.
+
 ### Error: failed to list releases: GET https://api.github.com/repos/aquasecurity/trivy-db/releases: 403 API rate limit exceeded
 
 Trivy DB downloads from GitHub are subject to [rate limiting][gh-rate-limit]. Make sure that the Trivy DB is mounted
@@ -186,10 +207,11 @@ Learn about our open source work and portfolio [here](https://www.aquasec.com/pr
 [license-img]: https://img.shields.io/github/license/aquasecurity/harbor-scanner-trivy.svg
 [license]: https://github.com/aquasecurity/harbor-scanner-trivy/blob/main/LICENSE
 
-[harbor]: https://github.com/goharbor/harbor
-[harbor-helm-chart]: https://github.com/goharbor/harbor-helm
-[trivy]: https://github.com/aquasecurity/trivy
+[Harbor]: https://github.com/goharbor/harbor
+[Harbor Helm chart]: https://github.com/goharbor/harbor-helm
+[Trivy]: https://github.com/aquasecurity/trivy
 [trivy-db]: https://github.com/aquasecurity/trivy-db
 [latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [harbor-pluggable-scanners]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [gh-rate-limit]: https://github.com/aquasecurity/trivy#github-rate-limiting
+[docker-dns]: https://docs.docker.com/config/containers/container-networking/#dns-services
