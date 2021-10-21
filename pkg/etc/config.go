@@ -32,7 +32,7 @@ type Trivy struct {
 	IgnoreUnfixed bool          `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
 	IgnorePolicy  string        `env:"SCANNER_TRIVY_IGNORE_POLICY"`
 	SkipUpdate    bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
-	GitHubToken   string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
+	GitHubToken   string        `env:"SCANNER_TRIVY_GITHUB_TOKEN,file"`
 	Insecure      bool          `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
 	Timeout       time.Duration `env:"SCANNER_TRIVY_TIMEOUT" envDefault:"5m0s"`
 }
@@ -62,7 +62,7 @@ type JobQueue struct {
 }
 
 type RedisPool struct {
-	URL               string        `env:"SCANNER_REDIS_URL" envDefault:"redis://localhost:6379"`
+	URL               string        `env:"SCANNER_REDIS_URL,file"`
 	MaxActive         int           `env:"SCANNER_REDIS_POOL_MAX_ACTIVE" envDefault:"5"`
 	MaxIdle           int           `env:"SCANNER_REDIS_POOL_MAX_IDLE" envDefault:"5"`
 	IdleTimeout       time.Duration `env:"SCANNER_REDIS_POOL_IDLE_TIMEOUT" envDefault:"5m"`
@@ -93,6 +93,10 @@ func GetConfig() (Config, error) {
 		if GetLogLevel() == logrus.DebugLevel {
 			cfg.Trivy.DebugMode = true
 		}
+	}
+
+	if (cfg.RedisPool.URL == "") {
+		cfg.RedisPool.URL = "redis://localhost:6379"
 	}
 
 	return cfg, nil
