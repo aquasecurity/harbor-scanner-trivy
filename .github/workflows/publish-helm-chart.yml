@@ -1,6 +1,7 @@
 ---
-# This is a manually triggered workflow to package and upload the Helm chart from the
-# main branch to Aqua Security repository at https://github.com/aquasecurity/helm-charts.
+# This is a manually triggered workflow to package and upload the Helm chart
+# from the specified Git revision to Aqua Security Helm repository at
+# https://github.com/aquasecurity/helm-charts.
 name: Publish Helm Chart
 
 on:
