@@ -34,7 +34,7 @@
    cd harbor-scanner-trivy
    ```
 2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
-   Make, and Harbor v2.3.2 preinstalled. Harbor is installed in the `/opt/harbor` directory.
+   Make, and Harbor v2.4.0 preinstalled. Harbor is installed in the `/opt/harbor` directory.
    ```
    vagrant up
    ```

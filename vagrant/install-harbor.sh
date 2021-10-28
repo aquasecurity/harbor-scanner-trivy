@@ -1,6 +1,6 @@
 #! /bin/bash
 
-HARBOR_VERSION="v2.3.2"
+HARBOR_VERSION="v2.4.0"
 
 # Keep in sync with vagrant/harbor.yml.
 HARBOR_HOSTNAME="harbor.dev.io"
@@ -34,11 +34,3 @@ EOF
 cd /opt/harbor
 
 ./install.sh --with-trivy
-
-sleep 30s
-
-echo "$HARBOR_PASSWORD" | docker login --username=$HARBOR_USERNAME --password-stdin $HARBOR_HOSTNAME
-
-docker image pull nginx:1.16
-docker image tag nginx:1.16 $HARBOR_HOSTNAME/library/nginx:1.16
-docker image push $HARBOR_HOSTNAME/library/nginx:1.16
