@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.20.1"}
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.21.3"}
 )
 
 const (
@@ -69,7 +69,7 @@ func TestComponent(t *testing.T) {
 
 	redisC, err := dp.CreateContainer(ctx,
 		tc.ContainerRequest{
-			Name:       "redis",
+			Name:       "redis-comp-test",
 			Image:      "redis:5",
 			Networks:   []string{testNetwork},
 			WaitingFor: wait.ForLog("Ready to accept connections"),
@@ -81,7 +81,7 @@ func TestComponent(t *testing.T) {
 
 	registryC, err := dp.CreateContainer(ctx,
 		tc.ContainerRequest{
-			Name:         "registry",
+			Name:         "registry-comp-test",
 			Image:        registryImage,
 			Networks:     []string{testNetwork},
 			ExposedPorts: []string{registryPort},
@@ -106,7 +106,7 @@ func TestComponent(t *testing.T) {
 	defer func() { _ = registryC.Terminate(ctx) }()
 
 	adapterC, err := dp.CreateContainer(ctx, tc.ContainerRequest{
-		Name:         "trivy-adapter",
+		Name:         "trivy-adapter-comp-test",
 		Image:        adapterImage,
 		Networks:     []string{testNetwork},
 		ExposedPorts: []string{adapterPort},

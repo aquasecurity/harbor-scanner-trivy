@@ -2,16 +2,18 @@
 
 ## Table of Contents
 
-* [Set up Local Development Environment](#set-up-local-development-environment)
-* [Set up Development Environment with Vagrant](#setup-development-environment-with-vagrant)
-* [Build Binaries](#build-binaries)
-* [Test Scanner Adapter](#test-scanner-adapter)
-  * [Prerequisites](#prerequisites)
-  * [Update Container Image](#update-container-image)
-* [Run Tests](#run-tests)
-  * [Run Unit Tests](#run-unit-tests)
-  * [Run Integration Tests](#run-integration-tests)
-  * [Run Component Tests](#run-component-tests)
+- [Contributing](#contributing)
+  - [Table of Contents](#table-of-contents)
+  - [Set up Local Development Environment](#set-up-local-development-environment)
+  - [Setup Development Environment with Vagrant](#setup-development-environment-with-vagrant)
+  - [Build Binaries](#build-binaries)
+  - [Test Scanner Adapter](#test-scanner-adapter)
+    - [Prerequisites](#prerequisites)
+    - [Update Container Image](#update-container-image)
+  - [Run Tests](#run-tests)
+    - [Run Unit Tests](#run-unit-tests)
+    - [Run Integration Tests](#run-integration-tests)
+    - [Run Component Tests](#run-component-tests)
 
 ## Set up Local Development Environment
 
@@ -34,7 +36,7 @@
    cd harbor-scanner-trivy
    ```
 2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
-   Make, and Harbor v2.4.0 preinstalled. Harbor is installed in the `/opt/harbor` directory.
+   Make, and Harbor v2.4.1 preinstalled. Harbor is installed in the `/opt/harbor` directory.
    ```
    vagrant up
    ```
@@ -69,27 +71,27 @@ make docker-build
 
 ### Prerequisites
 
-Install Harbor with [Harbor installer](https://goharbor.io/docs/2.3.0/install-config/download-installer/).
+Install Harbor with [Harbor installer](https://goharbor.io/docs/2.4.0/install-config/download-installer/).
 Make sure that you install Harbor with Trivy, i.e. `sudo ./install.sh --with-trivy`.
 
 ```console
 $ docker ps
-CONTAINER ID   IMAGE                                  COMMAND                  CREATED          STATUS                    PORTS                                   NAMES
-c4acd5694606   goharbor/nginx-photon:v2.3.2           "nginx -g 'daemon of…"   32 seconds ago   Up 31 seconds (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
-c6060e31d2e3   goharbor/harbor-jobservice:v2.3.2      "/harbor/entrypoint.…"   32 seconds ago   Up 31 seconds (healthy)                                           harbor-jobservice
-878cc280e634   goharbor/trivy-adapter-photon:v2.3.2   "/home/scanner/entry…"   32 seconds ago   Up 32 seconds (healthy)                                           trivy-adapter
-377922e00aa1   goharbor/harbor-core:v2.3.2            "/harbor/entrypoint.…"   32 seconds ago   Up 32 seconds (healthy)                                           harbor-core
-c8530be38c0c   goharbor/harbor-registryctl:v2.3.2     "/home/harbor/start.…"   33 seconds ago   Up 33 seconds (healthy)                                           registryctl
-fa6015b28ea7   goharbor/harbor-db:v2.3.2              "/docker-entrypoint.…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-db
-acb198e326f7   goharbor/registry-photon:v2.3.2        "/home/harbor/entryp…"   33 seconds ago   Up 32 seconds (healthy)                                           registry
-fb445cb08b1c   goharbor/harbor-portal:v2.3.2          "nginx -g 'daemon of…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-portal
-34f4ed9a3ac1   goharbor/redis-photon:v2.3.2           "redis-server /etc/r…"   33 seconds ago   Up 32 seconds (healthy)                                           redis
-157a023611ae   goharbor/harbor-log:v2.3.2             "/bin/sh -c /usr/loc…"   34 seconds ago   Up 33 seconds (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
+CONTAINER ID   IMAGE                                  COMMAND                  CREATED              STATUS                        PORTS                                   NAMES
+afd1962f5099   goharbor/nginx-photon:v2.4.1           "nginx -g 'daemon of…"   About a minute ago   Up About a minute (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
+a7d9433af1e3   goharbor/harbor-jobservice:v2.4.1      "/harbor/entrypoint.…"   About a minute ago   Up About a minute (healthy)                                           harbor-jobservice
+a6f70ddcac58   goharbor/trivy-adapter-photon:v2.4.1   "/home/scanner/entry…"   About a minute ago   Up About a minute (healthy)                                           trivy-adapter
+d8eb086391d1   goharbor/harbor-core:v2.4.1            "/harbor/entrypoint.…"   About a minute ago   Up About a minute (healthy)                                           harbor-core
+8d8f7809c673   goharbor/redis-photon:v2.4.1           "redis-server /etc/r…"   About a minute ago   Up About a minute (healthy)                                           redis
+733de91f5470   goharbor/harbor-registryctl:v2.4.1     "/home/harbor/start.…"   About a minute ago   Up About a minute (healthy)                                           registryctl
+733e7ba95f3f   goharbor/harbor-db:v2.4.1              "/docker-entrypoint.…"   About a minute ago   Up About a minute (healthy)                                           harbor-db
+0a51213cb9ed   goharbor/harbor-portal:v2.4.1          "nginx -g 'daemon of…"   About a minute ago   Up About a minute (healthy)                                           harbor-portal
+69ed0584eb4f   goharbor/registry-photon:v2.4.1        "/home/harbor/entryp…"   About a minute ago   Up About a minute (healthy)                                           registry
+c0db2b828f89   goharbor/harbor-log:v2.4.1             "/bin/sh -c /usr/loc…"   About a minute ago   Up About a minute (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
 ```
 
 ### Update Container Image
 
-1. Navigate to Harbor installation directory.
+1. Navigate to Harbor installation directory (`/opt/harbor`).
 2. Stop Harbor services.
    ```
    sudo docker-compose down
