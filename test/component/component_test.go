@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.20.1"}
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.22.0"}
 )
 
 const (
