@@ -140,6 +140,10 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		args = append([]string{"--skip-update"}, args...)
 	}
 
+	if w.config.OfflineScan {
+		args = append([]string{"--offline-scan"}, args...)
+	}
+
 	if w.config.IgnorePolicy != "" {
 		args = append([]string{"--ignore-policy", w.config.IgnorePolicy}, args...)
 	}

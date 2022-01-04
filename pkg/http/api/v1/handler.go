@@ -220,6 +220,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"org.label-schema.vcs":        "https://github.com/aquasecurity/harbor-scanner-trivy",
 
 		"env.SCANNER_TRIVY_SKIP_UPDATE":    strconv.FormatBool(h.config.Trivy.SkipUpdate),
+		"env.SCANNER_TRIVY_OFFLINE_SCAN":   strconv.FormatBool(h.config.Trivy.OfflineScan),
 		"env.SCANNER_TRIVY_IGNORE_UNFIXED": strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
 		"env.SCANNER_TRIVY_DEBUG_MODE":     strconv.FormatBool(h.config.Trivy.DebugMode),
 		"env.SCANNER_TRIVY_INSECURE":       strconv.FormatBool(h.config.Trivy.Insecure),

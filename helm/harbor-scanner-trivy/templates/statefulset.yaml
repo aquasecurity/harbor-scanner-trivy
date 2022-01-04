@@ -72,7 +72,9 @@ spec:
             - name: "SCANNER_TRIVY_TIMEOUT"
               value: {{ .Values.scanner.trivy.timeout | quote }}
             - name: "SCANNER_TRIVY_SKIP_UPDATE"
-              value: {{ .Values.scanner.trivy.skipUpdate | default false | quote }}
+              value: {{ .Values.scanner.trivy.skipUpdate | quote }}
+            - name: "SCANNER_TRIVY_OFFLINE_SCAN"
+              value: {{ .Values.scanner.trivy.offlineScan | quote }}
             - name: "SCANNER_TRIVY_GITHUB_TOKEN"
               valueFrom:
                 secretKeyRef:

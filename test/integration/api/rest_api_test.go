@@ -212,6 +212,7 @@ func TestRestApi(t *testing.T) {
     "org.label-schema.vcs-ref": "abc",
     "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
     "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+    "env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
     "env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
     "env.SCANNER_TRIVY_DEBUG_MODE": "true",
     "env.SCANNER_TRIVY_INSECURE": "true",

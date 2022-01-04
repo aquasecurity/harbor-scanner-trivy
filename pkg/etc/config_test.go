@@ -154,6 +154,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_IGNORE_UNFIXED": "true",
 				"SCANNER_TRIVY_INSECURE":       "true",
 				"SCANNER_TRIVY_SKIP_UPDATE":    "true",
+				"SCANNER_TRIVY_OFFLINE_SCAN":   "true",
 				"SCANNER_TRIVY_GITHUB_TOKEN":   "<GITHUB_TOKEN>",
 				"SCANNER_TRIVY_TIMEOUT":        "15m30s",
 
@@ -186,6 +187,7 @@ func TestGetConfig(t *testing.T) {
 					Severity:      "CRITICAL",
 					IgnoreUnfixed: true,
 					SkipUpdate:    true,
+					OfflineScan:   true,
 					Insecure:      true,
 					GitHubToken:   "<GITHUB_TOKEN>",
 					Timeout:       parseDuration(t, "15m30s"),
