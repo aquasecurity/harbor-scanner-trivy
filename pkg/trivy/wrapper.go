@@ -120,7 +120,6 @@ func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, e
 func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cmd, error) {
 	args := []string{
 		"--no-progress",
-		"--cache-dir", w.config.CacheDir,
 		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
 		"--format", "json",
@@ -130,10 +129,6 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 
 	if w.config.IgnoreUnfixed {
 		args = append([]string{"--ignore-unfixed"}, args...)
-	}
-
-	if w.config.DebugMode {
-		args = append([]string{"--debug"}, args...)
 	}
 
 	if w.config.SkipUpdate {
@@ -152,6 +147,15 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if err != nil {
 		return nil, err
 	}
+
+	globalArgs := []string{"--cache-dir", w.config.CacheDir}
+
+	if w.config.DebugMode {
+		globalArgs = append(globalArgs, "--debug")
+	}
+	globalArgs = append(globalArgs, "image")
+
+	args = append(globalArgs, args...)
 
 	cmd := exec.Command(name, args...)
 
