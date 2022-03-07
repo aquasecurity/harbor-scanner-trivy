@@ -111,14 +111,15 @@ func TestWrapper_Scan(t *testing.T) {
 
 	expectedCmdArgs := []string{
 		"/usr/local/bin/trivy",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--debug",
+		"image",
 		"--ignore-policy",
 		"/home/scanner/opa/policy.rego",
 		"--skip-update",
-		"--debug",
 		"--ignore-unfixed",
 		"--no-progress",
-		"--cache-dir",
-		"/home/scanner/.cache/trivy",
 		"--severity",
 		"CRITICAL,MEDIUM",
 		"--vuln-type",
