@@ -34,7 +34,7 @@
    cd harbor-scanner-trivy
    ```
 2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
-   Make, and Harbor v2.4.0 preinstalled. Harbor is installed in the `/opt/harbor` directory.
+   Make, and Harbor v2.4.1 preinstalled. Harbor is installed in the `/opt/harbor` directory.
    ```
    vagrant up
    ```
@@ -69,22 +69,23 @@ make docker-build
 
 ### Prerequisites
 
-Install Harbor with [Harbor installer](https://goharbor.io/docs/2.3.0/install-config/download-installer/).
+Install Harbor with [Harbor installer](https://goharbor.io/docs/2.4.0/install-config/download-installer/).
 Make sure that you install Harbor with Trivy, i.e. `sudo ./install.sh --with-trivy`.
 
 ```console
 $ docker ps
-CONTAINER ID   IMAGE                                  COMMAND                  CREATED          STATUS                    PORTS                                   NAMES
-c4acd5694606   goharbor/nginx-photon:v2.3.2           "nginx -g 'daemon of…"   32 seconds ago   Up 31 seconds (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
-c6060e31d2e3   goharbor/harbor-jobservice:v2.3.2      "/harbor/entrypoint.…"   32 seconds ago   Up 31 seconds (healthy)                                           harbor-jobservice
-878cc280e634   goharbor/trivy-adapter-photon:v2.3.2   "/home/scanner/entry…"   32 seconds ago   Up 32 seconds (healthy)                                           trivy-adapter
-377922e00aa1   goharbor/harbor-core:v2.3.2            "/harbor/entrypoint.…"   32 seconds ago   Up 32 seconds (healthy)                                           harbor-core
-c8530be38c0c   goharbor/harbor-registryctl:v2.3.2     "/home/harbor/start.…"   33 seconds ago   Up 33 seconds (healthy)                                           registryctl
-fa6015b28ea7   goharbor/harbor-db:v2.3.2              "/docker-entrypoint.…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-db
-acb198e326f7   goharbor/registry-photon:v2.3.2        "/home/harbor/entryp…"   33 seconds ago   Up 32 seconds (healthy)                                           registry
-fb445cb08b1c   goharbor/harbor-portal:v2.3.2          "nginx -g 'daemon of…"   33 seconds ago   Up 32 seconds (healthy)                                           harbor-portal
-34f4ed9a3ac1   goharbor/redis-photon:v2.3.2           "redis-server /etc/r…"   33 seconds ago   Up 32 seconds (healthy)                                           redis
-157a023611ae   goharbor/harbor-log:v2.3.2             "/bin/sh -c /usr/loc…"   34 seconds ago   Up 33 seconds (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
+CONTAINER ID   IMAGE                                  COMMAND                  CREATED             STATUS                       PORTS                                   NAMES
+a7cb1638c9cb   goharbor/trivy-adapter-photon:v2.4.1   "/home/scanner/entry…"   55 seconds ago      Up 54 seconds (healthy)                                              trivy-adapter
+0558f6a931f4   goharbor/harbor-jobservice:v2.4.1      "/harbor/entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-jobservice
+4a4f2e9c944c   goharbor/nginx-photon:v2.4.1           "nginx -g 'daemon of…"   About an hour ago   Up About an hour (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
+c3c23361b1ec   goharbor/harbor-core:v2.4.1            "/harbor/entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-core
+f8a4965fa514   goharbor/redis-photon:v2.4.1           "redis-server /etc/r…"   About an hour ago   Up About an hour (healthy)                                           redis
+3e43d6c6cf01   goharbor/harbor-registryctl:v2.4.1     "/home/harbor/start.…"   About an hour ago   Up About an hour (healthy)                                           registryctl
+93a12595774e   goharbor/harbor-db:v2.4.1              "/docker-entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-db
+f4068a67fd57   goharbor/registry-photon:v2.4.1        "/home/harbor/entryp…"   About an hour ago   Up About an hour (healthy)                                           registry
+153a87c92493   goharbor/harbor-portal:v2.4.1          "nginx -g 'daemon of…"   About an hour ago   Up About an hour (healthy)                                           harbor-portal
+0febb11c9f1a   goharbor/harbor-log:v2.4.1             "/bin/sh -c /usr/loc…"   About an hour ago   Up About an hour (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
+root@ubuntu-focal:/opt/harbor#
 ```
 
 ### Update Container Image
@@ -98,13 +99,13 @@ fb445cb08b1c   goharbor/harbor-portal:v2.3.2          "nginx -g 'daemon of…"  
    ```
    make docker-build
    ```
-4. Edit the `docker-compose.yml` file and replace the adapter's image with the one that we've just built.
+4. Edit the `docker-compose.yml` file and replace the adapter's image with the one that you've just built.
    ```yaml
    version: '2.3'
    services:
      trivy-adapter:
        container_name: trivy-adapter
-       # image: goharbor/trivy-adapter-photon:v2.1.1
+       # image: goharbor/trivy-adapter-photon:v2.4.1
        image: aquasec/harbor-scanner-trivy:dev
        restart: always
    ```

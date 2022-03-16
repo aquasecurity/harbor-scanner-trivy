@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |vb|
     vb.gui = false
-    vb.memory = "2096"
+    vb.memory = "2048"
   end
 
   config.vm.provision "install-go", type: "shell", path: "vagrant/install-go.sh"
