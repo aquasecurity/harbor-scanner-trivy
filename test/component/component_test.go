@@ -94,8 +94,8 @@ func TestComponent(t *testing.T) {
 				"REGISTRY_AUTH_HTPASSWD_REALM":  "Registry Realm",
 			},
 			BindMounts: map[string]string{
-				filepath.Join(baseDir, "data", "registry", "certs"): "/certs",
-				filepath.Join(baseDir, "data", "registry", "auth"):  "/auth",
+				"/certs": filepath.Join(baseDir, "data", "registry", "certs"),
+				"/auth":  filepath.Join(baseDir, "data", "registry", "auth"),
 			},
 			WaitingFor: wait.ForLog("listening on [::]:5443"),
 		})
