@@ -1,6 +1,6 @@
 #! /bin/bash
 
-HARBOR_VERSION="v2.4.0"
+HARBOR_VERSION="v2.4.1"
 
 # Keep in sync with vagrant/harbor.yml.
 HARBOR_HOSTNAME="harbor.dev.io"
