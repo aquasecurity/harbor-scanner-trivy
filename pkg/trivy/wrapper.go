@@ -194,20 +194,19 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 func (w *wrapper) GetVersion() (VersionInfo, error) {
 	cmd, err := w.prepareVersionCmd()
 	if err != nil {
-		return VersionInfo{}, err
+		return VersionInfo{}, fmt.Errorf("failed preparing trivy version command: %w", err)
 	}
 
 	versionOutput, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"exit_code": cmd.ProcessState.ExitCode(),
-			"std_out":   string(versionOutput),
-		}).Error("Running trivy failed")
-		return VersionInfo{}, fmt.Errorf("running trivy: %w: %v", err, string(versionOutput))
+		return VersionInfo{}, fmt.Errorf("failed running trivy version command: %w: %v", err, string(versionOutput))
 	}
 
 	var vi VersionInfo
-	_ = json.Unmarshal(versionOutput, &vi)
+	err = json.Unmarshal(versionOutput, &vi)
+	if err != nil {
+		return VersionInfo{}, fmt.Errorf("failed parsing trivy version output: %w", err)
+	}
 
 	return vi, nil
 }
