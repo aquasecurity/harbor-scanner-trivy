@@ -8,6 +8,9 @@ FROM aquasec/trivy:${TRIVY_VERSION}
 # FROM use an ARG instruction without a value inside of a build stage.
 ARG TRIVY_VERSION
 
+# Fix CVE-2022-28391 in busybox=1.34.1-r3
+RUN apk upgrade busybox
+
 RUN adduser -u 10000 -D -g '' scanner scanner
 
 COPY scanner-trivy /home/scanner/bin/scanner-trivy

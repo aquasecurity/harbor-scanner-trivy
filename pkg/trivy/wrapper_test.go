@@ -170,9 +170,9 @@ func TestWrapper_GetVersion(t *testing.T) {
 
 	expectedCmdArgs := []string{
 		"/usr/local/bin/trivy",
-		"--version",
 		"--cache-dir",
 		"/home/scanner/.cache/trivy",
+		"version",
 		"--format",
 		"json",
 	}
