@@ -32,8 +32,7 @@ func NewServer(config etc.API, handler http.Handler) (server *Server, err error)
 
 	if config.IsTLSEnabled() {
 		server.server.TLSConfig = &tls.Config{
-			MinVersion:               tls.VersionTLS12,
-			PreferServerCipherSuites: true,
+			MinVersion: tls.VersionTLS12,
 			// The API server prefers elliptic curves which have assembly implementations
 			// to ensure performance under heavy loads.
 			CurvePreferences: []tls.CurveID{

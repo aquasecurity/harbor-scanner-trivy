@@ -213,8 +213,8 @@ func (w *wrapper) GetVersion() (VersionInfo, error) {
 
 func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
 	args := []string{
-		"--version",
 		"--cache-dir", w.config.CacheDir,
+		"version",
 		"--format", "json",
 	}
 
