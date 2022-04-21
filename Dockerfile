@@ -1,5 +1,5 @@
 # That's the only place where you're supposed to specify version of Trivy.
-ARG TRIVY_VERSION=0.25.0
+ARG TRIVY_VERSION=0.26.0
 
 FROM aquasec/trivy:${TRIVY_VERSION}
 
@@ -7,9 +7,6 @@ FROM aquasec/trivy:${TRIVY_VERSION}
 # instruction after a FROM. To use the default value of an ARG declared before the first
 # FROM use an ARG instruction without a value inside of a build stage.
 ARG TRIVY_VERSION
-
-# Fix CVE-2022-28391 in busybox=1.34.1-r3
-RUN apk upgrade busybox
 
 RUN adduser -u 10000 -D -g '' scanner scanner
 
