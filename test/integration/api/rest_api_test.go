@@ -218,7 +218,9 @@ func TestRestApi(t *testing.T) {
     "env.SCANNER_TRIVY_INSECURE": "true",
     "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
     "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-    "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+    "env.SCANNER_TRIVY_TIMEOUT": "5m0s",
+	"env.SCANNER_TRIVY_REMOTE": "",
+	"env.SCANNER_TRIVY_INSECURE_REMOTE": "false"
   }
 }`, string(bodyBytes))
 	})

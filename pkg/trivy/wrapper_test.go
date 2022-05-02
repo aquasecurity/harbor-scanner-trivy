@@ -165,19 +165,20 @@ func TestWrapper_Scan_ServerMode(t *testing.T) {
 	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
 
 	config := etc.Trivy{
-		CacheDir:      "/home/scanner/.cache/trivy",
-		ReportsDir:    "/home/scanner/.cache/reports",
-		DebugMode:     true,
-		VulnType:      "os,library",
-		Severity:      "CRITICAL,MEDIUM",
-		IgnoreUnfixed: true,
-		IgnorePolicy:  "/home/scanner/opa/policy.rego",
-		SkipUpdate:    true,
-		GitHubToken:   "<github_token>",
-		Insecure:      true,
-		Timeout:       5 * time.Minute,
-		ServerToken:   "<server_token>",
-		ServerAddr:    "http://localhost:4954",
+		CacheDir:       "/home/scanner/.cache/trivy",
+		ReportsDir:     "/home/scanner/.cache/reports",
+		DebugMode:      true,
+		VulnType:       "os,library",
+		Severity:       "CRITICAL,MEDIUM",
+		IgnoreUnfixed:  true,
+		IgnorePolicy:   "/home/scanner/opa/policy.rego",
+		SkipUpdate:     true,
+		GitHubToken:    "<github_token>",
+		Insecure:       true,
+		Timeout:        5 * time.Minute,
+		ServerToken:    "<server_token>",
+		ServerAddr:     "http://localhost:4954",
+		ServerInsecure: true,
 	}
 
 	imageRef := ImageRef{
@@ -192,6 +193,7 @@ func TestWrapper_Scan_ServerMode(t *testing.T) {
 		"/home/scanner/.cache/trivy",
 		"--debug",
 		"client",
+		"--insecure",
 		"--remote",
 		"http://localhost:4954",
 		"--ignore-policy",

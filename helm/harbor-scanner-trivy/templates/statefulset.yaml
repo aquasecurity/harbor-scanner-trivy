@@ -82,6 +82,12 @@ spec:
                   key: gitHubToken
             - name: "SCANNER_TRIVY_INSECURE"
               value: {{ .Values.scanner.trivy.insecure | default false | quote }}
+            - name: "SCANNER_TRIVY_REMOTE"
+              value: {{ .Values.scanner.trivy.remoteServer | default "" | quote }}
+            - name: "SCANNER_TRIVY_TOKEN"
+              value: {{ .Values.scanner.trivy.serverToken | default "" | quote }}
+            - name: "SCANNER_TRIVY_INSECURE_REMOTE"
+              value: {{ .Values.scanner.trivy.insecureRemote | default false | quote }}
             - name: "SCANNER_STORE_REDIS_NAMESPACE"
               value: {{ .Values.scanner.store.redisNamespace | default "harbor.scanner.trivy:store" | quote }}
             - name: "SCANNER_STORE_REDIS_SCAN_JOB_TTL"

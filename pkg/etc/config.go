@@ -24,20 +24,21 @@ type Config struct {
 }
 
 type Trivy struct {
-	CacheDir      string        `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/home/scanner/.cache/trivy"`
-	ReportsDir    string        `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/home/scanner/.cache/reports"`
-	DebugMode     bool          `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
-	VulnType      string        `env:"SCANNER_TRIVY_VULN_TYPE" envDefault:"os,library"`
-	Severity      string        `env:"SCANNER_TRIVY_SEVERITY" envDefault:"UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"`
-	IgnoreUnfixed bool          `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
-	IgnorePolicy  string        `env:"SCANNER_TRIVY_IGNORE_POLICY"`
-	SkipUpdate    bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
-	OfflineScan   bool          `env:"SCANNER_TRIVY_OFFLINE_SCAN" envDefault:"false"`
-	GitHubToken   string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
-	Insecure      bool          `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
-	Timeout       time.Duration `env:"SCANNER_TRIVY_TIMEOUT" envDefault:"5m0s"`
-	ServerToken   string        `env:"SCANNER_TRIVY_TOKEN" envDefault:""`
-	ServerAddr    string        `env:"SCANNER_TRIVY_REMOTE" envDefault:""`
+	CacheDir       string        `env:"SCANNER_TRIVY_CACHE_DIR" envDefault:"/home/scanner/.cache/trivy"`
+	ReportsDir     string        `env:"SCANNER_TRIVY_REPORTS_DIR" envDefault:"/home/scanner/.cache/reports"`
+	DebugMode      bool          `env:"SCANNER_TRIVY_DEBUG_MODE" envDefault:"false"`
+	VulnType       string        `env:"SCANNER_TRIVY_VULN_TYPE" envDefault:"os,library"`
+	Severity       string        `env:"SCANNER_TRIVY_SEVERITY" envDefault:"UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"`
+	IgnoreUnfixed  bool          `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
+	IgnorePolicy   string        `env:"SCANNER_TRIVY_IGNORE_POLICY"`
+	SkipUpdate     bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
+	OfflineScan    bool          `env:"SCANNER_TRIVY_OFFLINE_SCAN" envDefault:"false"`
+	GitHubToken    string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
+	Insecure       bool          `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
+	Timeout        time.Duration `env:"SCANNER_TRIVY_TIMEOUT" envDefault:"5m0s"`
+	ServerToken    string        `env:"SCANNER_TRIVY_TOKEN" envDefault:""`
+	ServerAddr     string        `env:"SCANNER_TRIVY_REMOTE" envDefault:""`
+	ServerInsecure bool          `env:"SCANNER_TRIVY_INSECURE_REMOTE" envDefault:"false"`
 }
 
 type API struct {

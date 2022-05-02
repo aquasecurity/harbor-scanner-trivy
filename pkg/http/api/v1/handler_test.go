@@ -488,7 +488,9 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s",
+	  "env.SCANNER_TRIVY_REMOTE": "",
+	  "env.SCANNER_TRIVY_INSECURE_REMOTE": "false"
    }
 }`,
 		},
@@ -538,7 +540,9 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s",
+	  "env.SCANNER_TRIVY_REMOTE": "",
+	  "env.SCANNER_TRIVY_INSECURE_REMOTE": "false"
    }
 }`,
 		},
@@ -548,10 +552,12 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			buildInfo:   etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
 			config: etc.Config{
 				Trivy: etc.Trivy{
-					VulnType:    "os,library",
-					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Timeout:     5 * time.Minute,
-					OfflineScan: true,
+					VulnType:       "os,library",
+					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Timeout:        5 * time.Minute,
+					OfflineScan:    true,
+					ServerAddr:     "http://localhost:4954",
+					ServerInsecure: true,
 				},
 			},
 			expectedHTTPCode: http.StatusOK,
@@ -585,7 +591,9 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_INSECURE": "false",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+      "env.SCANNER_TRIVY_TIMEOUT": "5m0s",
+	  "env.SCANNER_TRIVY_REMOTE": "http://localhost:4954",
+	  "env.SCANNER_TRIVY_INSECURE_REMOTE": "true"
    }
 }`,
 		},

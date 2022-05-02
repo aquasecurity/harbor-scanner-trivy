@@ -156,6 +156,10 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if w.config.ServerAddr != "" {
 		globalArgs = append(globalArgs, "client")
 		args = append([]string{"--remote", w.config.ServerAddr}, args...)
+
+		if w.config.ServerInsecure {
+			args = append([]string{"--insecure"}, args...)
+		}
 	} else {
 		globalArgs = append(globalArgs, "image")
 	}

@@ -146,6 +146,9 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_GITHUB_TOKEN`            | N/A                                | The GitHub access token to download [Trivy DB] (see [GitHub rate limiting][gh-rate-limit])                                                                                                                                                                                         |
 | `SCANNER_TRIVY_INSECURE`                | `false`                            | The flag to skip verifying registry certificate                                                                                                                                                                                                                                    |
 | `SCANNER_TRIVY_TIMEOUT`                 | `5m0s`                             | The duration to wait for scan completion                                                                                                                                                                                                                                           |
+| `SCANNER_TRIVY_REMOTE`                  | N/A                                | The flag to enable client/server mode by specifying the remote server URL                                                                                  |
+| `SCANNER_TRIVY_TOKEN`                   | N/A                                | The flag to specify the token for authentication when in client/server mode                                                                                 |
+| `SCANNER_TRIVY_INSECURE_REMOTE`         | `false`                            | The flag to skip verifying certificate when in client/server mode                                                                                 |
 | `SCANNER_STORE_REDIS_NAMESPACE`         | `harbor.scanner.trivy:store`       | The namespace for keys in the Redis store                                                                                                                                                                                                                                          |
 | `SCANNER_STORE_REDIS_SCAN_JOB_TTL`      | `1h`                               | The time to live for persisting scan jobs and associated scan reports                                                                                                                                                                                                              |
 | `SCANNER_JOB_QUEUE_REDIS_NAMESPACE`     | `harbor.scanner.trivy:job-queue`   | The namespace for keys in the scan jobs queue backed by Redis                                                                                                                                                                                                                      |
@@ -205,7 +208,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 requests.
 
 ---
-Harbor Scanner Adapter for Trivy is an [Aqua Security](https://aquasec.com) open source project.  
+Harbor Scanner Adapter for Trivy is an [Aqua Security](https://aquasec.com) open source project.
 Learn about our open source work and portfolio [here](https://www.aquasec.com/products/open-source-projects/).
 
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg?logo=github
