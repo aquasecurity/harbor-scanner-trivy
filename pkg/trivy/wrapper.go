@@ -131,7 +131,7 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		args = append([]string{"--ignore-unfixed"}, args...)
 	}
 
-	if w.config.SkipUpdate {
+	if w.config.SkipUpdate && w.config.ServerAddr == "" {
 		args = append([]string{"--skip-update"}, args...)
 	}
 
@@ -153,7 +153,12 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if w.config.DebugMode {
 		globalArgs = append(globalArgs, "--debug")
 	}
-	globalArgs = append(globalArgs, "image")
+	if w.config.ServerAddr != "" {
+		globalArgs = append(globalArgs, "client")
+		args = append([]string{"--remote", w.config.ServerAddr}, args...)
+	} else {
+		globalArgs = append(globalArgs, "image")
+	}
 
 	args = append(globalArgs, args...)
 
@@ -186,6 +191,10 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 
 	if w.config.Insecure {
 		cmd.Env = append(cmd.Env, "TRIVY_INSECURE=true")
+	}
+
+	if w.config.ServerAddr != "" && w.config.ServerToken != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_TOKEN=%s", w.config.ServerToken))
 	}
 
 	return cmd, nil

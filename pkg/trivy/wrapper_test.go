@@ -159,6 +159,85 @@ func TestWrapper_Scan(t *testing.T) {
 	ambassador.AssertExpectations(t)
 }
 
+func TestWrapper_Scan_ServerMode(t *testing.T) {
+	ambassador := ext.NewMockAmbassador()
+	ambassador.On("Environ").Return([]string{"HTTP_PROXY=http://someproxy:7777"})
+	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
+
+	config := etc.Trivy{
+		CacheDir:      "/home/scanner/.cache/trivy",
+		ReportsDir:    "/home/scanner/.cache/reports",
+		DebugMode:     true,
+		VulnType:      "os,library",
+		Severity:      "CRITICAL,MEDIUM",
+		IgnoreUnfixed: true,
+		IgnorePolicy:  "/home/scanner/opa/policy.rego",
+		SkipUpdate:    true,
+		GitHubToken:   "<github_token>",
+		Insecure:      true,
+		Timeout:       5 * time.Minute,
+		ServerToken:   "<server_token>",
+		ServerAddr:    "http://localhost:4954",
+	}
+
+	imageRef := ImageRef{
+		Name:     "alpine:3.10.2",
+		Auth:     BasicAuth{Username: "dave.loper", Password: "s3cret"},
+		Insecure: true,
+	}
+
+	expectedCmdArgs := []string{
+		"/usr/local/bin/trivy",
+		"--cache-dir",
+		"/home/scanner/.cache/trivy",
+		"--debug",
+		"client",
+		"--remote",
+		"http://localhost:4954",
+		"--ignore-policy",
+		"/home/scanner/opa/policy.rego",
+		"--ignore-unfixed",
+		"--no-progress",
+		"--severity",
+		"CRITICAL,MEDIUM",
+		"--vuln-type",
+		"os,library",
+		"--format",
+		"json",
+		"--output",
+		"/home/scanner/.cache/reports/scan_report_1234567890.json",
+		"alpine:3.10.2",
+	}
+
+	expectedCmdEnvs := []string{
+		"HTTP_PROXY=http://someproxy:7777",
+		"TRIVY_TIMEOUT=5m0s",
+		"TRIVY_USERNAME=dave.loper",
+		"TRIVY_PASSWORD=s3cret",
+		"TRIVY_NON_SSL=true",
+		"GITHUB_TOKEN=<github_token>",
+		"TRIVY_INSECURE=true",
+		"TRIVY_TOKEN=<server_token>",
+	}
+
+	ambassador.On("TempFile", "/home/scanner/.cache/reports", "scan_report_*.json").
+		Return(ext.NewFakeFile("/home/scanner/.cache/reports/scan_report_1234567890.json", expectedReportJSON), nil)
+	ambassador.On("Remove", "/home/scanner/.cache/reports/scan_report_1234567890.json").
+		Return(nil)
+	ambassador.On("RunCmd", &exec.Cmd{
+		Path: "/usr/local/bin/trivy",
+		Env:  expectedCmdEnvs,
+		Args: expectedCmdArgs},
+	).Return([]byte{}, nil)
+
+	report, err := NewWrapper(config, ambassador).Scan(imageRef)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedReport, report)
+
+	ambassador.AssertExpectations(t)
+}
+
 func TestWrapper_GetVersion(t *testing.T) {
 	ambassador := ext.NewMockAmbassador()
 	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)

@@ -36,6 +36,8 @@ type Trivy struct {
 	GitHubToken   string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
 	Insecure      bool          `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
 	Timeout       time.Duration `env:"SCANNER_TRIVY_TIMEOUT" envDefault:"5m0s"`
+	ServerToken   string        `env:"SCANNER_TRIVY_TOKEN" envDefault:""`
+	ServerAddr    string        `env:"SCANNER_TRIVY_REMOTE" envDefault:""`
 }
 
 type API struct {
