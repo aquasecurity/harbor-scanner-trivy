@@ -4,6 +4,8 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
 
+  config.ssh.extra_args = ["-t", "cd /vagrant; bash --login"]
+
   config.vm.provider "virtualbox" do |vb|
     vb.gui = false
     vb.memory = "2048"

@@ -34,7 +34,7 @@
    cd harbor-scanner-trivy
    ```
 2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
-   Make, and Harbor v2.4.1 preinstalled. Harbor is installed in the `/opt/harbor` directory.
+   Make, and Harbor v2.5.1 preinstalled. Harbor is installed in the `/opt/harbor` directory.
    ```
    vagrant up
    ```
@@ -47,7 +47,6 @@
    The `/vagrant` directory in the development machine is shared between host and guest. This, for example, allows you
    to rebuild a container image for testing.
    ```
-   vagrant@ubuntu-focal:~$ cd /vagrant
    vagrant@ubuntu-focal:/vagrant$ make docker-build
    ```
 
@@ -74,18 +73,17 @@ Make sure that you install Harbor with Trivy, i.e. `sudo ./install.sh --with-tri
 
 ```console
 $ docker ps
-CONTAINER ID   IMAGE                                  COMMAND                  CREATED             STATUS                       PORTS                                   NAMES
-a7cb1638c9cb   goharbor/trivy-adapter-photon:v2.4.1   "/home/scanner/entry…"   55 seconds ago      Up 54 seconds (healthy)                                              trivy-adapter
-0558f6a931f4   goharbor/harbor-jobservice:v2.4.1      "/harbor/entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-jobservice
-4a4f2e9c944c   goharbor/nginx-photon:v2.4.1           "nginx -g 'daemon of…"   About an hour ago   Up About an hour (healthy)   0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
-c3c23361b1ec   goharbor/harbor-core:v2.4.1            "/harbor/entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-core
-f8a4965fa514   goharbor/redis-photon:v2.4.1           "redis-server /etc/r…"   About an hour ago   Up About an hour (healthy)                                           redis
-3e43d6c6cf01   goharbor/harbor-registryctl:v2.4.1     "/home/harbor/start.…"   About an hour ago   Up About an hour (healthy)                                           registryctl
-93a12595774e   goharbor/harbor-db:v2.4.1              "/docker-entrypoint.…"   About an hour ago   Up About an hour (healthy)                                           harbor-db
-f4068a67fd57   goharbor/registry-photon:v2.4.1        "/home/harbor/entryp…"   About an hour ago   Up About an hour (healthy)                                           registry
-153a87c92493   goharbor/harbor-portal:v2.4.1          "nginx -g 'daemon of…"   About an hour ago   Up About an hour (healthy)                                           harbor-portal
-0febb11c9f1a   goharbor/harbor-log:v2.4.1             "/bin/sh -c /usr/loc…"   About an hour ago   Up About an hour (healthy)   127.0.0.1:1514->10514/tcp               harbor-log
-root@ubuntu-focal:/opt/harbor#
+CONTAINER ID   IMAGE                                  COMMAND                  CREATED          STATUS                             PORTS                                   NAMES
+776c0b424d23   goharbor/trivy-adapter-photon:v2.5.1   "/home/scanner/entry…"   22 seconds ago   Up 22 seconds (health: starting)                                           trivy-adapter
+7d50e1196823   goharbor/harbor-jobservice:v2.5.1      "/harbor/entrypoint.…"   39 minutes ago   Up 39 minutes (healthy)                                                    harbor-jobservice
+70d08da89eed   goharbor/nginx-photon:v2.5.1           "nginx -g 'daemon of…"   39 minutes ago   Up 39 minutes (healthy)            0.0.0.0:80->8080/tcp, :::80->8080/tcp   nginx
+041d5fdae1fd   goharbor/harbor-core:v2.5.1            "/harbor/entrypoint.…"   39 minutes ago   Up 39 minutes (healthy)                                                    harbor-core
+4601fbbee7ee   goharbor/harbor-registryctl:v2.5.1     "/home/harbor/start.…"   39 minutes ago   Up 39 minutes (healthy)                                                    registryctl
+9c6dc4f126ca   goharbor/harbor-portal:v2.5.1          "nginx -g 'daemon of…"   39 minutes ago   Up 39 minutes (healthy)                                                    harbor-portal
+b42391dd9b69   goharbor/registry-photon:v2.5.1        "/home/harbor/entryp…"   39 minutes ago   Up 39 minutes (healthy)                                                    registry
+3ddd1913c9cb   goharbor/redis-photon:v2.5.1           "redis-server /etc/r…"   39 minutes ago   Up 39 minutes (healthy)                                                    redis
+33ddb8a8e9b3   goharbor/harbor-db:v2.5.1              "/docker-entrypoint.…"   39 minutes ago   Up 39 minutes (healthy)                                                    harbor-db
+dfaff72310c5   goharbor/harbor-log:v2.5.1             "/bin/sh -c /usr/loc…"   39 minutes ago   Up 39 minutes (healthy)            127.0.0.1:1514->10514/tcp               harbor-log
 ```
 
 ### Update Container Image

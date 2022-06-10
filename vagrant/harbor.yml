@@ -34,7 +34,7 @@ data_volume: /data
 # It is downloaded by Trivy from the GitHub release page https://github.com/aquasecurity/trivy-db/releases and cached
 # in the local file system. In addition, the database contains the update timestamp so Trivy can detect whether it
 # should download a newer version from the Internet or use the cached one. Currently, the database is updated every
-# 12 hours and pdublished as a new release to GitHub.
+# 12 hours and published as a new release to GitHub.
 trivy:
   # ignoreUnfixed The flag to display only fixed vulnerabilities
   ignore_unfixed: true
@@ -44,6 +44,14 @@ trivy:
   # If the flag is enabled you have to download the `trivy-offline.tar.gz` archive manually, extract `trivy.db` and
   # `metadata.json` files and mount them in the `/home/scanner/.cache/trivy/db` path.
   skip_update: false
+  #
+  # The offline_scan option prevents Trivy from sending API requests to identify dependencies.
+  # Scanning JAR files and pom.xml may require Internet access for better detection, but this option tries to avoid it.
+  # For example, the offline mode will not try to resolve transitive dependencies in pom.xml when the dependency doesn't
+  # exist in the local repositories. It means a number of detected vulnerabilities might be fewer in offline mode.
+  # It would work if all the dependencies are in local.
+  # This option doesn’t affect DB download. You need to specify "skip-update" as well as "offline-scan" in an air-gapped environment.
+  offline_scan: false
   #
   # insecure The flag to skip verifying registry certificate
   insecure: false
@@ -87,7 +95,7 @@ log:
     location: /var/log/harbor
 
 # This attribute is for migrator to detect the version of the .cfg file, DO NOT MODIFY!
-_version: 2.3.0
+_version: 2.5.0
 
 # Global proxy
 # Config http proxy for components, e.g. http://my.proxy.com:3128
