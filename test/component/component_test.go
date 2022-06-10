@@ -1,5 +1,4 @@
 //go:build component
-// +build component
 
 package component
 
@@ -22,7 +21,7 @@ import (
 )
 
 var (
-	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.26.0"}
+	trivyScanner = harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.28.1"}
 )
 
 const (
