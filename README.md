@@ -1,7 +1,5 @@
 [![GitHub Release][release-img]][release]
 [![GitHub Build Actions][build-action-img]][actions]
-[![GitHub Release Actions][release-action-img]][actions]
-[![Coverage Status][cov-img]][cov]
 [![Go Report Card][report-card-img]][report-card]
 [![License][license-img]][license]
 ![Docker Pulls / Aqua][docker-pulls-aqua]
@@ -216,10 +214,7 @@ Learn about our open source work and portfolio [here](https://www.aquasec.com/pr
 [release-img]: https://img.shields.io/github/release/aquasecurity/harbor-scanner-trivy.svg?logo=github
 [release]: https://github.com/aquasecurity/harbor-scanner-trivy/releases
 [build-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/build/badge.svg
-[release-action-img]: https://github.com/aquasecurity/harbor-scanner-trivy/workflows/release/badge.svg
 [actions]: https://github.com/aquasecurity/harbor-scanner-trivy/actions
-[cov-img]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy/branch/main/graph/badge.svg
-[cov]: https://codecov.io/github/aquasecurity/harbor-scanner-trivy
 [report-card-img]: https://goreportcard.com/badge/github.com/aquasecurity/harbor-scanner-trivy
 [report-card]: https://goreportcard.com/report/github.com/aquasecurity/harbor-scanner-trivy
 [docker-pulls-aqua]: https://img.shields.io/docker/pulls/aquasec/harbor-scanner-trivy?logo=docker&label=docker%20pulls%20%2F%20aquasec
