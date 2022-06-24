@@ -15,6 +15,15 @@ on:
       - 'docs/**'
       - 'LICENSE'
       - 'NOTICE'
+
+# Disable permissions granted to the GITHUB_TOKEN for all the available scopes.
+permissions: {}
+
+# Cancel any in-flight jobs for the same PR branch so there's only one active at a time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build
@@ -34,10 +43,6 @@ jobs:
         run: make lint
       - name: Run unit tests
         run: make test
-      - name: Upload code coverage
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.txt
       - name: Run integration tests
         run: make test-integration
       - name: Run component tests
@@ -45,7 +50,7 @@ jobs:
       - name: Release snapshot
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v1.7.0
+          version: v1.9.2
           args: release --snapshot --skip-publish --rm-dist
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@master
