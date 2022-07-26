@@ -85,15 +85,7 @@ func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err 
 		return
 	}
 
-	port := registryURL.Port()
-	if port == "" && registryURL.Scheme == "http" {
-		port = "80"
-	}
-	if port == "" && registryURL.Scheme == "https" {
-		port = "443"
-	}
-
-	imageRef = fmt.Sprintf("%s:%s/%s@%s", registryURL.Hostname(), port, c.Artifact.Repository, c.Artifact.Digest)
+	imageRef = fmt.Sprintf("%s/%s@%s", registryURL.Host, c.Artifact.Repository, c.Artifact.Digest)
 	insecureRegistry = "http" == registryURL.Scheme
 	return
 }
