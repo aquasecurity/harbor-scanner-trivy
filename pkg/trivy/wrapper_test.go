@@ -90,17 +90,18 @@ func TestWrapper_Scan(t *testing.T) {
 	ambassador.On("LookPath", "trivy").Return("/usr/local/bin/trivy", nil)
 
 	config := etc.Trivy{
-		CacheDir:      "/home/scanner/.cache/trivy",
-		ReportsDir:    "/home/scanner/.cache/reports",
-		DebugMode:     true,
-		VulnType:      "os,library",
-		Severity:      "CRITICAL,MEDIUM",
-		IgnoreUnfixed: true,
-		IgnorePolicy:  "/home/scanner/opa/policy.rego",
-		SkipUpdate:    true,
-		GitHubToken:   "<github_token>",
-		Insecure:      true,
-		Timeout:       5 * time.Minute,
+		CacheDir:       "/home/scanner/.cache/trivy",
+		ReportsDir:     "/home/scanner/.cache/reports",
+		DebugMode:      true,
+		VulnType:       "os,library",
+		SecurityChecks: "vuln",
+		Severity:       "CRITICAL,MEDIUM",
+		IgnoreUnfixed:  true,
+		IgnorePolicy:   "/home/scanner/opa/policy.rego",
+		SkipUpdate:     true,
+		GitHubToken:    "<github_token>",
+		Insecure:       true,
+		Timeout:        5 * time.Minute,
 	}
 
 	imageRef := ImageRef{
@@ -124,6 +125,8 @@ func TestWrapper_Scan(t *testing.T) {
 		"CRITICAL,MEDIUM",
 		"--vuln-type",
 		"os,library",
+		"--security-checks",
+		"vuln",
 		"--format",
 		"json",
 		"--output",

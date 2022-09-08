@@ -447,13 +447,14 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 				},
 			},
 			config: etc.Config{Trivy: etc.Trivy{
-				SkipUpdate:    false,
-				IgnoreUnfixed: true,
-				DebugMode:     true,
-				Insecure:      true,
-				VulnType:      "os,library",
-				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				Timeout:       5 * time.Minute,
+				SkipUpdate:     false,
+				IgnoreUnfixed:  true,
+				DebugMode:      true,
+				Insecure:       true,
+				VulnType:       "os,library",
+				SecurityChecks: "vuln",
+				Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				Timeout:        5 * time.Minute,
 			}},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
@@ -487,6 +488,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "true",
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
       "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
@@ -499,13 +501,14 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 				Version: "v0.5.2-17-g3c9af62",
 			},
 			config: etc.Config{Trivy: etc.Trivy{
-				SkipUpdate:    false,
-				IgnoreUnfixed: true,
-				DebugMode:     true,
-				Insecure:      true,
-				VulnType:      "os,library",
-				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				Timeout:       5 * time.Minute,
+				SkipUpdate:     false,
+				IgnoreUnfixed:  true,
+				DebugMode:      true,
+				Insecure:       true,
+				VulnType:       "os,library",
+				SecurityChecks: "vuln",
+				Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				Timeout:        5 * time.Minute,
 			}},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
@@ -537,6 +540,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "true",
       "env.SCANNER_TRIVY_INSECURE": "true",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
       "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
@@ -548,10 +552,11 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			buildInfo:   etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
 			config: etc.Config{
 				Trivy: etc.Trivy{
-					VulnType:    "os,library",
-					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Timeout:     5 * time.Minute,
-					OfflineScan: true,
+					VulnType:       "os,library",
+					SecurityChecks: "vuln",
+					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Timeout:        5 * time.Minute,
+					OfflineScan:    true,
 				},
 			},
 			expectedHTTPCode: http.StatusOK,
@@ -584,6 +589,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
       "env.SCANNER_TRIVY_DEBUG_MODE": "false",
       "env.SCANNER_TRIVY_INSECURE": "false",
       "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
       "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
       "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
    }
