@@ -41,13 +41,14 @@ func TestRestApi(t *testing.T) {
 		},
 		etc.Config{
 			Trivy: etc.Trivy{
-				SkipUpdate:    false,
-				IgnoreUnfixed: true,
-				DebugMode:     true,
-				Insecure:      true,
-				VulnType:      "os,library",
-				Severity:      "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				Timeout:       5 * time.Minute,
+				SkipUpdate:     false,
+				IgnoreUnfixed:  true,
+				DebugMode:      true,
+				Insecure:       true,
+				VulnType:       "os,library",
+				Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				SecurityChecks: "vuln",
+				Timeout:        5 * time.Minute,
 			},
 		}, enqueuer, store, wrapper)
 
@@ -218,6 +219,7 @@ func TestRestApi(t *testing.T) {
     "env.SCANNER_TRIVY_INSECURE": "true",
     "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
     "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+	"env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
     "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
   }
 }`, string(bodyBytes))
