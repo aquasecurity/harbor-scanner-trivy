@@ -74,6 +74,8 @@ scanner:
     ## If the flag is enabled you have to manually download the `trivy.db` file and mount it in the
     ## `/home/scanner/.cache/trivy/db/trivy.db` path (see `cacheDir`).
     skipUpdate: false
+    # OCI repository to retrieve the trivy vulnerability database from
+    dbRepository: ghcr.io/aquasecurity/trivy-db
     # offlineScan the flag to disable external API requests to identify dependencies.
     offlineScan: false
     ## gitHubToken the GitHub access token to download Trivy DB
