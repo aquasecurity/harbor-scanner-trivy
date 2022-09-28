@@ -122,6 +122,7 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		"--no-progress",
 		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
+		"--security-checks", w.config.SecurityChecks,
 		"--format", "json",
 		"--output", outputFile,
 		imageRef.Name,
