@@ -69,6 +69,8 @@ spec:
               value: {{ .Values.scanner.trivy.severity | default "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" | quote }}
             - name: "SCANNER_TRIVY_IGNORE_UNFIXED"
               value: {{ .Values.scanner.trivy.ignoreUnfixed | default false | quote }}
+            - name: "SCANNER_TRIVY_REPOSITORY"
+              value: {{ .Values.scanner.trivy.repository | default "ghcr.io/aquasecurity/trivy-db" | quote }}
             - name: "SCANNER_TRIVY_TIMEOUT"
               value: {{ .Values.scanner.trivy.timeout | quote }}
             - name: "SCANNER_TRIVY_SKIP_UPDATE"

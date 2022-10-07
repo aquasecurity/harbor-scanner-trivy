@@ -66,6 +66,8 @@ scanner:
     severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
     ## ignoreUnfixed the flag to display only fixed vulnerabilities
     ignoreUnfixed: false
+    ## OCI repository to retrieve trivy-db
+    repository: "ghcr.io/aquasecurity/trivy-db"
     ## timeout the duration to wait for scan completion
     timeout: 5m0s
     ## skipUpdate the flag to enable or disable Trivy DB downloads from GitHub
