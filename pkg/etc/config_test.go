@@ -155,7 +155,7 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
 				"SCANNER_TRIVY_SEVERITY":        "CRITICAL",
 				"SCANNER_TRIVY_IGNORE_UNFIXED":  "true",
-				"SCANNER_TRIVY_REPOSITORY":			 "ghcr.io/aquasecurity/trivy-db",
+				"SCANNER_TRIVY_REPOSITORY":      "ghcr.io/aquasecurity/trivy-db",
 				"SCANNER_TRIVY_INSECURE":        "true",
 				"SCANNER_TRIVY_SKIP_UPDATE":     "true",
 				"SCANNER_TRIVY_OFFLINE_SCAN":    "true",
