@@ -1,6 +1,6 @@
 module github.com/aquasecurity/harbor-scanner-trivy
 
-go 1.17
+go 1.18
 
 require (
 	github.com/FZambia/sentinel v1.1.0
