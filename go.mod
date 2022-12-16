@@ -3,7 +3,7 @@ module github.com/aquasecurity/harbor-scanner-trivy
 go 1.18
 
 require (
-	github.com/FZambia/sentinel v1.1.0
+	github.com/FZambia/sentinel v1.1.1
 	github.com/caarlos0/env/v6 v6.7.1
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/docker/go-connections v0.4.0
