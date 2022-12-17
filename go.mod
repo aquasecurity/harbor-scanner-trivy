@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/FZambia/sentinel v1.1.1
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v20.10.11+incompatible
+	github.com/docker/docker v20.10.22+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gocraft/work v0.5.1
 	github.com/gomodule/redigo v1.8.9
@@ -52,8 +52,6 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	go.opencensus.io v0.22.4 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
-	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a // indirect
-	google.golang.org/grpc v1.33.2 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
