@@ -54,26 +54,27 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
 
-	imageRef, insecureRegistry, err := req.GetImageRef()
-	if err != nil {
-		return err
-	}
+	if req.Artifact.MimeType != "application/vnd.oci.image.manifest.v1+json" {
+		imageRef, insecureRegistry, err := req.GetImageRef()
+		if err != nil {
+			return err
+		}
 
-	auth, err := c.ToRegistryAuth(req.Registry.Authorization)
-	if err != nil {
-		return err
-	}
+		auth, err := c.ToRegistryAuth(req.Registry.Authorization)
+		if err != nil {
+			return err
+		}
 
-	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry})
-	if err != nil {
-		return xerrors.Errorf("running trivy wrapper: %v", err)
-	}
+		scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry})
+		if err != nil {
+			return xerrors.Errorf("running trivy wrapper: %v", err)
+		}
 
-	err = c.store.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
-	if err != nil {
-		return xerrors.Errorf("saving scan report: %v", err)
+		err = c.store.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
+		if err != nil {
+			return xerrors.Errorf("saving scan report: %v", err)
+		}
 	}
-
 	err = c.store.UpdateStatus(scanJobID, job.Finished)
 	if err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)

@@ -17,11 +17,11 @@ test-component: docker-build
 	GO111MODULE=on go test -count=1 -v -tags=component ./test/component/...
 
 $(BINARY): $(SOURCES)
-	GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
+	GOOS=linux GOARCH=amd64 GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
 
 .PHONY: docker-build
 docker-build: build
-	docker build --no-cache -t $(IMAGE) .
+	docker build --platform linux/amd64 --no-cache -t $(IMAGE) .
 
 lint:
 	./bin/golangci-lint --build-tags component,integration run -v
