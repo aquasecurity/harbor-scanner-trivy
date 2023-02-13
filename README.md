@@ -37,6 +37,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 
 | Harbor           | Trivy Adapter | Trivy           |
 |------------------|---------------|-----------------|
+| -                | v0.30.7       | [trivy v0.37.2] |
 | -                | v0.30.6       | [trivy v0.35.0] |
 | -                | v0.30.5       | [trivy v0.35.0] |
 | -                | v0.30.4       | [trivy v0.35.0] |
@@ -72,6 +73,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 [harbor v2.1.6]: https://github.com/goharbor/harbor/releases/tag/v2.1.6
 [harbor v2.1.0]: https://github.com/goharbor/harbor/releases/tag/v2.1.0
 
+[trivy v0.37.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.37.2
 [trivy v0.35.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.35.0
 [trivy v0.32.1]: https://github.com/aquasecurity/trivy/releases/tag/v0.32.1
 [trivy v0.29.2]: https://github.com/aquasecurity/trivy/releases/tag/v0.29.2
