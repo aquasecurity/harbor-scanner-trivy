@@ -140,10 +140,14 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		args = append([]string{"--offline-scan"}, args...)
 	}
 
+	if w.config.Repository != "" {
+		args = append([]string{"--db-repository", w.config.Repository}, args...)
+	}
+
 	if w.config.IgnorePolicy != "" {
 		args = append([]string{"--ignore-policy", w.config.IgnorePolicy}, args...)
 	}
-
+	
 	name, err := w.ambassador.LookPath(trivyCmd)
 	if err != nil {
 		return nil, err
