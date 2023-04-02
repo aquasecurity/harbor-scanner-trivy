@@ -117,17 +117,20 @@ designated as the default scanner.
 ### Harbor 1.10 on Kubernetes
 
 1. Install the `harbor-scanner-trivy` chart:
+
    ```
    helm repo add aqua https://aquasecurity.github.io/helm-charts
    ```
+
    ```
    helm install harbor-scanner-trivy aqua/harbor-scanner-trivy \
      --namespace harbor --create-namespace
    ```
+
 2. Configure the scanner adapter in the Harbor interface.
    1. Navigate to **Interrogation Services** and click **+ NEW SCANNER**.
       ![Interrogation Services](docs/images/interrogation_services.png)
-   2. Enter http://harbor-scanner-trivy.harbor:8080 as the **Endpoint** URL and click **TEST CONNECTION**.
+   2. Enter <http://harbor-scanner-trivy.harbor:8080> as the **Endpoint** URL and click **TEST CONNECTION**.
       ![Add scanner](docs/images/add_scanner.png)
    3. If everything is fine click **ADD** to save the configuration.
 3. Select the **Trivy** scanner and set it as default by clicking **SET AS DEFAULT**.
@@ -183,12 +186,12 @@ Configuration of the adapter is done via environment variables at startup.
 
 ## Troubleshooting
 
-### Error: database error: --skip-update cannot be specified on the first run
+### Error: database error: --skip-db-update cannot be specified on the first run
 
 If you set the value of the `SCANNER_TRIVY_SKIP_UPDATE` to `true`, make sure that you download the [Trivy DB]
 and mount it in the `/home/scanner/.cache/trivy/db/trivy.db` path.
 
-### Error: failed to list releases: Get https://api.github.com/repos/aquasecurity/trivy-db/releases: dial tcp: lookup api.github.com on 127.0.0.11:53: read udp 127.0.0.1:39070->127.0.0.11:53: i/o timeout
+### Error: failed to list releases: Get <https://api.github.com/repos/aquasecurity/trivy-db/releases>: dial tcp: lookup api.github.com on 127.0.0.11:53: read udp 127.0.0.1:39070->127.0.0.11:53: i/o timeout
 
 Most likely it's a Docker DNS server or network firewall configuration issue. Trivy requires internet connection to
 periodically download vulnerability database from GitHub to show up-to-date risks.
@@ -208,7 +211,7 @@ services:
 Alternatively, configure Docker daemon to use the same DNS server as host operating system. See [DNS services][docker-dns]
 section in the Docker container networking documentation for more details.
 
-### Error: failed to list releases: GET https://api.github.com/repos/aquasecurity/trivy-db/releases: 403 API rate limit exceeded
+### Error: failed to list releases: GET <https://api.github.com/repos/aquasecurity/trivy-db/releases>: 403 API rate limit exceeded
 
 Trivy DB downloads from GitHub are subject to [rate limiting][gh-rate-limit]. Make sure that the Trivy DB is mounted
 and cached in the `/home/scanner/.cache/trivy/db/trivy.db` path. If, for any reason, it's not enough you can set the
@@ -238,7 +241,6 @@ Learn about our open source work and portfolio [here](https://www.aquasec.com/pr
 [Harbor Helm chart]: https://github.com/goharbor/harbor-helm
 [Trivy]: https://github.com/aquasecurity/trivy
 [Trivy DB]: https://github.com/aquasecurity/trivy-db
-[latest-release-url]: https://hub.docker.com/r/aquasec/harbor-scanner-trivy/tags
 [harbor-pluggable-scanners]: https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md
 [gh-rate-limit]: https://github.com/aquasecurity/trivy#github-rate-limiting
 [docker-dns]: https://docs.docker.com/config/containers/container-networking/#dns-services
