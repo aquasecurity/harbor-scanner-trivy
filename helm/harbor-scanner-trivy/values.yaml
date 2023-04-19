@@ -4,7 +4,7 @@ fullnameOverride: ""
 image:
   registry: docker.io
   repository: aquasec/harbor-scanner-trivy
-  tag: 0.30.10
+  tag: 0.30.11
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -74,6 +74,8 @@ scanner:
     ## If the flag is enabled you have to manually download the `trivy.db` file and mount it in the
     ## `/home/scanner/.cache/trivy/db/trivy.db` path (see `cacheDir`).
     skipUpdate: false
+    ## skipJavaUpdate the flag to enable or disable Trivy Java DB downloads
+    skipJavaUpdate: false
     # offlineScan the flag to disable external API requests to identify dependencies.
     offlineScan: false
     ## gitHubToken the GitHub access token to download Trivy DB

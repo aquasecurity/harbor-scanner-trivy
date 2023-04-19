@@ -42,6 +42,7 @@ func TestRestApi(t *testing.T) {
 		etc.Config{
 			Trivy: etc.Trivy{
 				SkipUpdate:     false,
+				SkipJavaUpdate: false,
 				IgnoreUnfixed:  true,
 				DebugMode:      true,
 				Insecure:       true,

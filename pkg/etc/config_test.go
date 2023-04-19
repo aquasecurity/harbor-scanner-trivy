@@ -191,6 +191,7 @@ func TestGetConfig(t *testing.T) {
 					Severity:       "CRITICAL",
 					IgnoreUnfixed:  true,
 					SkipUpdate:     true,
+					SkipJavaUpdate: true,
 					OfflineScan:    true,
 					Insecure:       true,
 					GitHubToken:    "<GITHUB_TOKEN>",
