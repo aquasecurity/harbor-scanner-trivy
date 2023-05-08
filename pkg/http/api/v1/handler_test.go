@@ -448,6 +448,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			},
 			config: etc.Config{Trivy: etc.Trivy{
 				SkipUpdate:     false,
+				SkipJavaUpdate: false,
 				IgnoreUnfixed:  true,
 				DebugMode:      true,
 				Insecure:       true,
@@ -502,6 +503,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			},
 			config: etc.Config{Trivy: etc.Trivy{
 				SkipUpdate:     false,
+				SkipJavaUpdate: false,
 				IgnoreUnfixed:  true,
 				DebugMode:      true,
 				Insecure:       true,
