@@ -1,7 +1,6 @@
 package ext
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -38,7 +37,7 @@ func (a *ambassador) RunCmd(cmd *exec.Cmd) ([]byte, error) {
 }
 
 func (a *ambassador) TempFile(dir, pattern string) (File, error) {
-	return ioutil.TempFile(dir, pattern)
+	return os.CreateTemp(dir, pattern)
 }
 
 func (a *ambassador) Remove(name string) error {

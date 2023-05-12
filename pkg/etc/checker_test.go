@@ -2,7 +2,6 @@ package etc
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -14,7 +13,7 @@ import (
 func TestCheck(t *testing.T) {
 
 	t.Run("Should return error when trivy cache dir is blank", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -31,7 +30,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should return error when trivy reports dir is blank", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -48,7 +47,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should create trivy directories", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -68,7 +67,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should skip creating trivy directories", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -90,7 +89,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should return error when TLS certificate does not exist", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -119,7 +118,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should return error when TLS key does not exist", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)
@@ -148,7 +147,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should return error when one of ClientCAs does not exist", func(t *testing.T) {
-		tempDir, err := ioutil.TempDir("", "TestCheck_*")
+		tempDir, err := os.MkdirTemp("", "TestCheck_*")
 		require.NoError(t, err)
 		defer func() {
 			_ = os.RemoveAll(tempDir)

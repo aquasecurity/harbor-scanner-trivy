@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
@@ -55,7 +56,7 @@ func NewServer(config etc.API, handler http.Handler) (server *Server, err error)
 			certPool := x509.NewCertPool()
 
 			for _, clientCAPath := range config.ClientCAs {
-				clientCA, err := ioutil.ReadFile(clientCAPath)
+				clientCA, err := os.ReadFile(clientCAPath)
 				if err != nil {
 					return nil, fmt.Errorf("cound not read file %s: %w", clientCAPath, err)
 				}
