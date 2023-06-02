@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/FZambia/sentinel v1.1.1
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v23.0.3+incompatible
+	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gocraft/work v0.5.1
 	github.com/gomodule/redigo v1.8.9
@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230106234847-43070de90fa1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
