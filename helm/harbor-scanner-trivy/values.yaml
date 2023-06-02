@@ -4,7 +4,7 @@ fullnameOverride: ""
 image:
   registry: docker.io
   repository: aquasec/harbor-scanner-trivy
-  tag: 0.30.11
+  tag: 0.30.12
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -96,7 +96,7 @@ scanner:
     insecure: false
     # See https://github.com/aquasecurity/trivy#filter-the-vulnerabilities-by-open-policy-agent-policy for details
     ignorePolicy: ""
-    #ignorePolicy:  |
+    # ignorePolicy:  |
     #  package trivy
     #
     #  import data.lib.trivy
