@@ -77,7 +77,6 @@ func TestComponent(t *testing.T) {
 	err = redisC.Start(ctx)
 	require.NoError(t, err)
 	defer func() { _ = redisC.Terminate(ctx) }()
-
 	registryC, err := dp.CreateContainer(ctx,
 		tc.ContainerRequest{
 			Name:         "registry",
@@ -92,9 +91,9 @@ func TestComponent(t *testing.T) {
 				"REGISTRY_AUTH_HTPASSWD_PATH":   "/auth/htpasswd",
 				"REGISTRY_AUTH_HTPASSWD_REALM":  "Registry Realm",
 			},
-			BindMounts: map[string]string{
-				"/certs": filepath.Join(baseDir, "data", "registry", "certs"),
-				"/auth":  filepath.Join(baseDir, "data", "registry", "auth"),
+			Mounts: tc.ContainerMounts{
+				tc.BindMount(filepath.Join(baseDir, "data", "registry", "certs"), "/certs"),
+				tc.BindMount(filepath.Join(baseDir, "data", "registry", "auth"), "/auth"),
 			},
 			WaitingFor: wait.ForLog("listening on [::]:5443"),
 		})
