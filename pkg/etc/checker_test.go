@@ -13,7 +13,7 @@ import (
 func TestCheck(t *testing.T) {
 
 	t.Run("Should return error when trivy cache dir is blank", func(t *testing.T) {
-		tempDir:= t.TempDir()
+		tempDir := t.TempDir()
 		reportsDir := path.Join(tempDir, "reports")
 
 		err := Check(Config{Trivy: Trivy{
@@ -27,7 +27,6 @@ func TestCheck(t *testing.T) {
 	t.Run("Should return error when trivy reports dir is blank", func(t *testing.T) {
 		tempDir := t.TempDir()
 
-
 		cacheDir := path.Join(tempDir, "cache")
 
 		err := Check(Config{Trivy: Trivy{
@@ -39,7 +38,7 @@ func TestCheck(t *testing.T) {
 	})
 
 	t.Run("Should create trivy directories", func(t *testing.T) {
-		tempDir:= t.TempDir()
+		tempDir := t.TempDir()
 
 		cacheDir := path.Join(tempDir, "cache")
 		reportsDir := path.Join(tempDir, "reports")
