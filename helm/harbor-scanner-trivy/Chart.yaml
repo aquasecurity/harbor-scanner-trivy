@@ -1,7 +1,7 @@
 apiVersion: v1
 name: harbor-scanner-trivy
-version: 0.30.12
-appVersion: 0.30.12
+version: 0.30.13
+appVersion: 0.30.13
 description: Harbor scanner adapter for Trivy
 keywords:
   - scanner
