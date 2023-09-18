@@ -48,7 +48,7 @@ jobs:
       - name: Run component tests
         run: make test-component
       - name: Release snapshot
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: v1.9.2
           args: release --snapshot --skip-publish --rm-dist
