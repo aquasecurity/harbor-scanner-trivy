@@ -42,6 +42,10 @@ spec:
           securityContext:
 {{ toYaml .Values.securityContext | indent 12 }}
           {{- end }}
+          {{- if .Values.image.pullSecret }}
+          imagePullSecrets:
+            - name: {{ .Values.image.pullSecret }}
+          {{- end }}
           env:
             - name: "SCANNER_LOG_LEVEL"
               value: {{ .Values.scanner.logLevel | default "info" | quote }}
