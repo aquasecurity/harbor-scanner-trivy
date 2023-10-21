@@ -1,12 +1,12 @@
 package scan
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	log "github.com/sirupsen/logrus"
 )
 
 // Clock wraps the Now method. Introduced to allow replacing the global state with fixed clocks to facilitate testing.
@@ -96,12 +96,13 @@ func (t *transformer) toHarborLayer(tLayer *trivy.Layer) (hLayer *harbor.Layer) 
 }
 
 func (t *transformer) toHarborSeverity(severity string) harbor.Severity {
-	if harborSev, ok := trivyToHarborSeverityMap[severity]; ok {
-		return harborSev
+	harborSev, ok := trivyToHarborSeverityMap[severity]
+	if !ok {
+		slog.Warn("Unknown trivy severity", slog.String("severity", severity))
+		return harbor.SevUnknown
 	}
 
-	log.WithField("severity", severity).Warn("Unknown trivy severity")
-	return harbor.SevUnknown
+	return harborSev
 }
 
 func (t *transformer) toVendorAttributes(info map[string]trivy.CVSSInfo) map[string]interface{} {

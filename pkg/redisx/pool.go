@@ -3,17 +3,16 @@ package redisx
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/FZambia/sentinel"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-
-	"github.com/gomodule/redigo/redis"
-	log "github.com/sirupsen/logrus"
 )
 
 // NewPool constructs a redis.Pool with the specified configuration.
@@ -42,7 +41,7 @@ func NewPool(config etc.RedisPool) (pool *redis.Pool, err error) {
 func newInstancePool(config etc.RedisPool) *redis.Pool {
 	return &redis.Pool{
 		Dial: func() (redis.Conn, error) {
-			log.WithField("url", config.URL).Trace("Connecting to Redis")
+			slog.Debug("Connecting to Redis", slog.String("url", config.URL))
 			return redis.DialURL(config.URL)
 		},
 		MaxIdle:     config.MaxIdle,
@@ -54,7 +53,7 @@ func newInstancePool(config etc.RedisPool) *redis.Pool {
 
 // redis+sentinel://user:password@sentinel_host1:port1,sentinel_host2:port2/monitor-name/db-number
 func newSentinelPool(configURL *url.URL, config etc.RedisPool) (pool *redis.Pool, err error) {
-	log.Trace("Constructing connection pool for Redis Sentinel")
+	slog.Debug("Constructing connection pool for Redis Sentinel")
 	sentinelURL, err := ParseSentinelURL(configURL)
 	if err != nil {
 		return
@@ -77,7 +76,7 @@ func newSentinelPool(configURL *url.URL, config etc.RedisPool) (pool *redis.Pool
 		Addrs:      sentinelURL.Addrs,
 		MasterName: sentinelURL.MonitorName,
 		Dial: func(addr string) (conn redis.Conn, err error) {
-			log.WithField("addr", addr).Trace("Connecting to Redis sentinel")
+			slog.Debug("Connecting to Redis sentinel", slog.String("addr", addr))
 			conn, err = redis.Dial("tcp", addr, sentinelOpts...)
 			if err != nil {
 				return
@@ -97,14 +96,14 @@ func newSentinelPool(configURL *url.URL, config etc.RedisPool) (pool *redis.Pool
 			if err != nil {
 				return
 			}
-			log.WithField("addr", masterAddr).Trace("Connecting to Redis master")
+			slog.Debug("Connecting to Redis master", slog.String("addr", masterAddr))
 			return redis.Dial("tcp", masterAddr, redisOpts...)
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
 				return nil
 			}
-			log.Trace("Testing connection to Redis master on borrow")
+			slog.Debug("Testing connection to Redis master on borrow")
 			if !sentinel.TestRole(c, "master") {
 				return errors.New("role check failed")
 			}

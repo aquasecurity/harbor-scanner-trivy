@@ -3,14 +3,14 @@ package queue
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
+	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
-	"github.com/gocraft/work"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,9 +55,9 @@ func (w *worker) Start() {
 }
 
 func (w *worker) Stop() {
-	log.Trace("Job queue shutdown started")
+	slog.Debug("Job queue shutdown started")
 	w.workerPool.Stop()
-	log.Trace("Job queue shutdown completed")
+	slog.Debug("Job queue shutdown completed")
 }
 
 // workerContext is a context for running scan jobs.
@@ -66,22 +66,20 @@ type workerContext struct {
 }
 
 // ScanArtifact is a handler function for the specified scan Job with the given workerContext.
-func (s *workerContext) ScanArtifact(job *work.Job) (err error) {
-	log.WithField("scan_job_id", job.ID).Debug("Executing enqueued scan job")
+func (s *workerContext) ScanArtifact(job *work.Job) error {
+	slog.Debug("Executing enqueued scan job", slog.String("scan_job_id", job.ID))
 
 	request, err := s.unmarshalScanRequest(job)
 	if err != nil {
-		return
+		return err
 	}
 
-	err = s.controller.Scan(job.ID, request)
-	return
+	return s.controller.Scan(job.ID, request)
 }
 
 func (s *workerContext) unmarshalScanRequest(job *work.Job) (request harbor.ScanRequest, err error) {
 	// TODO Fail fast and assert that the scan_request arg was set by the enqueuer.
-	err = json.Unmarshal([]byte(job.ArgString(scanRequestJobArg)), &request)
-	if err != nil {
+	if err = json.Unmarshal([]byte(job.ArgString(scanRequestJobArg)), &request); err != nil {
 		return request, fmt.Errorf("unmarshalling scan request: %v", err)
 	}
 	return

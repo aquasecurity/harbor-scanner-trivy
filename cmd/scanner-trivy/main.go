@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,7 +16,6 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/redisx"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -26,10 +26,10 @@ var (
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
-	log.SetLevel(etc.GetLogLevel())
-	log.SetReportCaller(false)
-	log.SetFormatter(&log.JSONFormatter{})
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: etc.LogLevel(),
+	}))
+	slog.SetDefault(logger)
 
 	info := etc.BuildInfo{
 		Version: version,
@@ -38,16 +38,15 @@ func main() {
 	}
 
 	if err := run(info); err != nil {
-		log.Fatalf("Error: %v", err)
+		slog.Error("Error: %v", err)
+		os.Exit(1)
 	}
 }
 
 func run(info etc.BuildInfo) error {
-	log.WithFields(log.Fields{
-		"version":  info.Version,
-		"commit":   info.Commit,
-		"built_at": info.Date,
-	}).Info("Starting harbor-scanner-trivy")
+	slog.Info("Starting harbor-scanner-trivy", slog.String("version", info.Version),
+		slog.String("commit", info.Commit), slog.String("built_at", info.Date),
+	)
 
 	config, err := etc.GetConfig()
 	if err != nil {
@@ -79,7 +78,7 @@ func run(info etc.BuildInfo) error {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
 		captured := <-sigint
-		log.WithField("signal", captured.String()).Debug("Trapped os signal")
+		slog.Debug("Trapped os signal", slog.String("signal", captured.String()))
 
 		apiServer.Shutdown()
 		worker.Stop()
