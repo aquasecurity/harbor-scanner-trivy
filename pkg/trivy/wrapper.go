@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os/exec"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -56,18 +56,18 @@ func NewWrapper(config etc.Trivy, ambassador ext.Ambassador) Wrapper {
 }
 
 func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
-	log.WithField("image_ref", imageRef.Name).Debug("Started scanning")
+	logger := slog.With(slog.String("image_ref", imageRef.Name))
+	logger.Debug("Started scanning")
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
 		return nil, err
 	}
-	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
+	logger.Debug("Saving scan report to tmp file", slog.String("path", reportFile.Name()))
 	defer func() {
-		log.WithField("path", reportFile.Name()).Debug("Removing scan report tmp file")
-		err := w.ambassador.Remove(reportFile.Name())
-		if err != nil {
-			log.WithError(err).Warn("Error while removing scan report tmp file")
+		logger.Debug("Removing scan report tmp file", slog.String("path", reportFile.Name()))
+		if err = w.ambassador.Remove(reportFile.Name()); err != nil {
+			logger.Warn("Error while removing scan report tmp file", slog.String("err", err.Error()))
 		}
 	}()
 
@@ -76,31 +76,29 @@ func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{"path": cmd.Path, "args": cmd.Args}).Trace("Exec command with args")
+	logger.Debug("Exec command with args", slog.String("path", cmd.Path),
+		slog.String("args", strings.Join(cmd.Args, " ")))
 
 	stdout, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"image_ref": imageRef.Name,
-			"exit_code": cmd.ProcessState.ExitCode(),
-			"std_out":   string(stdout),
-		}).Error("Running trivy failed")
+		logger.Error("Running trivy failed",
+			slog.String("exit_code", fmt.Sprintf("%d", cmd.ProcessState.ExitCode())),
+			slog.String("std_out", string(stdout)),
+		)
 		return nil, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
 	}
 
-	log.WithFields(log.Fields{
-		"image_ref": imageRef.Name,
-		"exit_code": cmd.ProcessState.ExitCode(),
-		"std_out":   string(stdout),
-	}).Debug("Running trivy finished")
+	logger.Debug("Running trivy finished",
+		slog.String("exit_code", fmt.Sprintf("%d", cmd.ProcessState.ExitCode())),
+		slog.String("std_out", string(stdout)),
+	)
 
 	return w.parseVulnerabilities(reportFile)
 }
 
 func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, error) {
 	var scanReport ScanReport
-	err := json.NewDecoder(reportFile).Decode(&scanReport)
-	if err != nil {
+	if err := json.NewDecoder(reportFile).Decode(&scanReport); err != nil {
 		return nil, fmt.Errorf("decoding scan report from file: %w", err)
 	}
 
@@ -110,7 +108,7 @@ func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, e
 
 	var vulnerabilities []Vulnerability
 	for _, scanResult := range scanReport.Results {
-		log.WithField("target", scanResult.Target).Trace("Parsing vulnerabilities")
+		slog.Debug("Parsing vulnerabilities", slog.String("target", scanResult.Target))
 		vulnerabilities = append(vulnerabilities, scanResult.Vulnerabilities...)
 	}
 

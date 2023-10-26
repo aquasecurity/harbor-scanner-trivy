@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,14 +18,11 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
 	pathVarScanRequestID = "scan_request_id"
-)
 
-const (
 	propertyScannerType    = "harbor.scanner-adapter/scanner-type"
 	propertyDBUpdatedAt    = "harbor.scanner-adapter/vulnerability-database-updated-at"
 	propertyDBNextUpdateAt = "harbor.scanner-adapter/vulnerability-database-next-update-at"
@@ -67,16 +65,20 @@ func NewAPIHandler(info etc.BuildInfo, config etc.Config, enqueuer queue.Enqueue
 
 func (h *requestHandler) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Tracef("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+		slog.Debug("Request",
+			slog.String("addr", r.RemoteAddr),
+			slog.String("proto", r.Proto),
+			slog.String("method", r.Method),
+			slog.String("uri", r.URL.RequestURI()),
+		)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Request) {
 	scanRequest := harbor.ScanRequest{}
-	err := json.NewDecoder(req.Body).Decode(&scanRequest)
-	if err != nil {
-		log.WithError(err).Error("Error while unmarshalling scan request")
+	if err := json.NewDecoder(req.Body).Decode(&scanRequest); err != nil {
+		slog.Error("Error while unmarshalling scan request", slog.String("err", err.Error()))
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  fmt.Sprintf("unmarshalling scan request: %s", err.Error()),
@@ -85,14 +87,14 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 	}
 
 	if validationError := h.ValidateScanRequest(scanRequest); validationError != nil {
-		log.Errorf("Error while validating scan request: %s", validationError.Message)
+		slog.Error("Error while validating scan request", slog.String("err", validationError.Message))
 		h.WriteJSONError(res, *validationError)
 		return
 	}
 
 	scanJob, err := h.enqueuer.Enqueue(scanRequest)
 	if err != nil {
-		log.WithError(err).Error("Error while enqueuing scan job")
+		slog.Error("Error while enqueuing scan job", slog.String("err", err.Error()))
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  fmt.Sprintf("enqueuing scan job: %s", err.Error()),
@@ -113,8 +115,7 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 		}
 	}
 
-	_, err := url.ParseRequestURI(req.Registry.URL)
-	if err != nil {
+	if _, err := url.ParseRequestURI(req.Registry.URL); err != nil {
 		return &harbor.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "invalid registry.url",
@@ -141,8 +142,7 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
 	var reportMimeType api.MimeType
 
-	err := reportMimeType.FromAcceptHeader(req.Header.Get(api.HeaderAccept))
-	if err != nil {
+	if err := reportMimeType.FromAcceptHeader(req.Header.Get(api.HeaderAccept)); err != nil {
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusUnsupportedMediaType,
 			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
@@ -153,7 +153,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
-		log.Error("Error while parsing `scan_request_id` path variable")
+		slog.Error("Error while parsing `scan_request_id` path variable")
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  "missing scan_request_id",
@@ -161,7 +161,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	reqLog := log.WithField("scan_job_id", scanJobID)
+	reqLog := slog.With(slog.String("scan_job_id", scanJobID))
 
 	scanJob, err := h.store.Get(scanJobID)
 	if err != nil {
@@ -182,15 +182,17 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
+	scanJobLog := reqLog.With(slog.String("scan_job_status", scanJob.Status.String()))
+
 	if scanJob.Status == job.Queued || scanJob.Status == job.Pending {
-		reqLog.WithField("scan_job_status", scanJob.Status).Debug("Scan job has not finished yet")
+		scanJobLog.Debug("Scan job has not finished yet")
 		res.Header().Add("Location", req.URL.String())
 		res.WriteHeader(http.StatusFound)
 		return
 	}
 
 	if scanJob.Status == job.Failed {
-		reqLog.WithField(log.ErrorKey, scanJob.Error).Error("Scan job failed")
+		scanJobLog.Error("Scan job failed", slog.String("err", scanJob.Error))
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  scanJob.Error,
@@ -199,7 +201,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	}
 
 	if scanJob.Status != job.Finished {
-		reqLog.WithField("scan_job_status", scanJob.Status).Error("Unexpected scan job status")
+		scanJobLog.Error("Unexpected scan job status")
 		h.WriteJSONError(res, harbor.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  fmt.Sprintf("unexpected status %v of scan job %v", scanJob.Status, scanJob.ID),
@@ -232,7 +234,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 
 	vi, err := h.wrapper.GetVersion()
 	if err != nil {
-		log.WithError(err).Error("Error while retrieving vulnerability DB version")
+		slog.Error("Error while retrieving vulnerability DB version", slog.String("err", err.Error()))
 	}
 
 	if err == nil && vi.VulnerabilityDB != nil {

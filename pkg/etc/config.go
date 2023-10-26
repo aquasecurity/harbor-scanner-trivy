@@ -1,12 +1,13 @@
 package etc
 
 import (
+	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/caarlos0/env/v6"
-	"github.com/sirupsen/logrus"
 )
 
 type BuildInfo struct {
@@ -73,15 +74,21 @@ type RedisPool struct {
 	WriteTimeout      time.Duration `env:"SCANNER_REDIS_POOL_WRITE_TIMEOUT" envDefault:"1s"`
 }
 
-func GetLogLevel() logrus.Level {
+func LogLevel() slog.Level {
 	if value, ok := os.LookupEnv("SCANNER_LOG_LEVEL"); ok {
-		level, err := logrus.ParseLevel(value)
-		if err != nil {
-			return logrus.InfoLevel
+		switch strings.ToLower(value) {
+		case "error":
+			return slog.LevelError
+		case "warn", "warning":
+			return slog.LevelWarn
+		case "info":
+			return slog.LevelInfo
+		case "trace", "debug":
+			return slog.LevelDebug
 		}
-		return level
+		return slog.LevelInfo
 	}
-	return logrus.InfoLevel
+	return slog.LevelInfo
 }
 
 func GetConfig() (Config, error) {
@@ -92,7 +99,7 @@ func GetConfig() (Config, error) {
 	}
 
 	if _, ok := os.LookupEnv("SCANNER_TRIVY_DEBUG_MODE"); !ok {
-		if GetLogLevel() == logrus.DebugLevel {
+		if LogLevel() == slog.LevelDebug {
 			cfg.Trivy.DebugMode = true
 		}
 	}

@@ -2,13 +2,13 @@ package scan
 
 import (
 	"encoding/base64"
+	"log/slog"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
 )
 
@@ -31,11 +31,9 @@ func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer T
 }
 
 func (c *controller) Scan(scanJobID string, request harbor.ScanRequest) error {
-	err := c.scan(scanJobID, request)
-	if err != nil {
-		log.WithError(err).Error("Scan failed")
-		err = c.store.UpdateStatus(scanJobID, job.Failed, err.Error())
-		if err != nil {
+	if err := c.scan(scanJobID, request); err != nil {
+		slog.Error("Scan failed", slog.String("err", err.Error()))
+		if err = c.store.UpdateStatus(scanJobID, job.Failed, err.Error()); err != nil {
 			return xerrors.Errorf("updating scan job as failed: %v", err)
 		}
 	}

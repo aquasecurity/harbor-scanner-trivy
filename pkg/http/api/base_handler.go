@@ -3,11 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -71,7 +71,7 @@ func (h *BaseHandler) WriteJSON(res http.ResponseWriter, data interface{}, mimeT
 
 	err := json.NewEncoder(res).Encode(data)
 	if err != nil {
-		log.WithError(err).Error("Error while writing JSON")
+		slog.Error("Error while writing JSON", slog.String("err", err.Error()))
 		h.SendInternalServerError(res)
 		return
 	}

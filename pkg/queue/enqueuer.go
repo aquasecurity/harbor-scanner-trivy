@@ -3,14 +3,15 @@ package queue
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
+
+	"github.com/gocraft/work"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
-	"github.com/gocraft/work"
-	"github.com/gomodule/redigo/redis"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -35,7 +36,7 @@ func NewEnqueuer(config etc.JobQueue, redisPool *redis.Pool, store persistence.S
 }
 
 func (e *enqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, error) {
-	log.Debug("Enqueueing scan job")
+	slog.Debug("Enqueueing scan job")
 
 	b, err := json.Marshal(request)
 	if err != nil {
@@ -48,15 +49,14 @@ func (e *enqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, error) {
 	if err != nil {
 		return job.ScanJob{}, fmt.Errorf("enqueuing scan artifact job: %v", err)
 	}
-	log.Debug("Successfully enqueued scan job")
+	slog.Debug("Successfully enqueued scan job", slog.String("job_id", j.ID))
 
 	scanJob := job.ScanJob{
 		ID:     j.ID,
 		Status: job.Queued,
 	}
 
-	err = e.store.Create(scanJob)
-	if err != nil {
+	if err = e.store.Create(scanJob); err != nil {
 		return job.ScanJob{}, fmt.Errorf("creating scan job %v", err)
 	}
 

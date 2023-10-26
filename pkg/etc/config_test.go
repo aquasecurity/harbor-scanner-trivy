@@ -1,12 +1,11 @@
 package etc
 
 import (
-	"os"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,32 +16,32 @@ func TestGetLogLevel(t *testing.T) {
 	testCases := []struct {
 		Name             string
 		Envs             Envs
-		ExpectedLogLevel logrus.Level
+		ExpectedLogLevel slog.Level
 	}{
 		{
 			Name:             "Should return default log level when env is not set",
-			ExpectedLogLevel: logrus.InfoLevel,
+			ExpectedLogLevel: slog.LevelInfo,
 		},
 		{
 			Name: "Should return default log level when env has invalid value",
 			Envs: Envs{
 				"SCANNER_LOG_LEVEL": "unknown_level",
 			},
-			ExpectedLogLevel: logrus.InfoLevel,
+			ExpectedLogLevel: slog.LevelInfo,
 		},
 		{
 			Name: "Should return log level set as env",
 			Envs: Envs{
-				"SCANNER_LOG_LEVEL": "trace",
+				"SCANNER_LOG_LEVEL": "debug",
 			},
-			ExpectedLogLevel: logrus.TraceLevel,
+			ExpectedLogLevel: slog.LevelDebug,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			setenvs(t, tc.Envs)
-			assert.Equal(t, tc.ExpectedLogLevel, GetLogLevel())
+			setEnvs(t, tc.Envs)
+			assert.Equal(t, tc.ExpectedLogLevel, LogLevel())
 		})
 	}
 }
@@ -219,7 +218,7 @@ func TestGetConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			setenvs(t, tc.envs)
+			setEnvs(t, tc.envs)
 			config, err := GetConfig()
 			assert.Equal(t, tc.expectedError, err)
 			assert.Equal(t, tc.expectedConfig, config)
@@ -245,18 +244,15 @@ func TestGetScannerMetadata(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			setenvs(t, tc.envs)
+			setEnvs(t, tc.envs)
 			assert.Equal(t, tc.expectedScanner, GetScannerMetadata())
 		})
 	}
 }
 
-func setenvs(t *testing.T, envs Envs) {
-	t.Helper()
-	os.Clearenv()
+func setEnvs(t *testing.T, envs Envs) {
 	for k, v := range envs {
-		err := os.Setenv(k, v)
-		require.NoError(t, err)
+		t.Setenv(k, v)
 	}
 }
 

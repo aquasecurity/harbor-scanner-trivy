@@ -3,13 +3,14 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 
@@ -73,31 +74,32 @@ func NewServer(config etc.API, handler http.Handler) (server *Server, err error)
 
 func (s *Server) ListenAndServe() {
 	go func() {
-		if err := s.listenAndServe(); err != http.ErrServerClosed {
-			log.Fatalf("Error: %v", err)
+		if err := s.listenAndServe(); errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Error", slog.String("err", err.Error()))
+			os.Exit(1)
 		}
-		log.Trace("API server stopped listening for incoming connections")
+		slog.Debug("API server stopped listening for incoming connections")
 	}()
 }
 
 func (s *Server) listenAndServe() error {
 	if s.config.IsTLSEnabled() {
-		log.WithFields(log.Fields{
-			"certificate": s.config.TLSCertificate,
-			"key":         s.config.TLSKey,
-			"clientCAs":   strings.Join(s.config.ClientCAs, ", "),
-			"addr":        s.config.Addr,
-		}).Debug("Starting API server with TLS")
+		slog.Debug("Starting API server with TLS",
+			slog.String("certificate", s.config.TLSCertificate),
+			slog.String("key", s.config.TLSKey),
+			slog.String("clientCAs", strings.Join(s.config.ClientCAs, ", ")),
+			slog.String("addr", s.config.Addr),
+		)
 		return s.server.ListenAndServeTLS(s.config.TLSCertificate, s.config.TLSKey)
 	}
-	log.WithField("addr", s.config.Addr).Warn("Starting API server without TLS")
+	slog.Warn("Starting API server without TLS", slog.String("addr", s.config.Addr))
 	return s.server.ListenAndServe()
 }
 
 func (s *Server) Shutdown() {
-	log.Trace("API server shutdown started")
+	slog.Debug("API server shutdown started")
 	if err := s.server.Shutdown(context.Background()); err != nil {
-		log.WithError(err).Error("Error while shutting down API server")
+		slog.Error("Error while shutting down API server", slog.String("err", err.Error()))
 	}
-	log.Trace("API server shutdown completed")
+	slog.Debug("API server shutdown completed")
 }
