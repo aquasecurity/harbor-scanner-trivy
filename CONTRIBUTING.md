@@ -17,38 +17,55 @@
 
 1. Install Go.
 
-   The project requires [Go 1.17][go-download] or later. We also assume that you're familiar with
+   The project requires [Go 1.21][go-download] or later. We also assume that you're familiar with
    Go's [GOPATH workspace][go-code] convention, and have the appropriate environment variables set.
-2. Install Docker, Docker Compose, and Make.
+2. Install Docker, Make, and Skaffold.
 3. Get the source code.
    ```
    git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
    cd harbor-scanner-trivy
    ```
 
-## Setup Development Environment with Vagrant
+## Set up Development Environment with Kubernetes
 
 1. Get the source code.
    ```
-   git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
+   git clone --recursive https://github.com/aquasecurity/harbor-scanner-trivy.git
    cd harbor-scanner-trivy
    ```
-2. Create and configure a guest development machine, which is based on Ubuntu 20.4 LTS and has Go, Docker, Docker Compose,
-   Make, and Harbor v2.5.1 preinstalled. Harbor is installed in the `/opt/harbor` directory.
-   ```
-   vagrant up
-   ```
-   If everything goes well Harbor will be accessible at http://localhost:8181 (admin/Harbor12345).
+2. Launch a Kubernetes cluster
+   
+   We recommend setting up a Kubernetes cluster with:
 
-   To SSH into a running Vagrant machine.
+   - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
+   - [minikube](https://minikube.sigs.k8s.io/docs/start/)
+   - [Docker Desktop](https://docs.docker.com/desktop/)
+   - [Rancher Desktop](https://docs.rancherdesktop.io/ui/preferences/kubernetes/)
+    
+   However, you can use any Kubernetes cluster you want.
+
+   In case of kind, you can use the following command to create a cluster:
    ```
-   vagrant ssh
+   kind create cluster --name harbor-scanner-trivy
    ```
-   The `/vagrant` directory in the development machine is shared between host and guest. This, for example, allows you
-   to rebuild a container image for testing.
+
+3. Run Skaffold
+ 
+   The following command will build the image and deploy Harbor with the scanner adapter to the Kubernetes cluster:
    ```
-   vagrant@ubuntu-focal:/vagrant$ make docker-build
+   make dev
    ```
+
+4. Access Harbor UI
+
+   After the Harbor chart is deployed, you can access `https://core.harbor.domain`.
+   It depends on how you configure the Kubernetes cluster, but you may need to add a host entry to `/etc/hosts` file.
+ 
+   ```
+   echo "127.0.0.1\tcore.harbor.domain" | sudo tee -a /etc/hosts
+   ```
+   
+   username: admin, password: Harbor12345
 
 ## Build Binaries
 
