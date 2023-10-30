@@ -47,7 +47,7 @@ func TestStore(t *testing.T) {
 		ScanJobTTL: parseDuration(t, "10s"),
 	}
 
-	pool, err := redisx.NewPool(etc.RedisPool{
+	pool, err := redisx.NewClient(etc.RedisPool{
 		URL: redisURL,
 	})
 	require.NoError(t, err)

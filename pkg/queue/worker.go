@@ -1,86 +1,100 @@
 package queue
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
+	"time"
 
-	"github.com/gocraft/work"
-	"github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
+	"github.com/samber/lo"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/scan"
 )
 
-const (
-	scanJobDefaultPriority = 1 // The highest
-	scanJobMaxFailures     = 1
-)
-
 type Worker interface {
-	Start()
+	Start(ctx context.Context)
 	Stop()
 }
 
 type worker struct {
-	workerPool *work.WorkerPool
+	namespace   string
+	concurrency int
+
+	rdb    *redis.Client
+	pubsub *redis.PubSub
+
+	controller scan.Controller
 }
 
-func NewWorker(config etc.JobQueue, redisPool *redis.Pool, controller scan.Controller) Worker {
-
-	workerPool := work.NewWorkerPool(workerContext{}, uint(config.WorkerConcurrency), config.Namespace, redisPool)
-
-	// Note: For each scan job a new instance of the workerContext struct is created.
-	// Therefore, the only way to do a proper dependency injection is to use such closure
-	// and the following middleware as the first step in the processing chain.
-	workerPool.Middleware(func(ctx *workerContext, job *work.Job, next work.NextMiddlewareFunc) error {
-		ctx.controller = controller
-		return next()
-	})
-
-	workerPool.JobWithOptions(scanArtifactJobName,
-		work.JobOptions{
-			Priority: scanJobDefaultPriority,
-			MaxFails: scanJobMaxFailures,
-		}, (*workerContext).ScanArtifact)
-
+func NewWorker(config etc.JobQueue, rdb *redis.Client, controller scan.Controller) Worker {
 	return &worker{
-		workerPool: workerPool,
+		namespace:   config.Namespace,
+		concurrency: config.WorkerConcurrency,
+
+		rdb: rdb,
+
+		controller: controller,
 	}
 }
 
-func (w *worker) Start() {
-	w.workerPool.Start()
+func (w *worker) Start(ctx context.Context) {
+	w.pubsub = w.rdb.Subscribe(ctx, w.redisJobChannel())
+	ch := w.pubsub.Channel()
+
+	for i := 0; i < w.concurrency; i++ {
+		go func() {
+			w.subscribe(ctx, ch)
+		}()
+	}
 }
 
 func (w *worker) Stop() {
 	slog.Debug("Job queue shutdown started")
-	w.workerPool.Stop()
+	_ = w.pubsub.Close()
 	slog.Debug("Job queue shutdown completed")
 }
 
-// workerContext is a context for running scan jobs.
-type workerContext struct {
-	controller scan.Controller
+func (w *worker) redisJobChannel() string {
+	return redisJobChannel(w.namespace)
 }
 
-// ScanArtifact is a handler function for the specified scan Job with the given workerContext.
-func (s *workerContext) ScanArtifact(job *work.Job) error {
-	slog.Debug("Executing enqueued scan job", slog.String("scan_job_id", job.ID))
+func (w *worker) subscribe(ctx context.Context, ch <-chan *redis.Message) {
+	for msg := range ch {
+		chLog := slog.With(
+			slog.String("channel", msg.Channel),
+			slog.String("payload", msg.Payload),
+		)
+		chLog.Debug("Message subscribed")
 
-	request, err := s.unmarshalScanRequest(job)
+		if err := w.scanArtifact(ctx, msg); err != nil {
+			chLog.Error("Failed to scan artifact", slog.String("err", err.Error()))
+			continue
+		}
+	}
+}
+
+func (w *worker) scanArtifact(ctx context.Context, msg *redis.Message) error {
+	var job Job
+	if err := json.Unmarshal([]byte(msg.Payload), &job); err != nil {
+		return xerrors.Errorf("unmarshalling scan request: %w", err)
+	}
+
+	// Lock the job so that other workers won't process it.
+	nx, err := w.rdb.SetNX(ctx, redisLockKey(w.namespace, job.ID), "", 5*time.Minute).Result()
 	if err != nil {
-		return err
+		return xerrors.Errorf("redis lock: %w", err)
+	} else if !nx {
+		slog.Debug("Skip the locked job", slog.String("scan_job_id", job.ID))
+		return nil
 	}
 
-	return s.controller.Scan(job.ID, request)
+	slog.Debug("Executing enqueued scan job", slog.String("scan_job_id", job.ID))
+	return w.controller.Scan(ctx, job.ID, lo.FromPtr(job.Args.ScanRequest))
 }
 
-func (s *workerContext) unmarshalScanRequest(job *work.Job) (request harbor.ScanRequest, err error) {
-	// TODO Fail fast and assert that the scan_request arg was set by the enqueuer.
-	if err = json.Unmarshal([]byte(job.ArgString(scanRequestJobArg)), &request); err != nil {
-		return request, fmt.Errorf("unmarshalling scan request: %v", err)
-	}
-	return
+func redisLockKey(namespace, jobID string) string {
+	return redisJobChannel(namespace) + ":lock:" + jobID
 }
