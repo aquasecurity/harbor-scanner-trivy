@@ -29,3 +29,11 @@ lint:
 .PHONY: setup
 setup:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s v1.21.0
+
+.PHONY: run
+run: export SCANNER_TRIVY_CACHE_DIR = $(TMPDIR)harbor-scanner-trivy/.cache/trivy
+run: export SCANNER_TRIVY_REPORTS_DIR=$(TMPDIR)harbor-scanner-trivy/.cache/reports
+run: export SCANNER_LOG_LEVEL=debug
+run:
+	@mkdir -p $(SCANNER_TRIVY_CACHE_DIR) $(SCANNER_TRIVY_REPORTS_DIR)
+	@go run cmd/scanner-trivy/main.go
