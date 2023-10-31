@@ -63,12 +63,13 @@ func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.Scan
 		return err
 	}
 
-	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry})
+	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry},
+		trivy.ScanOption{Format: determineFormat(req.Scan.SBOMMediaType)})
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
 
-	if err = c.store.UpdateReport(ctx, scanJobID, c.transformer.Transform(req.Artifact, scanReport)); err != nil {
+	if err = c.store.UpdateReport(ctx, scanJobID, c.transformer.Transform(req, scanReport)); err != nil {
 		return xerrors.Errorf("saving scan report: %v", err)
 	}
 
@@ -112,4 +113,15 @@ func (c *controller) decodeBasicAuth(value string) (auth trivy.RegistryAuth, err
 		Password: tokens[1],
 	}
 	return
+}
+
+func determineFormat(sbomMediaType harbor.MediaType) trivy.Format {
+	switch sbomMediaType {
+	case harbor.MediaTypeSPDX:
+		return trivy.FormatSPDX
+	case harbor.MediaTypeCycloneDX:
+		return trivy.FormatCycloneDX
+	default:
+		return trivy.FormatJSON
+	}
 }

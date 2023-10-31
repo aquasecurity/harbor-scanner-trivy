@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"time"
 
@@ -76,7 +77,7 @@ func (h *requestHandler) logRequest(next http.Handler) http.Handler {
 }
 
 func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Request) {
-	scanRequest := harbor.ScanRequest{}
+	var scanRequest harbor.ScanRequest
 	if err := json.NewDecoder(req.Body).Decode(&scanRequest); err != nil {
 		slog.Error("Error while unmarshalling scan request", slog.String("err", err.Error()))
 		h.WriteJSONError(res, harbor.Error{
@@ -84,6 +85,17 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 			Message:  fmt.Sprintf("unmarshalling scan request: %s", err.Error()),
 		})
 		return
+	}
+
+	// Extract SBOM related properties from HTTP header
+	scanType := getHeader(req.Header, "X-Scan-Type", harbor.ScanTypeVulnerability)
+	var sbomMediaType harbor.MediaType
+	if scanType == harbor.ScanTypeSBOM {
+		sbomMediaType = getHeader(req.Header, "X-Scan-Sbom-MediaType", harbor.MediaTypeCycloneDX)
+	}
+	scanRequest.Scan = harbor.Scan{
+		Type:          scanType,
+		SBOMMediaType: sbomMediaType,
 	}
 
 	if validationError := h.ValidateScanRequest(scanRequest); validationError != nil {
@@ -108,6 +120,21 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 }
 
 func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Error {
+	if req.Scan.Type != harbor.ScanTypeVulnerability && req.Scan.Type != harbor.ScanTypeSBOM {
+		return &harbor.Error{
+			HTTPCode: http.StatusUnprocessableEntity,
+			Message:  "invalid scan type",
+		}
+	}
+
+	if req.Scan.Type == harbor.ScanTypeSBOM &&
+		!slices.Contains(harbor.SupportedSBOMMediaTypes, req.Scan.SBOMMediaType) {
+		return &harbor.Error{
+			HTTPCode: http.StatusUnprocessableEntity,
+			Message:  "invalid SBOM media type",
+		}
+	}
+
 	if req.Registry.URL == "" {
 		return &harbor.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
@@ -269,4 +296,11 @@ func (h *requestHandler) GetHealthy(res http.ResponseWriter, req *http.Request) 
 
 func (h *requestHandler) GetReady(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
+}
+
+func getHeader[T ~string](header http.Header, key string, defaultValue T) T {
+	if v := header.Get(key); v != "" {
+		return T(v)
+	}
+	return defaultValue
 }

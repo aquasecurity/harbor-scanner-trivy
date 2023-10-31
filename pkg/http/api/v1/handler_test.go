@@ -27,7 +27,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 	}{
 		{
 			Name:    "Should return error when Registry URL is blank",
-			Request: harbor.ScanRequest{},
+			Request: harbor.ScanRequest{Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability}},
 			ExpectedError: &harbor.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "missing registry.url",
@@ -36,6 +36,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when Registry URL is invalid",
 			Request: harbor.ScanRequest{
+				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
 				Registry: harbor.Registry{
 					URL: "INVALID URL",
 				},
@@ -48,6 +49,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when artifact repository is blank",
 			Request: harbor.ScanRequest{
+				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
 				Registry: harbor.Registry{
 					URL: "https://core.harbor.domain",
 				},
@@ -60,6 +62,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when artifact digest is blank",
 			Request: harbor.ScanRequest{
+				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
 				Registry: harbor.Registry{
 					URL: "https://core.harbor.domain",
 				},
@@ -85,6 +88,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 
 func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 	validScanRequest := harbor.ScanRequest{
+		Scan: harbor.Scan{
+			Type: harbor.ScanTypeVulnerability,
+		},
 		Registry: harbor.Registry{
 			URL:           "https://core.harbor.domain",
 			Authorization: "Bearer JWTTOKENGOESHERE",

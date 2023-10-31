@@ -38,6 +38,11 @@ type CVSSInfo struct {
 	V3Score  *float32 `json:"V3Score,omitempty"`
 }
 
+type Report struct {
+	SBOM            any
+	Vulnerabilities []Vulnerability
+}
+
 type Vulnerability struct {
 	VulnerabilityID  string              `json:"VulnerabilityID"`
 	PkgName          string              `json:"PkgName"`

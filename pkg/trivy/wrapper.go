@@ -8,18 +8,30 @@ import (
 	"os/exec"
 	"strings"
 
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
 )
 
+type Format string
+
 const (
 	trivyCmd = "trivy"
+
+	FormatJSON      Format = "json"
+	FormatSPDX      Format = "spdx-json"
+	FormatCycloneDX Format = "cyclonedx"
 )
 
 type ImageRef struct {
 	Name     string
 	Auth     RegistryAuth
 	Insecure bool
+}
+
+type ScanOption struct {
+	Format Format
 }
 
 // RegistryAuth wraps registry credentials.
@@ -39,7 +51,7 @@ type BearerAuth struct {
 }
 
 type Wrapper interface {
-	Scan(imageRef ImageRef) ([]Vulnerability, error)
+	Scan(imageRef ImageRef, opt ScanOption) (Report, error)
 	GetVersion() (VersionInfo, error)
 }
 
@@ -55,13 +67,13 @@ func NewWrapper(config etc.Trivy, ambassador ext.Ambassador) Wrapper {
 	}
 }
 
-func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
+func (w *wrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
 	logger := slog.With(slog.String("image_ref", imageRef.Name))
 	logger.Debug("Started scanning")
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return nil, err
+		return Report{}, err
 	}
 	logger.Debug("Saving scan report to tmp file", slog.String("path", reportFile.Name()))
 	defer func() {
@@ -71,9 +83,9 @@ func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
 		}
 	}()
 
-	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name())
+	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name(), opt)
 	if err != nil {
-		return nil, err
+		return Report{}, err
 	}
 
 	logger.Debug("Exec command with args", slog.String("path", cmd.Path),
@@ -85,7 +97,7 @@ func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
 			slog.String("exit_code", fmt.Sprintf("%d", cmd.ProcessState.ExitCode())),
 			slog.String("std_out", string(stdout)),
 		)
-		return nil, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
+		return Report{}, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
 	}
 
 	logger.Debug("Running trivy finished",
@@ -93,17 +105,27 @@ func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
 		slog.String("std_out", string(stdout)),
 	)
 
-	return w.parseVulnerabilities(reportFile)
+	return w.parseReport(opt.Format, reportFile)
 }
 
-func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, error) {
+func (w *wrapper) parseReport(format Format, reportFile io.Reader) (Report, error) {
+	switch format {
+	case FormatJSON:
+		return w.parseJSONReport(reportFile)
+	case FormatSPDX, FormatCycloneDX:
+		return w.parseSBOM(reportFile)
+	}
+	return Report{}, fmt.Errorf("unsupported format %s", format)
+}
+
+func (w *wrapper) parseJSONReport(reportFile io.Reader) (Report, error) {
 	var scanReport ScanReport
 	if err := json.NewDecoder(reportFile).Decode(&scanReport); err != nil {
-		return nil, fmt.Errorf("decoding scan report from file: %w", err)
+		return Report{}, xerrors.Errorf("report json decode error: %w", err)
 	}
 
 	if scanReport.SchemaVersion != SchemaVersion {
-		return nil, fmt.Errorf("unsupported schema %d, expected %d", scanReport.SchemaVersion, SchemaVersion)
+		return Report{}, xerrors.Errorf("unsupported schema %d, expected %d", scanReport.SchemaVersion, SchemaVersion)
 	}
 
 	var vulnerabilities []Vulnerability
@@ -112,16 +134,26 @@ func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, e
 		vulnerabilities = append(vulnerabilities, scanResult.Vulnerabilities...)
 	}
 
-	return vulnerabilities, nil
+	return Report{
+		Vulnerabilities: vulnerabilities,
+	}, nil
 }
 
-func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cmd, error) {
+func (w *wrapper) parseSBOM(reportFile io.Reader) (Report, error) {
+	var doc any
+	if err := json.NewDecoder(reportFile).Decode(&doc); err != nil {
+		return Report{}, xerrors.Errorf("sbom json decode error: %w", err)
+	}
+	return Report{SBOM: doc}, nil
+}
+
+func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string, opt ScanOption) (*exec.Cmd, error) {
 	args := []string{
 		"--no-progress",
 		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
 		"--scanners", w.config.SecurityChecks,
-		"--format", "json",
+		"--format", string(opt.Format),
 		"--output", outputFile,
 		imageRef.Name,
 	}

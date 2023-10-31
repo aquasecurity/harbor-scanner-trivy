@@ -25,6 +25,7 @@ var MimeTypeDockerImageManifestV2 = MimeType{Type: "application", Subtype: "vnd.
 var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeVersion}
 
 var MimeTypeSecurityVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.security.vulnerability.report", Params: map[string]string{"version": "1.1"}}
+var MimeTypeSecuritySBOMReport = MimeType{Type: "application", Subtype: "vnd.security.sbom.report+json", Params: map[string]string{"version": "1.1"}}
 var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeVersion}
 var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeVersion}
 
@@ -57,6 +58,11 @@ func (mt *MimeType) FromAcceptHeader(value string) error {
 		mt.Type = MimeTypeSecurityVulnerabilityReport.Type
 		mt.Subtype = MimeTypeSecurityVulnerabilityReport.Subtype
 		mt.Params = MimeTypeSecurityVulnerabilityReport.Params
+		return nil
+	case MimeTypeSecuritySBOMReport.String():
+		mt.Type = MimeTypeSecuritySBOMReport.Type
+		mt.Subtype = MimeTypeSecuritySBOMReport.Subtype
+		mt.Params = MimeTypeSecuritySBOMReport.Params
 		return nil
 	}
 	return fmt.Errorf("unsupported mime type: %s", value)

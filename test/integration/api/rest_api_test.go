@@ -58,6 +58,9 @@ func TestRestApi(t *testing.T) {
 	t.Run("POST /api/v1/scan", func(t *testing.T) {
 		// given
 		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
+			Scan: harbor.Scan{
+				Type: harbor.ScanTypeVulnerability,
+			},
 			Registry: harbor.Registry{
 				URL:           "https://core.harbor.domain",
 				Authorization: "Bearer JWTTOKENGOESHERE",

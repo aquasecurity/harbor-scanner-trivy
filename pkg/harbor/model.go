@@ -60,6 +60,24 @@ func (s *Severity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type ScanType string
+type MediaType string
+
+const (
+	ScanTypeSBOM          ScanType = "sbom"
+	ScanTypeVulnerability ScanType = "vulnerability"
+
+	MediaTypeSPDX      MediaType = "application/spdx+json"
+	MediaTypeCycloneDX MediaType = "application/vnd.cyclonedx+json"
+)
+
+var SupportedSBOMMediaTypes = []MediaType{MediaTypeSPDX, MediaTypeCycloneDX}
+
+type Scan struct {
+	Type          ScanType  `json:"type,omitempty"`
+	SBOMMediaType MediaType `json:"sbom_media_type,omitempty"`
+}
+
 type Registry struct {
 	URL           string `json:"url"`
 	Authorization string `json:"authorization"`
@@ -72,6 +90,7 @@ type Artifact struct {
 }
 
 type ScanRequest struct {
+	Scan     Scan     `json:"scan"` // From HTTP header
 	Registry Registry `json:"registry"`
 	Artifact Artifact `json:"artifact"`
 }
@@ -103,11 +122,17 @@ type ScanResponse struct {
 }
 
 type ScanReport struct {
-	GeneratedAt     time.Time           `json:"generated_at"`
-	Artifact        Artifact            `json:"artifact"`
-	Scanner         Scanner             `json:"scanner"`
-	Severity        Severity            `json:"severity"`
-	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
+	GeneratedAt time.Time `json:"generated_at"`
+	Artifact    Artifact  `json:"artifact"`
+	Scanner     Scanner   `json:"scanner"`
+	Severity    Severity  `json:"severity,omitempty"`
+
+	// For SBOM
+	MediaType string `json:"media_type,omitempty"`
+	SBOM      any    `json:"sbom,omitempty"`
+
+	// For vulnerabilities
+	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities,omitempty"`
 }
 
 type Layer struct {

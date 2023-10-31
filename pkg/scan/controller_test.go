@@ -13,13 +13,13 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestContoller_Scan(t *testing.T) {
+func TestController_Scan(t *testing.T) {
 	ctx := context.Background()
 	artifact := harbor.Artifact{
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
-	trivyReport := []trivy.Vulnerability{}
+	trivyReport := trivy.Report{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
@@ -68,6 +68,7 @@ func TestContoller_Scan(t *testing.T) {
 						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},
+					trivy.ScanOption{Format: "json"},
 				},
 				ReturnArgs: []interface{}{
 					trivyReport,
@@ -77,7 +78,13 @@ func TestContoller_Scan(t *testing.T) {
 			transformerExpectation: &mock.Expectation{
 				Method: "Transform",
 				Args: []interface{}{
-					artifact,
+					harbor.ScanRequest{
+						Registry: harbor.Registry{
+							URL:           "https://core.harbor.domain",
+							Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
+						},
+						Artifact: artifact,
+					},
 					trivyReport,
 				},
 				ReturnArgs: []interface{}{
@@ -115,9 +122,10 @@ func TestContoller_Scan(t *testing.T) {
 						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
 						Insecure: false,
 					},
+					trivy.ScanOption{Format: "json"},
 				},
 				ReturnArgs: []interface{}{
-					[]trivy.Vulnerability{},
+					trivy.Report{},
 					xerrors.New("out of memory"),
 				},
 			},
