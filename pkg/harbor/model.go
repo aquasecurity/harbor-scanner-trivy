@@ -101,7 +101,7 @@ type ScanRequest struct {
 
 // GetImageRef returns Docker image reference for this ScanRequest.
 // Example: core.harbor.domain/scanners/mysql@sha256:3b00a364fb74246ca119d16111eb62f7302b2ff66d51e373c2bb209f8a1f3b9e
-func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err error) {
+func (c ScanRequest) GetImageRef() (imageRef string, nonSSL bool, err error) {
 	registryURL, err := url.Parse(c.Registry.URL)
 	if err != nil {
 		err = fmt.Errorf("parsing registry URL: %w", err)
@@ -117,7 +117,7 @@ func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err 
 	}
 
 	imageRef = fmt.Sprintf("%s:%s/%s@%s", registryURL.Hostname(), port, c.Artifact.Repository, c.Artifact.Digest)
-	insecureRegistry = "http" == registryURL.Scheme
+	nonSSL = "http" == registryURL.Scheme
 	return
 }
 

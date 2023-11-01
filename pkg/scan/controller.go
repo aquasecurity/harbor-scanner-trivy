@@ -53,7 +53,7 @@ func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.Scan
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
 
-	imageRef, insecureRegistry, err := req.GetImageRef()
+	imageRef, nonSSL, err := req.GetImageRef()
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.Scan
 		return err
 	}
 
-	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry},
+	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, NonSSL: nonSSL},
 		trivy.ScanOption{Format: determineFormat(req.Scan.Parameters.SBOMMediaType)})
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)

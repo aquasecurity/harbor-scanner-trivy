@@ -107,9 +107,9 @@ func TestWrapper_Scan(t *testing.T) {
 	}
 
 	imageRef := ImageRef{
-		Name:     "alpine:3.10.2",
-		Auth:     BasicAuth{Username: "dave.loper", Password: "s3cret"},
-		Insecure: true,
+		Name:   "alpine:3.10.2",
+		Auth:   BasicAuth{Username: "dave.loper", Password: "s3cret"},
+		NonSSL: true,
 	}
 
 	expectedCmdArgs := []string{

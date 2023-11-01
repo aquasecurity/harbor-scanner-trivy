@@ -25,9 +25,9 @@ const (
 )
 
 type ImageRef struct {
-	Name     string
-	Auth     RegistryAuth
-	Insecure bool
+	Name   string
+	Auth   RegistryAuth
+	NonSSL bool
 }
 
 type ScanOption struct {
@@ -71,6 +71,11 @@ func (w *wrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
 	logger := slog.With(slog.String("image_ref", imageRef.Name))
 	logger.Debug("Started scanning")
 
+	target, err := newTarget(imageRef, w.config)
+	if err != nil {
+		return Report{}, xerrors.Errorf("creating scan target: %w", err)
+	}
+
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
 		return Report{}, err
@@ -83,7 +88,7 @@ func (w *wrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
 		}
 	}()
 
-	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name(), opt)
+	cmd, err := w.prepareScanCmd(target, reportFile.Name(), opt)
 	if err != nil {
 		return Report{}, err
 	}
@@ -147,54 +152,62 @@ func (w *wrapper) parseSBOM(reportFile io.Reader) (Report, error) {
 	return Report{SBOM: doc}, nil
 }
 
-func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string, opt ScanOption) (*exec.Cmd, error) {
+func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanOption) (*exec.Cmd, error) {
 	args := []string{
+		string(target.Type), // subcommand
 		"--no-progress",
 		"--severity", w.config.Severity,
 		"--vuln-type", w.config.VulnType,
-		"--scanners", w.config.SecurityChecks,
 		"--format", string(opt.Format),
 		"--output", outputFile,
-		imageRef.Name,
+		"--cache-dir", w.config.CacheDir,
+		"--timeout", w.config.Timeout.String(),
+	}
+
+	if target.Type == TargetImage {
+		args = append(args, "--scanners", w.config.SecurityChecks)
 	}
 
 	if w.config.IgnoreUnfixed {
-		args = append([]string{"--ignore-unfixed"}, args...)
+		args = append(args, "--ignore-unfixed")
 	}
 
 	if w.config.SkipUpdate {
-		args = append([]string{"--skip-db-update"}, args...)
+		args = append(args, "--skip-db-update")
 	}
 
 	if w.config.OfflineScan {
-		args = append([]string{"--offline-scan"}, args...)
+		args = append(args, "--offline-scan")
 	}
 
 	if w.config.IgnorePolicy != "" {
-		args = append([]string{"--ignore-policy", w.config.IgnorePolicy}, args...)
+		args = append(args, "--ignore-policy")
 	}
+
+	if w.config.DebugMode {
+		args = append(args, "--debug")
+	}
+
+	if w.config.Insecure || target.NonSSL() {
+		args = append(args, "--insecure")
+	}
+
+	targetName, err := target.Name()
+	if err != nil {
+		return nil, xerrors.Errorf("get target name: %w", err)
+	}
+	args = append(args, targetName)
 
 	name, err := w.ambassador.LookPath(trivyCmd)
 	if err != nil {
 		return nil, err
 	}
 
-	globalArgs := []string{"--cache-dir", w.config.CacheDir}
-
-	if w.config.DebugMode {
-		globalArgs = append(globalArgs, "--debug")
-	}
-	globalArgs = append(globalArgs, "image")
-
-	args = append(globalArgs, args...)
-
 	cmd := exec.Command(name, args...)
 
 	cmd.Env = w.ambassador.Environ()
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_TIMEOUT=%s", w.config.Timeout.String()))
-
-	switch a := imageRef.Auth.(type) {
+	switch a := target.Auth().(type) {
 	case NoAuth:
 	case BasicAuth:
 		cmd.Env = append(cmd.Env,
@@ -207,16 +220,8 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string, opt ScanO
 		return nil, fmt.Errorf("invalid auth type %T", a)
 	}
 
-	if imageRef.Insecure {
-		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
-	}
-
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
-	}
-
-	if w.config.Insecure {
-		cmd.Env = append(cmd.Env, "TRIVY_INSECURE=true")
 	}
 
 	return cmd, nil
