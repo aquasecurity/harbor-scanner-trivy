@@ -74,7 +74,11 @@ const (
 var SupportedSBOMMediaTypes = []MediaType{MediaTypeSPDX, MediaTypeCycloneDX}
 
 type Scan struct {
-	Type          ScanType  `json:"type,omitempty"`
+	Type       ScanType       `json:"type,omitempty"`
+	Parameters ScanParameters `json:"parameters,omitempty"`
+}
+
+type ScanParameters struct {
 	SBOMMediaType MediaType `json:"sbom_media_type,omitempty"`
 }
 
@@ -90,7 +94,7 @@ type Artifact struct {
 }
 
 type ScanRequest struct {
-	Scan     Scan     `json:"scan"` // From HTTP header
+	Scan     Scan     `json:"scan"`
 	Registry Registry `json:"registry"`
 	Artifact Artifact `json:"artifact"`
 }

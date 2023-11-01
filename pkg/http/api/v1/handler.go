@@ -87,15 +87,9 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	// Extract SBOM related properties from HTTP header
-	scanType := getHeader(req.Header, "X-Scan-Type", harbor.ScanTypeVulnerability)
-	var sbomMediaType harbor.MediaType
-	if scanType == harbor.ScanTypeSBOM {
-		sbomMediaType = getHeader(req.Header, "X-Scan-Sbom-MediaType", harbor.MediaTypeCycloneDX)
-	}
-	scanRequest.Scan = harbor.Scan{
-		Type:          scanType,
-		SBOMMediaType: sbomMediaType,
+	// Set the default value for scan type if it is not specified.
+	if scanRequest.Scan.Type == "" {
+		scanRequest.Scan.Type = harbor.ScanTypeVulnerability
 	}
 
 	if validationError := h.ValidateScanRequest(scanRequest); validationError != nil {
@@ -128,7 +122,7 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 	}
 
 	if req.Scan.Type == harbor.ScanTypeSBOM &&
-		!slices.Contains(harbor.SupportedSBOMMediaTypes, req.Scan.SBOMMediaType) {
+		!slices.Contains(harbor.SupportedSBOMMediaTypes, req.Scan.Parameters.SBOMMediaType) {
 		return &harbor.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "invalid SBOM media type",

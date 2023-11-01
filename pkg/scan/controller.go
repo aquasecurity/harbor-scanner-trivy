@@ -64,7 +64,7 @@ func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.Scan
 	}
 
 	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry},
-		trivy.ScanOption{Format: determineFormat(req.Scan.SBOMMediaType)})
+		trivy.ScanOption{Format: determineFormat(req.Scan.Parameters.SBOMMediaType)})
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
