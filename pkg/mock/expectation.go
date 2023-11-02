@@ -1,10 +1,13 @@
 package mock
 
 import (
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 )
+
+const Anything = mock.Anything
 
 // Expectation represents an expectation of a method being called and its return values.
 type Expectation struct {

@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,7 +13,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestController_Scan(t *testing.T) {
+func TestContoller_Scan(t *testing.T) {
+	ctx := context.Background()
 	artifact := harbor.Artifact{
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
@@ -44,17 +46,17 @@ func TestController_Scan(t *testing.T) {
 			storeExpectation: []*mock.Expectation{
 				{
 					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					Args:       []interface{}{ctx, "job:123", job.Pending, []string(nil)},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
 					Method:     "UpdateReport",
-					Args:       []interface{}{"job:123", harborReport},
+					Args:       []interface{}{ctx, "job:123", harborReport},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
 					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Finished, []string(nil)},
+					Args:       []interface{}{ctx, "job:123", job.Finished, []string(nil)},
 					ReturnArgs: []interface{}{nil},
 				},
 			},
@@ -96,12 +98,12 @@ func TestController_Scan(t *testing.T) {
 			storeExpectation: []*mock.Expectation{
 				{
 					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					Args:       []interface{}{ctx, "job:123", job.Pending, []string(nil)},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
 					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Failed, []string{"running trivy wrapper: out of memory"}},
+					Args:       []interface{}{ctx, "job:123", job.Failed, []string{"running trivy wrapper: out of memory"}},
 					ReturnArgs: []interface{}{nil},
 				},
 			},
@@ -132,7 +134,7 @@ func TestController_Scan(t *testing.T) {
 			mock.ApplyExpectations(t, wrapper, tc.wrapperExpectation)
 			mock.ApplyExpectations(t, transformer, tc.transformerExpectation)
 
-			err := NewController(store, wrapper, transformer).Scan(tc.scanJobID, tc.scanRequest)
+			err := NewController(store, wrapper, transformer).Scan(ctx, tc.scanJobID, tc.scanRequest)
 			assert.Equal(t, tc.expectedError, err)
 
 			store.AssertExpectations(t)

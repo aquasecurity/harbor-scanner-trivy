@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -37,13 +38,14 @@ func main() {
 		Date:    date,
 	}
 
-	if err := run(info); err != nil {
+	ctx := context.Background()
+	if err := run(ctx, info); err != nil {
 		slog.Error("Error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func run(info etc.BuildInfo) error {
+func run(ctx context.Context, info etc.BuildInfo) error {
 	slog.Info("Starting harbor-scanner-trivy", slog.String("version", info.Version),
 		slog.String("commit", info.Commit), slog.String("built_at", info.Date),
 	)
@@ -56,16 +58,16 @@ func run(info etc.BuildInfo) error {
 		return fmt.Errorf("checking config: %w", err)
 	}
 
-	pool, err := redisx.NewPool(config.RedisPool)
+	rdb, err := redisx.NewClient(config.RedisPool)
 	if err != nil {
 		return fmt.Errorf("constructing connection pool: %w", err)
 	}
 
 	wrapper := trivy.NewWrapper(config.Trivy, ext.DefaultAmbassador)
-	store := redis.NewStore(config.RedisStore, pool)
+	store := redis.NewStore(config.RedisStore, rdb)
 	controller := scan.NewController(store, wrapper, scan.NewTransformer(&scan.SystemClock{}))
-	enqueuer := queue.NewEnqueuer(config.JobQueue, pool, store)
-	worker := queue.NewWorker(config.JobQueue, pool, controller)
+	enqueuer := queue.NewEnqueuer(config.JobQueue, rdb, store)
+	worker := queue.NewWorker(config.JobQueue, rdb, controller)
 
 	apiHandler := v1.NewAPIHandler(info, config, enqueuer, store, wrapper)
 	apiServer, err := api.NewServer(config.API, apiHandler)
@@ -82,11 +84,12 @@ func run(info etc.BuildInfo) error {
 
 		apiServer.Shutdown()
 		worker.Stop()
+		_ = rdb.Close()
 
 		close(shutdownComplete)
 	}()
 
-	worker.Start()
+	worker.Start(ctx)
 	apiServer.ListenAndServe()
 
 	<-shutdownComplete

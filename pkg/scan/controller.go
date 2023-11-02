@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"context"
 	"encoding/base64"
 	"log/slog"
 	"strings"
@@ -13,7 +14,7 @@ import (
 )
 
 type Controller interface {
-	Scan(scanJobID string, request harbor.ScanRequest) error
+	Scan(ctx context.Context, scanJobID string, request harbor.ScanRequest) error
 }
 
 type controller struct {
@@ -30,24 +31,24 @@ func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer T
 	}
 }
 
-func (c *controller) Scan(scanJobID string, request harbor.ScanRequest) error {
-	if err := c.scan(scanJobID, request); err != nil {
+func (c *controller) Scan(ctx context.Context, scanJobID string, request harbor.ScanRequest) error {
+	if err := c.scan(ctx, scanJobID, request); err != nil {
 		slog.Error("Scan failed", slog.String("err", err.Error()))
-		if err = c.store.UpdateStatus(scanJobID, job.Failed, err.Error()); err != nil {
+		if err = c.store.UpdateStatus(ctx, scanJobID, job.Failed, err.Error()); err != nil {
 			return xerrors.Errorf("updating scan job as failed: %v", err)
 		}
 	}
 	return nil
 }
 
-func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) {
+func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.ScanRequest) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
 		}
 	}()
 
-	err = c.store.UpdateStatus(scanJobID, job.Pending)
+	err = c.store.UpdateStatus(ctx, scanJobID, job.Pending)
 	if err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
@@ -67,13 +68,11 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
 
-	err = c.store.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
-	if err != nil {
+	if err = c.store.UpdateReport(ctx, scanJobID, c.transformer.Transform(req.Artifact, scanReport)); err != nil {
 		return xerrors.Errorf("saving scan report: %v", err)
 	}
 
-	err = c.store.UpdateStatus(scanJobID, job.Finished)
-	if err != nil {
+	if err = c.store.UpdateStatus(ctx, scanJobID, job.Finished); err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
 
