@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,32 +11,26 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
-	"github.com/gomodule/redigo/redis"
+	redis "github.com/redis/go-redis/v9"
 	"golang.org/x/xerrors"
 )
 
 type store struct {
-	cfg  etc.RedisStore
-	pool *redis.Pool
+	cfg etc.RedisStore
+	rdb *redis.Client
 }
 
-func NewStore(cfg etc.RedisStore, pool *redis.Pool) persistence.Store {
-	return &store{
-		cfg:  cfg,
-		pool: pool,
-	}
+func NewStore(cfg etc.RedisStore, rdb *redis.Client) persistence.Store {
+	return &store{cfg: cfg, rdb: rdb}
 }
 
-func (s *store) Create(scanJob job.ScanJob) error {
-	conn := s.pool.Get()
-	defer s.close(conn)
-
+func (s *store) Create(ctx context.Context, scanJob job.ScanJob) error {
 	bytes, err := json.Marshal(scanJob)
 	if err != nil {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := s.getKeyForScanJob(scanJob.ID)
+	key := s.keyForScanJob(scanJob.ID)
 
 	slog.Debug("Saving scan job",
 		slog.String("scan_job_id", scanJob.ID),
@@ -44,23 +39,20 @@ func (s *store) Create(scanJob job.ScanJob) error {
 		slog.Duration("expire", s.cfg.ScanJobTTL),
 	)
 
-	if _, err = conn.Do("SET", key, string(bytes), "NX", "EX", int(s.cfg.ScanJobTTL.Seconds())); err != nil {
+	if err = s.rdb.SetNX(ctx, key, string(bytes), s.cfg.ScanJobTTL).Err(); err != nil {
 		return xerrors.Errorf("creating scan job: %w", err)
 	}
 
 	return nil
 }
 
-func (s *store) update(scanJob job.ScanJob) error {
-	conn := s.pool.Get()
-	defer s.close(conn)
-
+func (s *store) update(ctx context.Context, scanJob job.ScanJob) error {
 	bytes, err := json.Marshal(scanJob)
 	if err != nil {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := s.getKeyForScanJob(scanJob.ID)
+	key := s.keyForScanJob(scanJob.ID)
 
 	slog.Debug("Updating scan job",
 		slog.String("scan_job_id", scanJob.ID),
@@ -69,42 +61,39 @@ func (s *store) update(scanJob job.ScanJob) error {
 		slog.Duration("expire", s.cfg.ScanJobTTL),
 	)
 
-	if _, err = conn.Do("SET", key, string(bytes), "XX", "EX", int(s.cfg.ScanJobTTL.Seconds())); err != nil {
+	if err = s.rdb.SetXX(ctx, key, string(bytes), s.cfg.ScanJobTTL).Err(); err != nil {
 		return xerrors.Errorf("updating scan job: %w", err)
 	}
 
 	return nil
 }
 
-func (s *store) Get(scanJobID string) (*job.ScanJob, error) {
-	conn := s.pool.Get()
-	defer s.close(conn)
-
-	key := s.getKeyForScanJob(scanJobID)
-	value, err := redis.String(conn.Do("GET", key))
-	if err != nil {
-		if errors.Is(err, redis.ErrNil) {
-			return nil, nil
-		}
+func (s *store) Get(ctx context.Context, scanJobID string) (*job.ScanJob, error) {
+	key := s.keyForScanJob(scanJobID)
+	value, err := s.rdb.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 
 	var scanJob job.ScanJob
-	err = json.Unmarshal([]byte(value), &scanJob)
-	if err != nil {
-		return nil, err
+	if err = json.Unmarshal([]byte(value), &scanJob); err != nil {
+		return nil, xerrors.Errorf("unmarshalling scan job: %w", err)
 	}
 
 	return &scanJob, nil
 }
 
-func (s *store) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
+func (s *store) UpdateStatus(ctx context.Context, scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
 	slog.Debug("Updating status for scan job", slog.String("scan_job_id", scanJobID),
 		slog.String("new_status", newStatus.String()),
 	)
 
-	scanJob, err := s.Get(scanJobID)
-	if err != nil {
+	scanJob, err := s.Get(ctx, scanJobID)
+	if scanJob == nil {
+		return xerrors.Errorf("scan job %s not found", scanJobID)
+	} else if err != nil {
 		return err
 	}
 
@@ -113,28 +102,21 @@ func (s *store) UpdateStatus(scanJobID string, newStatus job.ScanJobStatus, erro
 		scanJob.Error = error[0]
 	}
 
-	return s.update(*scanJob)
+	return s.update(ctx, *scanJob)
 }
 
-func (s *store) UpdateReport(scanJobID string, report harbor.ScanReport) error {
+func (s *store) UpdateReport(ctx context.Context, scanJobID string, report harbor.ScanReport) error {
 	slog.Debug("Updating reports for scan job", slog.String("scan_job_id", scanJobID))
 
-	scanJob, err := s.Get(scanJobID)
+	scanJob, err := s.Get(ctx, scanJobID)
 	if err != nil {
 		return err
 	}
 
 	scanJob.Report = report
-	return s.update(*scanJob)
+	return s.update(ctx, *scanJob)
 }
 
-func (s *store) getKeyForScanJob(scanJobID string) string {
+func (s *store) keyForScanJob(scanJobID string) string {
 	return fmt.Sprintf("%s:scan-job:%s", s.cfg.Namespace, scanJobID)
-}
-
-func (s *store) close(conn redis.Conn) {
-	err := conn.Close()
-	if err != nil {
-		slog.Error("Error while closing connection", slog.String("err", err.Error()))
-	}
 }

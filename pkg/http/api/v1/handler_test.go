@@ -117,7 +117,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			name: "Should accept scan request",
 			enqueuerExpectation: &mock.Expectation{
 				Method:     "Enqueue",
-				Args:       []interface{}{validScanRequest},
+				Args:       []interface{}{mock.Anything, validScanRequest},
 				ReturnArgs: []interface{}{job.ScanJob{ID: "job:123"}, nil},
 			},
 			requestBody:         validScanRequestJSON,
@@ -151,7 +151,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 			name: "Should respond with error 500 when enqueuing scan request fails",
 			enqueuerExpectation: &mock.Expectation{
 				Method:     "Enqueue",
-				Args:       []interface{}{validScanRequest},
+				Args:       []interface{}{mock.Anything, validScanRequest},
 				ReturnArgs: []interface{}{job.ScanJob{}, errors.New("queue is down")},
 			},
 			requestBody:         validScanRequestJSON,
@@ -203,7 +203,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: "Should respond with error 500 when retrieving scan job fails",
 			storeExpectation: &mock.Expectation{
 				Method:     "Get",
-				Args:       []interface{}{"job:123"},
+				Args:       []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{}, errors.New("data store is down")},
 			},
 			expectedStatus:      http.StatusInternalServerError,
@@ -218,7 +218,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: "Should respond with error 404 when scan job cannot be found",
 			storeExpectation: &mock.Expectation{
 				Method:     "Get",
-				Args:       []interface{}{"job:123"},
+				Args:       []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{(*job.ScanJob)(nil), nil},
 			},
 			expectedStatus:      http.StatusNotFound,
@@ -233,7 +233,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Queued),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{"job:123"},
+				Args:   []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: job.Queued,
@@ -245,7 +245,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Pending),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{"job:123"},
+				Args:   []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: job.Pending,
@@ -257,7 +257,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with error 500 when scan job is %s", job.Failed),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{"job:123"},
+				Args:   []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: job.Failed,
@@ -276,7 +276,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with error 500 when scan job is NOT %s", job.Finished),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{"job:123"},
+				Args:   []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: 666,
@@ -295,7 +295,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: "Should respond with vulnerabilities report",
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{"job:123"},
+				Args:   []interface{}{mock.Anything, "job:123"},
 				ReturnArgs: []interface{}{&job.ScanJob{
 					ID:     "job:123",
 					Status: job.Finished,

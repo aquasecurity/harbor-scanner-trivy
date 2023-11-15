@@ -92,7 +92,7 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	scanJob, err := h.enqueuer.Enqueue(scanRequest)
+	scanJob, err := h.enqueuer.Enqueue(req.Context(), scanRequest)
 	if err != nil {
 		slog.Error("Error while enqueuing scan job", slog.String("err", err.Error()))
 		h.WriteJSONError(res, harbor.Error{
@@ -163,7 +163,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	reqLog := slog.With(slog.String("scan_job_id", scanJobID))
 
-	scanJob, err := h.store.Get(scanJobID)
+	scanJob, err := h.store.Get(req.Context(), scanJobID)
 	if err != nil {
 		reqLog.Error("Error while getting scan job")
 		h.WriteJSONError(res, harbor.Error{

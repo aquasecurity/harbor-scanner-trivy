@@ -1,10 +1,10 @@
 //go:build integration
-// +build integration
 
 package api
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -57,7 +57,7 @@ func TestRestApi(t *testing.T) {
 
 	t.Run("POST /api/v1/scan", func(t *testing.T) {
 		// given
-		enqueuer.On("Enqueue", harbor.ScanRequest{
+		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
 			Registry: harbor.Registry{
 				URL:           "https://core.harbor.domain",
 				Authorization: "Bearer JWTTOKENGOESHERE",
@@ -85,7 +85,7 @@ func TestRestApi(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, rs.StatusCode)
 		assert.Equal(t, "application/vnd.scanner.adapter.scan.response+json; version=1.0", rs.Header.Get("Content-Type"))
 
-		bodyBytes, err := ioutil.ReadAll(rs.Body)
+		bodyBytes, err := io.ReadAll(rs.Body)
 		require.NoError(t, err)
 
 		assert.JSONEq(t, `{"id": "job:123"}`, string(bodyBytes))
@@ -95,7 +95,7 @@ func TestRestApi(t *testing.T) {
 		// given
 		now := time.Now()
 
-		store.On("Get", "job:123").Return(&job.ScanJob{
+		store.On("Get", mock.Anything, "job:123").Return(&job.ScanJob{
 			ID:     "job:123",
 			Status: job.Finished,
 			Report: harbor.ScanReport{

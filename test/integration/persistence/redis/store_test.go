@@ -47,7 +47,7 @@ func TestStore(t *testing.T) {
 		ScanJobTTL: parseDuration(t, "10s"),
 	}
 
-	pool, err := redisx.NewPool(etc.RedisPool{
+	pool, err := redisx.NewClient(etc.RedisPool{
 		URL: redisURL,
 	})
 	require.NoError(t, err)
@@ -57,23 +57,23 @@ func TestStore(t *testing.T) {
 	t.Run("CRUD", func(t *testing.T) {
 		scanJobID := "123"
 
-		err := store.Create(job.ScanJob{
+		err := store.Create(ctx, job.ScanJob{
 			ID:     scanJobID,
 			Status: job.Queued,
 		})
 		require.NoError(t, err, "saving scan job should not fail")
 
-		j, err := store.Get(scanJobID)
+		j, err := store.Get(ctx, scanJobID)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
 			ID:     scanJobID,
 			Status: job.Queued,
 		}, j)
 
-		err = store.UpdateStatus(scanJobID, job.Pending)
+		err = store.UpdateStatus(ctx, scanJobID, job.Pending)
 		require.NoError(t, err, "updating scan job status should not fail")
 
-		j, err = store.Get(scanJobID)
+		j, err = store.Get(ctx, scanJobID)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
 			ID:     scanJobID,
@@ -89,20 +89,20 @@ func TestStore(t *testing.T) {
 			},
 		}
 
-		err = store.UpdateReport(scanJobID, scanReport)
+		err = store.UpdateReport(ctx, scanJobID, scanReport)
 		require.NoError(t, err, "updating scan job reports should not fail")
 
-		j, err = store.Get(scanJobID)
+		j, err = store.Get(ctx, scanJobID)
 		require.NoError(t, err, "retrieving scan job should not fail")
 		require.NotNil(t, j, "retrieved scan job must not be nil")
 		assert.Equal(t, scanReport, j.Report)
 
-		err = store.UpdateStatus(scanJobID, job.Finished)
+		err = store.UpdateStatus(ctx, scanJobID, job.Finished)
 		require.NoError(t, err)
 
 		time.Sleep(parseDuration(t, "12s"))
 
-		j, err = store.Get(scanJobID)
+		j, err = store.Get(ctx, scanJobID)
 		require.NoError(t, err, "retrieve scan job should not fail")
 		require.Nil(t, j, "retrieved scan job should be nil, i.e. expired")
 	})
