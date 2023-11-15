@@ -25,6 +25,8 @@
    git clone https://github.com/aquasecurity/harbor-scanner-trivy.git
    cd harbor-scanner-trivy
    ```
+   
+**NOTE**: Podman is [not supported](https://github.com/GoogleContainerTools/skaffold/issues/8430) by Skaffold.
 
 ## Set up Development Environment with Kubernetes
 
