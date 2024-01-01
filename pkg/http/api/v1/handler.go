@@ -23,9 +23,11 @@ import (
 const (
 	pathVarScanRequestID = "scan_request_id"
 
-	propertyScannerType    = "harbor.scanner-adapter/scanner-type"
-	propertyDBUpdatedAt    = "harbor.scanner-adapter/vulnerability-database-updated-at"
-	propertyDBNextUpdateAt = "harbor.scanner-adapter/vulnerability-database-next-update-at"
+	propertyScannerType        = "harbor.scanner-adapter/scanner-type"
+	propertyDBUpdatedAt        = "harbor.scanner-adapter/vulnerability-database-updated-at"
+	propertyDBNextUpdateAt     = "harbor.scanner-adapter/vulnerability-database-next-update-at"
+	propertyJavaDBUpdatedAt    = "harbor.scanner-adapter/vulnerability-java-database-updated-at"
+	propertyJavaDBNextUpdateAt = "harbor.scanner-adapter/vulnerability-java-database-next-update-at"
 )
 
 type requestHandler struct {
@@ -221,15 +223,16 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"org.label-schema.vcs-ref":    h.info.Commit,
 		"org.label-schema.vcs":        "https://github.com/aquasecurity/harbor-scanner-trivy",
 
-		"env.SCANNER_TRIVY_SKIP_UPDATE":     strconv.FormatBool(h.config.Trivy.SkipUpdate),
-		"env.SCANNER_TRIVY_OFFLINE_SCAN":    strconv.FormatBool(h.config.Trivy.OfflineScan),
-		"env.SCANNER_TRIVY_IGNORE_UNFIXED":  strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
-		"env.SCANNER_TRIVY_DEBUG_MODE":      strconv.FormatBool(h.config.Trivy.DebugMode),
-		"env.SCANNER_TRIVY_INSECURE":        strconv.FormatBool(h.config.Trivy.Insecure),
-		"env.SCANNER_TRIVY_VULN_TYPE":       h.config.Trivy.VulnType,
-		"env.SCANNER_TRIVY_SECURITY_CHECKS": h.config.Trivy.SecurityChecks,
-		"env.SCANNER_TRIVY_SEVERITY":        h.config.Trivy.Severity,
-		"env.SCANNER_TRIVY_TIMEOUT":         h.config.Trivy.Timeout.String(),
+		"env.SCANNER_TRIVY_SKIP_UPDATE":         strconv.FormatBool(h.config.Trivy.SkipUpdate),
+		"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE": strconv.FormatBool(h.config.Trivy.SkipJavaDBUpdate),
+		"env.SCANNER_TRIVY_OFFLINE_SCAN":        strconv.FormatBool(h.config.Trivy.OfflineScan),
+		"env.SCANNER_TRIVY_IGNORE_UNFIXED":      strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
+		"env.SCANNER_TRIVY_DEBUG_MODE":          strconv.FormatBool(h.config.Trivy.DebugMode),
+		"env.SCANNER_TRIVY_INSECURE":            strconv.FormatBool(h.config.Trivy.Insecure),
+		"env.SCANNER_TRIVY_VULN_TYPE":           h.config.Trivy.VulnType,
+		"env.SCANNER_TRIVY_SECURITY_CHECKS":     h.config.Trivy.SecurityChecks,
+		"env.SCANNER_TRIVY_SEVERITY":            h.config.Trivy.Severity,
+		"env.SCANNER_TRIVY_TIMEOUT":             h.config.Trivy.Timeout.String(),
 	}
 
 	vi, err := h.wrapper.GetVersion()
@@ -243,6 +246,10 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 
 	if err == nil && vi.VulnerabilityDB != nil && !h.config.Trivy.SkipUpdate {
 		properties[propertyDBNextUpdateAt] = vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339)
+	}
+
+	if err == nil && vi.JavaDB != nil && !h.config.Trivy.SkipJavaDBUpdate {
+		properties[propertyJavaDBNextUpdateAt] = vi.JavaDB.NextUpdate.Format(time.RFC3339)
 	}
 
 	metadata := &harbor.ScannerAdapterMetadata{

@@ -41,14 +41,15 @@ func TestRestApi(t *testing.T) {
 		},
 		etc.Config{
 			Trivy: etc.Trivy{
-				SkipUpdate:     false,
-				IgnoreUnfixed:  true,
-				DebugMode:      true,
-				Insecure:       true,
-				VulnType:       "os,library",
-				Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				SecurityChecks: "vuln",
-				Timeout:        5 * time.Minute,
+				SkipUpdate:       false,
+				SkipJavaDBUpdate: false,
+				IgnoreUnfixed:    true,
+				DebugMode:        true,
+				Insecure:         true,
+				VulnType:         "os,library",
+				Severity:         "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+				SecurityChecks:   "vuln",
+				Timeout:          5 * time.Minute,
 			},
 		}, enqueuer, store, wrapper)
 
@@ -213,6 +214,7 @@ func TestRestApi(t *testing.T) {
     "org.label-schema.vcs-ref": "abc",
     "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
     "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+	"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE": "false",
     "env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
     "env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
     "env.SCANNER_TRIVY_DEBUG_MODE": "true",
