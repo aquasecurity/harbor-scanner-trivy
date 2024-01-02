@@ -475,25 +475,25 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
          ]
       }
    ],
-   "properties":{
-      "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-      "harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
-      "harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
-      "org.label-schema.build-date": "2019-01-03T13:40",
-      "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
-      "org.label-schema.vcs-ref": "abc",
-      "org.label-schema.version": "0.1",
-      "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
-	  "env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE": "false",
-      "env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
-      "env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
-      "env.SCANNER_TRIVY_DEBUG_MODE": "true",
-      "env.SCANNER_TRIVY_INSECURE": "true",
-      "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
-   }
+	"properties":{
+		"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+		"harbor.scanner-adapter/vulnerability-database-next-update-at": "2020-03-18T05:00:44Z",
+		"harbor.scanner-adapter/vulnerability-database-updated-at": "2020-03-18T07:47:24Z",
+		"org.label-schema.build-date": "2019-01-03T13:40",
+		"org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+		"org.label-schema.vcs-ref": "abc",
+		"org.label-schema.version": "0.1",
+		"env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+		"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE": "false",
+		"env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
+		"env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+		"env.SCANNER_TRIVY_DEBUG_MODE": "true",
+		"env.SCANNER_TRIVY_INSECURE": "true",
+		"env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+		"env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
+		"env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+		"env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+	}
 }`,
 		},
 		{
@@ -531,23 +531,23 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
          ]
       }
    ],
-   "properties":{
-      "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-      "org.label-schema.build-date": "2019-01-03T13:40",
-      "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
-      "org.label-schema.vcs-ref": "abc",
-      "org.label-schema.version": "0.1",
-      "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
-	  "env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE":"false",
-      "env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
-      "env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
-      "env.SCANNER_TRIVY_DEBUG_MODE": "true",
-      "env.SCANNER_TRIVY_INSECURE": "true",
-      "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
-   }
+	"properties":{
+		"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+		"org.label-schema.build-date": "2019-01-03T13:40",
+		"org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+		"org.label-schema.vcs-ref": "abc",
+		"org.label-schema.version": "0.1",
+		"env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+		"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE":"false",
+		"env.SCANNER_TRIVY_OFFLINE_SCAN": "false",
+		"env.SCANNER_TRIVY_IGNORE_UNFIXED": "true",
+		"env.SCANNER_TRIVY_DEBUG_MODE": "true",
+		"env.SCANNER_TRIVY_INSECURE": "true",
+		"env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+		"env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
+		"env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+		"env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+	}
 }`,
 		},
 		{
@@ -581,23 +581,23 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
          ]
       }
    ],
-   "properties":{
-      "harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
-      "org.label-schema.build-date": "2019-01-03T13:40",
-      "org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
-      "org.label-schema.vcs-ref": "abc",
-      "org.label-schema.version": "0.1",
-      "env.SCANNER_TRIVY_SKIP_UPDATE": "false",
-	  "env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE":"false",
-      "env.SCANNER_TRIVY_OFFLINE_SCAN": "true",
-      "env.SCANNER_TRIVY_IGNORE_UNFIXED": "false",
-      "env.SCANNER_TRIVY_DEBUG_MODE": "false",
-      "env.SCANNER_TRIVY_INSECURE": "false",
-      "env.SCANNER_TRIVY_VULN_TYPE": "os,library",
-	  "env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
-      "env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-      "env.SCANNER_TRIVY_TIMEOUT": "5m0s"
-   }
+	"properties":{
+		"harbor.scanner-adapter/scanner-type": "os-package-vulnerability",
+		"org.label-schema.build-date": "2019-01-03T13:40",
+		"org.label-schema.vcs": "https://github.com/aquasecurity/harbor-scanner-trivy",
+		"org.label-schema.vcs-ref": "abc",
+		"org.label-schema.version": "0.1",
+		"env.SCANNER_TRIVY_SKIP_UPDATE": "false",
+		"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE":"false",
+		"env.SCANNER_TRIVY_OFFLINE_SCAN": "true",
+		"env.SCANNER_TRIVY_IGNORE_UNFIXED": "false",
+		"env.SCANNER_TRIVY_DEBUG_MODE": "false",
+		"env.SCANNER_TRIVY_INSECURE": "false",
+		"env.SCANNER_TRIVY_VULN_TYPE": "os,library",
+		"env.SCANNER_TRIVY_SECURITY_CHECKS": "vuln",
+		"env.SCANNER_TRIVY_SEVERITY": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+		"env.SCANNER_TRIVY_TIMEOUT": "5m0s"
+	}
 }`,
 		},
 	}
