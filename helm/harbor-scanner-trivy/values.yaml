@@ -75,8 +75,8 @@ scanner:
     ## `/home/scanner/.cache/trivy/db/trivy.db` path (see `cacheDir`).
     skipUpdate: false
        
-    ## If the flag is enabled you have to manually download the `trivy-java-db` file and mount it in the
-    ## `/home/scanner/.cache/trivy/db/trivy.java-db` path (see `cacheDir`).
+    ## If the flag is enabled you have to manually download the `trivy-java.db` file and mount it in the
+    ## `/home/scanner/.cache/trivy/java-db/trivy-java.db` path (see `cacheDir`).
     skipJavaDBUpdate: false
     # offlineScan the flag to disable external API requests to identify dependencies.
     offlineScan: false
