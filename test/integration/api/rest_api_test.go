@@ -59,8 +59,10 @@ func TestRestApi(t *testing.T) {
 	t.Run("POST /api/v1/scan", func(t *testing.T) {
 		// given
 		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
-			Scan: harbor.Scan{
-				Type: harbor.CapabilityTypeVulnerability,
+			Capabilities: []harbor.Capability{
+				{
+					Type: harbor.CapabilityTypeVulnerability,
+				},
 			},
 			Registry: harbor.Registry{
 				URL:           "https://core.harbor.domain",
@@ -199,12 +201,23 @@ func TestRestApi(t *testing.T) {
   },
   "capabilities": [
     {
+      "type": "vulnerability",
       "consumes_mime_types": [
         "application/vnd.oci.image.manifest.v1+json",
         "application/vnd.docker.distribution.manifest.v2+json"
       ],
       "produces_mime_types": [
         "application/vnd.security.vulnerability.report; version=1.1"
+      ]
+    },
+    {
+      "type": "sbom",
+      "consumes_mime_types": [
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.docker.distribution.manifest.v2+json"
+      ],
+      "produces_mime_types": [
+        "application/vnd.security.sbom.report+json; version=1.0"
       ]
     }
   ],
