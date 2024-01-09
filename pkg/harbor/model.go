@@ -71,7 +71,10 @@ const (
 	MediaTypeCycloneDX MediaType = "application/vnd.cyclonedx+json"
 )
 
-var SupportedSBOMMediaTypes = []MediaType{MediaTypeSPDX, MediaTypeCycloneDX}
+var SupportedSBOMMediaTypes = []MediaType{
+	MediaTypeSPDX,
+	MediaTypeCycloneDX,
+}
 
 type Scan struct {
 	Type       ScanType       `json:"type,omitempty"`
@@ -179,6 +182,7 @@ type Scanner struct {
 }
 
 type Capability struct {
+	Type              string   `json:"type"`
 	ConsumesMIMETypes []string `json:"consumes_mime_types"`
 	ProducesMIMETypes []string `json:"produces_mime_types"`
 }

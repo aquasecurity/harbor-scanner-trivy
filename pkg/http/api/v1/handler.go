@@ -277,12 +277,23 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		Scanner: etc.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
 			{
+				Type: api.CapabilityTypeVulnerability,
 				ConsumesMIMETypes: []string{
 					api.MimeTypeOCIImageManifest.String(),
 					api.MimeTypeDockerImageManifestV2.String(),
 				},
 				ProducesMIMETypes: []string{
 					api.MimeTypeSecurityVulnerabilityReport.String(),
+				},
+			},
+			{
+				Type: api.CapabilityTypeSBOM,
+				ConsumesMIMETypes: []string{
+					api.MimeTypeOCIImageManifest.String(),
+					api.MimeTypeDockerImageManifestV2.String(),
+				},
+				ProducesMIMETypes: []string{
+					api.MimeTypeSecuritySBOMReport.String(),
 				},
 			},
 		},

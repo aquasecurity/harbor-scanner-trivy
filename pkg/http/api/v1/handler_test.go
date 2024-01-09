@@ -122,9 +122,15 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 		{
 			name: "Should accept scan request",
 			enqueuerExpectation: &mock.Expectation{
-				Method:     "Enqueue",
-				Args:       []interface{}{mock.Anything, validScanRequest},
-				ReturnArgs: []interface{}{job.ScanJob{ID: "job:123"}, nil},
+				Method: "Enqueue",
+				Args: []interface{}{
+					mock.Anything,
+					validScanRequest,
+				},
+				ReturnArgs: []interface{}{
+					job.ScanJob{ID: "job:123"},
+					nil,
+				},
 			},
 			requestBody:         validScanRequestJSON,
 			expectedStatus:      http.StatusAccepted,
@@ -156,9 +162,15 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 		{
 			name: "Should respond with error 500 when enqueuing scan request fails",
 			enqueuerExpectation: &mock.Expectation{
-				Method:     "Enqueue",
-				Args:       []interface{}{mock.Anything, validScanRequest},
-				ReturnArgs: []interface{}{job.ScanJob{}, errors.New("queue is down")},
+				Method: "Enqueue",
+				Args: []interface{}{
+					mock.Anything,
+					validScanRequest,
+				},
+				ReturnArgs: []interface{}{
+					job.ScanJob{},
+					errors.New("queue is down"),
+				},
 			},
 			requestBody:         validScanRequestJSON,
 			expectedStatus:      http.StatusInternalServerError,
@@ -208,9 +220,15 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: "Should respond with error 500 when retrieving scan job fails",
 			storeExpectation: &mock.Expectation{
-				Method:     "Get",
-				Args:       []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{}, errors.New("data store is down")},
+				Method: "Get",
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{},
+					errors.New("data store is down"),
+				},
 			},
 			expectedStatus:      http.StatusInternalServerError,
 			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
@@ -223,9 +241,15 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 		{
 			name: "Should respond with error 404 when scan job cannot be found",
 			storeExpectation: &mock.Expectation{
-				Method:     "Get",
-				Args:       []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{(*job.ScanJob)(nil), nil},
+				Method: "Get",
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					(*job.ScanJob)(nil),
+					nil,
+				},
 			},
 			expectedStatus:      http.StatusNotFound,
 			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
@@ -239,11 +263,17 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Queued),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{
-					ID:     "job:123",
-					Status: job.Queued,
-				}, nil},
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{
+						ID:     "job:123",
+						Status: job.Queued,
+					},
+					nil,
+				},
 			},
 			expectedStatus: http.StatusFound,
 		},
@@ -251,11 +281,17 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with found status 302 when scan job is %s", job.Pending),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{
-					ID:     "job:123",
-					Status: job.Pending,
-				}, nil},
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{
+						ID:     "job:123",
+						Status: job.Pending,
+					},
+					nil,
+				},
 			},
 			expectedStatus: http.StatusFound,
 		},
@@ -263,12 +299,18 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with error 500 when scan job is %s", job.Failed),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{
-					ID:     "job:123",
-					Status: job.Failed,
-					Error:  "queue worker failed",
-				}, nil},
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{
+						ID:     "job:123",
+						Status: job.Failed,
+						Error:  "queue worker failed",
+					},
+					nil,
+				},
 			},
 			expectedStatus:      http.StatusInternalServerError,
 			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
@@ -282,12 +324,18 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: fmt.Sprintf("Should respond with error 500 when scan job is NOT %s", job.Finished),
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{
-					ID:     "job:123",
-					Status: 666,
-					Error:  "queue worker failed",
-				}, nil},
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{
+						ID:     "job:123",
+						Status: 666,
+						Error:  "queue worker failed",
+					},
+					nil,
+				},
 			},
 			expectedStatus:      http.StatusInternalServerError,
 			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
@@ -301,40 +349,46 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			name: "Should respond with vulnerabilities report",
 			storeExpectation: &mock.Expectation{
 				Method: "Get",
-				Args:   []interface{}{mock.Anything, "job:123"},
-				ReturnArgs: []interface{}{&job.ScanJob{
-					ID:     "job:123",
-					Status: job.Finished,
-					Report: harbor.ScanReport{
-						GeneratedAt: now,
-						Artifact: harbor.Artifact{
-							Repository: "library/mongo",
-							Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
-						},
-						Scanner: harbor.Scanner{
-							Name:    "Trivy",
-							Vendor:  "Aqua Security",
-							Version: "0.1.6",
-						},
-						Severity: harbor.SevCritical,
-						Vulnerabilities: []harbor.VulnerabilityItem{
-							{
-								ID:          "CVE-2019-1111",
-								Pkg:         "openssl",
-								Version:     "2.0-rc1",
-								FixVersion:  "2.1",
-								Severity:    harbor.SevCritical,
-								Description: "You'd better upgrade your server",
-								Links: []string{
-									"http://cve.com?id=CVE-2019-1111",
-								},
-								Layer: &harbor.Layer{
-									Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+				Args: []interface{}{
+					mock.Anything,
+					"job:123",
+				},
+				ReturnArgs: []interface{}{
+					&job.ScanJob{
+						ID:     "job:123",
+						Status: job.Finished,
+						Report: harbor.ScanReport{
+							GeneratedAt: now,
+							Artifact: harbor.Artifact{
+								Repository: "library/mongo",
+								Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
+							},
+							Scanner: harbor.Scanner{
+								Name:    "Trivy",
+								Vendor:  "Aqua Security",
+								Version: "0.1.6",
+							},
+							Severity: harbor.SevCritical,
+							Vulnerabilities: []harbor.VulnerabilityItem{
+								{
+									ID:          "CVE-2019-1111",
+									Pkg:         "openssl",
+									Version:     "2.0-rc1",
+									FixVersion:  "2.1",
+									Severity:    harbor.SevCritical,
+									Description: "You'd better upgrade your server",
+									Links: []string{
+										"http://cve.com?id=CVE-2019-1111",
+									},
+									Layer: &harbor.Layer{
+										Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+									},
 								},
 							},
 						},
 					},
-				}, nil},
+					nil,
+				},
 			},
 			expectedStatus:      http.StatusOK,
 			expectedContentType: "application/vnd.security.vulnerability.report; version=1.1",
@@ -443,8 +497,12 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		expectedError    error
 	}{
 		{
-			name:      "Should respond with a valid Metadata JSON and HTTP 200 OK",
-			buildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			name: "Should respond with a valid Metadata JSON and HTTP 200 OK",
+			buildInfo: etc.BuildInfo{
+				Version: "0.1",
+				Commit:  "abc",
+				Date:    "2019-01-03T13:40",
+			},
 			version: trivy.VersionInfo{
 				Version: "v0.5.2-17-g3c9af62",
 				VulnerabilityDB: &trivy.Metadata{
@@ -452,17 +510,19 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 					UpdatedAt:  time.Unix(1584517644, 0).UTC(),
 				},
 			},
-			config: etc.Config{Trivy: etc.Trivy{
-				SkipUpdate:       false,
-				SkipJavaDBUpdate: false,
-				IgnoreUnfixed:    true,
-				DebugMode:        true,
-				Insecure:         true,
-				VulnType:         "os,library",
-				SecurityChecks:   "vuln",
-				Severity:         "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				Timeout:          5 * time.Minute,
-			}},
+			config: etc.Config{
+				Trivy: etc.Trivy{
+					SkipUpdate:       false,
+					SkipJavaDBUpdate: false,
+					IgnoreUnfixed:    true,
+					DebugMode:        true,
+					Insecure:         true,
+					VulnType:         "os,library",
+					SecurityChecks:   "vuln",
+					Severity:         "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Timeout:          5 * time.Minute,
+				},
+			},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
    "scanner":{
@@ -472,12 +532,23 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
    },
    "capabilities":[
       {
+         "type": "vulnerability",
          "consumes_mime_types":[
             "application/vnd.oci.image.manifest.v1+json",
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
             "application/vnd.security.vulnerability.report; version=1.1"
+         ]
+      },
+      {
+         "type": "sbom",
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.security.sbom.report+json; version=1.0"
          ]
       }
    ],
@@ -503,22 +574,28 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 }`,
 		},
 		{
-			name:      "Should respond with a valid Metadata JSON and HTTP 200 OK, when there's no trivy Metadata present",
-			buildInfo: etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			name: "Should respond with a valid Metadata JSON and HTTP 200 OK, when there's no trivy Metadata present",
+			buildInfo: etc.BuildInfo{
+				Version: "0.1",
+				Commit:  "abc",
+				Date:    "2019-01-03T13:40",
+			},
 			version: trivy.VersionInfo{
 				Version: "v0.5.2-17-g3c9af62",
 			},
-			config: etc.Config{Trivy: etc.Trivy{
-				SkipUpdate:       false,
-				SkipJavaDBUpdate: false,
-				IgnoreUnfixed:    true,
-				DebugMode:        true,
-				Insecure:         true,
-				VulnType:         "os,library",
-				SecurityChecks:   "vuln",
-				Severity:         "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-				Timeout:          5 * time.Minute,
-			}},
+			config: etc.Config{
+				Trivy: etc.Trivy{
+					SkipUpdate:       false,
+					SkipJavaDBUpdate: false,
+					IgnoreUnfixed:    true,
+					DebugMode:        true,
+					Insecure:         true,
+					VulnType:         "os,library",
+					SecurityChecks:   "vuln",
+					Severity:         "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Timeout:          5 * time.Minute,
+				},
+			},
 			expectedHTTPCode: http.StatusOK,
 			expectedResp: `{
    "scanner":{
@@ -528,12 +605,23 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
    },
    "capabilities":[
       {
+         "type": "vulnerability",
          "consumes_mime_types":[
             "application/vnd.oci.image.manifest.v1+json",
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
             "application/vnd.security.vulnerability.report; version=1.1"
+         ]
+      },
+      {
+         "type": "sbom",
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.security.sbom.report+json; version=1.0"
          ]
       }
    ],
@@ -559,7 +647,11 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 		{
 			name:        "Should respond with a valid Metadata JSON and HTTP 200 OK when GetVersion fails",
 			mockedError: errors.New("get version failed"),
-			buildInfo:   etc.BuildInfo{Version: "0.1", Commit: "abc", Date: "2019-01-03T13:40"},
+			buildInfo: etc.BuildInfo{
+				Version: "0.1",
+				Commit:  "abc",
+				Date:    "2019-01-03T13:40",
+			},
 			config: etc.Config{
 				Trivy: etc.Trivy{
 					VulnType:       "os,library",
@@ -578,12 +670,23 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
    },
    "capabilities":[
       {
+         "type": "vulnerability",
          "consumes_mime_types":[
             "application/vnd.oci.image.manifest.v1+json",
             "application/vnd.docker.distribution.manifest.v2+json"
          ],
          "produces_mime_types":[
             "application/vnd.security.vulnerability.report; version=1.1"
+         ]
+      },
+      {
+         "type": "sbom",
+         "consumes_mime_types":[
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json"
+         ],
+         "produces_mime_types":[
+            "application/vnd.security.sbom.report+json; version=1.0"
          ]
       }
    ],

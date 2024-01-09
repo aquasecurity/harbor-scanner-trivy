@@ -17,17 +17,46 @@ const (
 
 type MimeTypeParams map[string]string
 
-var MimeTypeVersion = map[string]string{"version": "1.0"}
+var (
+	MimeTypeVersion = map[string]string{"version": "1.0"}
 
-var MimeTypeOCIImageManifest = MimeType{Type: "application", Subtype: "vnd.oci.image.manifest.v1+json"}
-var MimeTypeDockerImageManifestV2 = MimeType{Type: "application", Subtype: "vnd.docker.distribution.manifest.v2+json"}
+	CapabilityTypeVulnerability = "vulnerability"
+	CapabilityTypeSBOM          = "sbom"
 
-var MimeTypeScanResponse = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.response+json", Params: MimeTypeVersion}
-
-var MimeTypeSecurityVulnerabilityReport = MimeType{Type: "application", Subtype: "vnd.security.vulnerability.report", Params: map[string]string{"version": "1.1"}}
-var MimeTypeSecuritySBOMReport = MimeType{Type: "application", Subtype: "vnd.security.sbom.report+json", Params: map[string]string{"version": "1.1"}}
-var MimeTypeMetadata = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.metadata+json", Params: MimeTypeVersion}
-var MimeTypeError = MimeType{Type: "application", Subtype: "vnd.scanner.adapter.error", Params: MimeTypeVersion}
+	MimeTypeOCIImageManifest = MimeType{
+		Type:    "application",
+		Subtype: "vnd.oci.image.manifest.v1+json",
+	}
+	MimeTypeDockerImageManifestV2 = MimeType{
+		Type:    "application",
+		Subtype: "vnd.docker.distribution.manifest.v2+json",
+	}
+	MimeTypeScanResponse = MimeType{
+		Type:    "application",
+		Subtype: "vnd.scanner.adapter.scan.response+json",
+		Params:  MimeTypeVersion,
+	}
+	MimeTypeSecurityVulnerabilityReport = MimeType{
+		Type:    "application",
+		Subtype: "vnd.security.vulnerability.report",
+		Params:  map[string]string{"version": "1.1"},
+	}
+	MimeTypeSecuritySBOMReport = MimeType{
+		Type:    "application",
+		Subtype: "vnd.security.sbom.report+json",
+		Params:  map[string]string{"version": "1.0"},
+	}
+	MimeTypeMetadata = MimeType{
+		Type:    "application",
+		Subtype: "vnd.scanner.adapter.metadata+json",
+		Params:  MimeTypeVersion,
+	}
+	MimeTypeError = MimeType{
+		Type:    "application",
+		Subtype: "vnd.scanner.adapter.error",
+		Params:  MimeTypeVersion,
+	}
+)
 
 type MimeType struct {
 	Type    string
