@@ -60,12 +60,12 @@ func (s *Severity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type ScanType string
+type CapabilityType string
 type MediaType string
 
 const (
-	ScanTypeSBOM          ScanType = "sbom"
-	ScanTypeVulnerability ScanType = "vulnerability"
+	CapabilityTypeSBOM          CapabilityType = "sbom"
+	CapabilityTypeVulnerability CapabilityType = "vulnerability"
 
 	MediaTypeSPDX      MediaType = "application/spdx+json"
 	MediaTypeCycloneDX MediaType = "application/vnd.cyclonedx+json"
@@ -74,15 +74,6 @@ const (
 var SupportedSBOMMediaTypes = []MediaType{
 	MediaTypeSPDX,
 	MediaTypeCycloneDX,
-}
-
-type Scan struct {
-	Type       ScanType       `json:"type,omitempty"`
-	Parameters ScanParameters `json:"parameters,omitempty"`
-}
-
-type ScanParameters struct {
-	SBOMMediaType MediaType `json:"sbom_media_type,omitempty"`
 }
 
 type Registry struct {
@@ -97,9 +88,9 @@ type Artifact struct {
 }
 
 type ScanRequest struct {
-	Scan     Scan     `json:"scan"`
-	Registry Registry `json:"registry"`
-	Artifact Artifact `json:"artifact"`
+	Registry     Registry     `json:"registry"`
+	Artifact     Artifact     `json:"artifact"`
+	Capabilities []Capability `json:"enabled_capabilities"`
 }
 
 // GetImageRef returns Docker image reference for this ScanRequest.
@@ -182,9 +173,14 @@ type Scanner struct {
 }
 
 type Capability struct {
-	Type              string   `json:"type"`
-	ConsumesMIMETypes []string `json:"consumes_mime_types"`
-	ProducesMIMETypes []string `json:"produces_mime_types"`
+	Type              CapabilityType        `json:"type"`
+	ConsumesMIMETypes []string              `json:"consumes_mime_types"`
+	ProducesMIMETypes []string              `json:"produces_mime_types"`
+	Parameters        *CapabilityParameters `json:"parameters,omitempty"`
+}
+
+type CapabilityParameters struct {
+	MediaType MediaType `json:"accept_media_type,omitempty"`
 }
 
 // Error holds the information about an error, including metadata about its JSON structure.

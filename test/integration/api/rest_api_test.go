@@ -41,7 +41,7 @@ func TestRestApi(t *testing.T) {
 		},
 		etc.Config{
 			Trivy: etc.Trivy{
-				SkipUpdate:       false,
+				SkipDBUpdate:     false,
 				SkipJavaDBUpdate: false,
 				IgnoreUnfixed:    true,
 				DebugMode:        true,
@@ -60,7 +60,7 @@ func TestRestApi(t *testing.T) {
 		// given
 		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
 			Scan: harbor.Scan{
-				Type: harbor.ScanTypeVulnerability,
+				Type: harbor.CapabilityTypeVulnerability,
 			},
 			Registry: harbor.Registry{
 				URL:           "https://core.harbor.domain",

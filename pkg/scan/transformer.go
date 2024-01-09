@@ -47,9 +47,9 @@ func (t *transformer) Transform(req harbor.ScanRequest, source trivy.Report) har
 		Artifact:    req.Artifact,
 	}
 
-	switch req.Scan.Parameters.SBOMMediaType {
+	switch lo.FromPtr(req.Capabilities[0].Parameters).MediaType {
 	case harbor.MediaTypeSPDX, harbor.MediaTypeCycloneDX:
-		report.MediaType = string(req.Scan.Parameters.SBOMMediaType)
+		report.MediaType = string(req.Capabilities[0].Parameters.MediaType)
 		report.SBOM = source.SBOM
 	default:
 		report.Vulnerabilities = t.transformVulnerabilities(source.Vulnerabilities)

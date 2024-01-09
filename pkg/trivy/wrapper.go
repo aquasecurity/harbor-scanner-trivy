@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -71,26 +72,34 @@ func (w *wrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
 	logger := slog.With(slog.String("image_ref", imageRef.Name))
 	logger.Debug("Started scanning")
 
-	target, err := newTarget(imageRef, w.config)
+	target, err := newTarget(imageRef, w.config, w.ambassador)
 	if err != nil {
 		return Report{}, xerrors.Errorf("creating scan target: %w", err)
 	}
+	defer func() {
+		if err = target.Clean(); err != nil {
+			logger.Warn("Error while removing sbom tmp file", slog.String("err", err.Error()))
+		}
+	}()
 
 	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return Report{}, err
+		return Report{}, xerrors.Errorf("creating scan report tmp file: %w", err)
 	}
 	logger.Debug("Saving scan report to tmp file", slog.String("path", reportFile.Name()))
 	defer func() {
+		if err = reportFile.Close(); err != nil {
+			logger.Warn("Error while closing scan report tmp file", slog.String("err", err.Error()))
+		}
 		logger.Debug("Removing scan report tmp file", slog.String("path", reportFile.Name()))
-		if err = w.ambassador.Remove(reportFile.Name()); err != nil {
+		if err = os.Remove(reportFile.Name()); err != nil {
 			logger.Warn("Error while removing scan report tmp file", slog.String("err", err.Error()))
 		}
 	}()
 
 	cmd, err := w.prepareScanCmd(target, reportFile.Name(), opt)
 	if err != nil {
-		return Report{}, err
+		return Report{}, xerrors.Errorf("preparing scan command: %w", err)
 	}
 
 	logger.Debug("Exec command with args", slog.String("path", cmd.Path),
@@ -120,7 +129,7 @@ func (w *wrapper) parseReport(format Format, reportFile io.Reader) (Report, erro
 	case FormatSPDX, FormatCycloneDX:
 		return w.parseSBOM(reportFile)
 	}
-	return Report{}, fmt.Errorf("unsupported format %s", format)
+	return Report{}, xerrors.Errorf("unsupported format %s", format)
 }
 
 func (w *wrapper) parseJSONReport(reportFile io.Reader) (Report, error) {
@@ -154,17 +163,23 @@ func (w *wrapper) parseSBOM(reportFile io.Reader) (Report, error) {
 
 func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanOption) (*exec.Cmd, error) {
 	args := []string{
-		string(target.Type), // subcommand
+		string(target.kind), // subcommand
 		"--no-progress",
-		"--severity", w.config.Severity,
-		"--vuln-type", w.config.VulnType,
-		"--format", string(opt.Format),
-		"--output", outputFile,
-		"--cache-dir", w.config.CacheDir,
-		"--timeout", w.config.Timeout.String(),
+		"--severity",
+		w.config.Severity,
+		"--vuln-type",
+		w.config.VulnType,
+		"--format",
+		string(opt.Format),
+		"--output",
+		outputFile,
+		"--cache-dir",
+		w.config.CacheDir,
+		"--timeout",
+		w.config.Timeout.String(),
 	}
 
-	if target.Type == TargetImage {
+	if target.kind == TargetImage {
 		args = append(args, "--scanners", w.config.SecurityChecks)
 	}
 
@@ -172,12 +187,12 @@ func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanO
 		args = append(args, "--ignore-unfixed")
 	}
 
-	if w.config.SkipUpdate {
+	if w.config.SkipDBUpdate {
 		args = append(args, "--skip-db-update")
 	}
 
 	if w.config.SkipJavaDBUpdate {
-		args = append([]string{"--skip-java-db-update"}, args...)
+		args = append(args, "--skip-java-db-update")
 	}
 
 	if w.config.OfflineScan {
@@ -185,7 +200,7 @@ func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanO
 	}
 
 	if w.config.IgnorePolicy != "" {
-		args = append(args, "--ignore-policy")
+		args = append(args, "--ignore-policy", w.config.IgnorePolicy)
 	}
 
 	if w.config.DebugMode {
@@ -253,9 +268,11 @@ func (w *wrapper) GetVersion() (VersionInfo, error) {
 
 func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
 	args := []string{
-		"--cache-dir", w.config.CacheDir,
+		"--cache-dir",
+		w.config.CacheDir,
 		"version",
-		"--format", "json",
+		"--format",
+		"json",
 	}
 
 	name, err := w.ambassador.LookPath(trivyCmd)

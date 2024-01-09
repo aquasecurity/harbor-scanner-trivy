@@ -3,6 +3,7 @@ package scan
 import (
 	"context"
 	"encoding/base64"
+	"github.com/samber/lo"
 	"log/slog"
 	"strings"
 
@@ -63,12 +64,15 @@ func (c *controller) scan(ctx context.Context, scanJobID string, req harbor.Scan
 		return err
 	}
 
-	scanReport, err := c.wrapper.Scan(trivy.ImageRef{
+	ref := trivy.ImageRef{
 		Name:   imageRef,
 		Auth:   auth,
 		NonSSL: nonSSL,
-	},
-		trivy.ScanOption{Format: determineFormat(req.Scan.Parameters.SBOMMediaType)})
+	}
+
+	scanReport, err := c.wrapper.Scan(ref, trivy.ScanOption{
+		Format: determineFormat(lo.FromPtr(req.Capabilities[0].Parameters).MediaType),
+	})
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
@@ -119,8 +123,8 @@ func (c *controller) decodeBasicAuth(value string) (auth trivy.RegistryAuth, err
 	return
 }
 
-func determineFormat(sbomMediaType harbor.MediaType) trivy.Format {
-	switch sbomMediaType {
+func determineFormat(m harbor.MediaType) trivy.Format {
+	switch m {
 	case harbor.MediaTypeSPDX:
 		return trivy.FormatSPDX
 	case harbor.MediaTypeCycloneDX:

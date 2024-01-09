@@ -33,7 +33,7 @@ type Trivy struct {
 	Severity         string        `env:"SCANNER_TRIVY_SEVERITY" envDefault:"UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"`
 	IgnoreUnfixed    bool          `env:"SCANNER_TRIVY_IGNORE_UNFIXED" envDefault:"false"`
 	IgnorePolicy     string        `env:"SCANNER_TRIVY_IGNORE_POLICY"`
-	SkipUpdate       bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
+	SkipDBUpdate     bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
 	SkipJavaDBUpdate bool          `env:"SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE" envDefault:"false"`
 	OfflineScan      bool          `env:"SCANNER_TRIVY_OFFLINE_SCAN" envDefault:"false"`
 	GitHubToken      string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`

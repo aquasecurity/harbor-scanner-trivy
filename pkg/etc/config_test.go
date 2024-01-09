@@ -176,10 +176,13 @@ func TestGetConfig(t *testing.T) {
 					Addr:           ":4200",
 					TLSCertificate: "/certs/tls.crt",
 					TLSKey:         "/certs/tls.key",
-					ClientCAs:      []string{"/certs/tls1.crt", "/certs/tls2.crt"},
-					ReadTimeout:    parseDuration(t, "1h"),
-					WriteTimeout:   parseDuration(t, "2m"),
-					IdleTimeout:    parseDuration(t, "3m10s"),
+					ClientCAs: []string{
+						"/certs/tls1.crt",
+						"/certs/tls2.crt",
+					},
+					ReadTimeout:  parseDuration(t, "1h"),
+					WriteTimeout: parseDuration(t, "2m"),
+					IdleTimeout:  parseDuration(t, "3m10s"),
 				},
 				Trivy: Trivy{
 					CacheDir:         "/home/scanner/trivy-cache",
@@ -189,7 +192,7 @@ func TestGetConfig(t *testing.T) {
 					SecurityChecks:   "vuln",
 					Severity:         "CRITICAL",
 					IgnoreUnfixed:    true,
-					SkipUpdate:       true,
+					SkipDBUpdate:     true,
 					SkipJavaDBUpdate: false,
 					OfflineScan:      true,
 					Insecure:         true,
@@ -234,13 +237,21 @@ func TestGetScannerMetadata(t *testing.T) {
 		expectedScanner harbor.Scanner
 	}{
 		{
-			name:            "Should return version set via env",
-			envs:            Envs{"TRIVY_VERSION": "0.1.6"},
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.6"},
+			name: "Should return version set via env",
+			envs: Envs{"TRIVY_VERSION": "0.1.6"},
+			expectedScanner: harbor.Scanner{
+				Name:    "Trivy",
+				Vendor:  "Aqua Security",
+				Version: "0.1.6",
+			},
 		},
 		{
-			name:            "Should return unknown version when it is not set via env",
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "Unknown"},
+			name: "Should return unknown version when it is not set via env",
+			expectedScanner: harbor.Scanner{
+				Name:    "Trivy",
+				Vendor:  "Aqua Security",
+				Version: "Unknown",
+			},
 		},
 	}
 	for _, tc := range testCases {

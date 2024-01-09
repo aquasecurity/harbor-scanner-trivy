@@ -28,7 +28,11 @@ func TestTransformer_Transform(t *testing.T) {
 	})
 
 	hr := tf.Transform(harbor.ScanRequest{
-		Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
+		Capabilities: []harbor.Capability{
+			{
+				Type: harbor.CapabilityTypeVulnerability,
+			},
+		},
 		Artifact: harbor.Artifact{
 			Repository: "library/mongo",
 			Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",

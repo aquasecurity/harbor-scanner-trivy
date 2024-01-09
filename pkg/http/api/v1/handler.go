@@ -89,15 +89,17 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	// Set the default value for scan type if it is not specified.
-	if scanRequest.Scan.Type == "" {
-		scanRequest.Scan.Type = harbor.ScanTypeVulnerability
-	}
-
 	if validationError := h.ValidateScanRequest(scanRequest); validationError != nil {
 		slog.Error("Error while validating scan request", slog.String("err", validationError.Message))
 		h.WriteJSONError(res, *validationError)
 		return
+	}
+
+	// Set the default value for capability type if not specified.
+	if len(scanRequest.Capabilities) == 0 {
+		scanRequest.Capabilities = append(scanRequest.Capabilities, harbor.Capability{
+			Type: harbor.CapabilityTypeVulnerability,
+		})
 	}
 
 	scanJob, err := h.enqueuer.Enqueue(req.Context(), scanRequest)
@@ -116,19 +118,8 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 }
 
 func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Error {
-	if req.Scan.Type != harbor.ScanTypeVulnerability && req.Scan.Type != harbor.ScanTypeSBOM {
-		return &harbor.Error{
-			HTTPCode: http.StatusUnprocessableEntity,
-			Message:  "invalid scan type",
-		}
-	}
-
-	if req.Scan.Type == harbor.ScanTypeSBOM &&
-		!slices.Contains(harbor.SupportedSBOMMediaTypes, req.Scan.Parameters.SBOMMediaType) {
-		return &harbor.Error{
-			HTTPCode: http.StatusUnprocessableEntity,
-			Message:  "invalid SBOM media type",
-		}
+	if err := h.validateCapabilities(req.Capabilities); err != nil {
+		return err
 	}
 
 	if req.Registry.URL == "" {
@@ -159,6 +150,26 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 		}
 	}
 
+	return nil
+}
+
+func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) *harbor.Error {
+	for _, c := range capabilities {
+		if c.Type != harbor.CapabilityTypeVulnerability && c.Type != harbor.CapabilityTypeSBOM {
+			return &harbor.Error{
+				HTTPCode: http.StatusUnprocessableEntity,
+				Message:  "invalid scan type",
+			}
+		}
+
+		if c.Type == harbor.CapabilityTypeSBOM &&
+			!slices.Contains(harbor.SupportedSBOMMediaTypes, c.Parameters.MediaType) {
+			return &harbor.Error{
+				HTTPCode: http.StatusUnprocessableEntity,
+				Message:  "invalid SBOM media type",
+			}
+		}
+	}
 	return nil
 }
 
@@ -244,7 +255,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"org.label-schema.vcs-ref":    h.info.Commit,
 		"org.label-schema.vcs":        "https://github.com/aquasecurity/harbor-scanner-trivy",
 
-		"env.SCANNER_TRIVY_SKIP_UPDATE":         strconv.FormatBool(h.config.Trivy.SkipUpdate),
+		"env.SCANNER_TRIVY_SKIP_UPDATE":         strconv.FormatBool(h.config.Trivy.SkipDBUpdate),
 		"env.SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE": strconv.FormatBool(h.config.Trivy.SkipJavaDBUpdate),
 		"env.SCANNER_TRIVY_OFFLINE_SCAN":        strconv.FormatBool(h.config.Trivy.OfflineScan),
 		"env.SCANNER_TRIVY_IGNORE_UNFIXED":      strconv.FormatBool(h.config.Trivy.IgnoreUnfixed),
@@ -265,7 +276,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		properties[propertyDBUpdatedAt] = vi.VulnerabilityDB.UpdatedAt.Format(time.RFC3339)
 	}
 
-	if err == nil && vi.VulnerabilityDB != nil && !h.config.Trivy.SkipUpdate {
+	if err == nil && vi.VulnerabilityDB != nil && !h.config.Trivy.SkipDBUpdate {
 		properties[propertyDBNextUpdateAt] = vi.VulnerabilityDB.NextUpdate.Format(time.RFC3339)
 	}
 
@@ -277,7 +288,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		Scanner: etc.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
 			{
-				Type: api.CapabilityTypeVulnerability,
+				Type: harbor.CapabilityTypeVulnerability,
 				ConsumesMIMETypes: []string{
 					api.MimeTypeOCIImageManifest.String(),
 					api.MimeTypeDockerImageManifestV2.String(),
@@ -287,7 +298,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 				},
 			},
 			{
-				Type: api.CapabilityTypeSBOM,
+				Type: harbor.CapabilityTypeSBOM,
 				ConsumesMIMETypes: []string{
 					api.MimeTypeOCIImageManifest.String(),
 					api.MimeTypeDockerImageManifestV2.String(),

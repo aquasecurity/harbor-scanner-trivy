@@ -26,8 +26,12 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		ExpectedError *harbor.Error
 	}{
 		{
-			Name:    "Should return error when Registry URL is blank",
-			Request: harbor.ScanRequest{Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability}},
+			Name: "Should return error when Registry URL is blank",
+			Request: harbor.ScanRequest{
+				Capabilities: []harbor.Capability{
+					{Type: harbor.CapabilityTypeVulnerability},
+				},
+			},
 			ExpectedError: &harbor.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "missing registry.url",
@@ -36,7 +40,11 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when Registry URL is invalid",
 			Request: harbor.ScanRequest{
-				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
+				Capabilities: []harbor.Capability{
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+					},
+				},
 				Registry: harbor.Registry{
 					URL: "INVALID URL",
 				},
@@ -49,7 +57,11 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when artifact repository is blank",
 			Request: harbor.ScanRequest{
-				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
+				Capabilities: []harbor.Capability{
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+					},
+				},
 				Registry: harbor.Registry{
 					URL: "https://core.harbor.domain",
 				},
@@ -62,7 +74,11 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 		{
 			Name: "Should return error when artifact digest is blank",
 			Request: harbor.ScanRequest{
-				Scan: harbor.Scan{Type: harbor.ScanTypeVulnerability},
+				Capabilities: []harbor.Capability{
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+					},
+				},
 				Registry: harbor.Registry{
 					URL: "https://core.harbor.domain",
 				},
@@ -88,8 +104,10 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 
 func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 	validScanRequest := harbor.ScanRequest{
-		Scan: harbor.Scan{
-			Type: harbor.ScanTypeVulnerability,
+		Capabilities: []harbor.Capability{
+			{
+				Type: harbor.CapabilityTypeVulnerability,
+			},
 		},
 		Registry: harbor.Registry{
 			URL:           "https://core.harbor.domain",
@@ -512,7 +530,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			},
 			config: etc.Config{
 				Trivy: etc.Trivy{
-					SkipUpdate:       false,
+					SkipDBUpdate:     false,
 					SkipJavaDBUpdate: false,
 					IgnoreUnfixed:    true,
 					DebugMode:        true,
@@ -585,7 +603,7 @@ func TestRequestHandler_GetMetadata(t *testing.T) {
 			},
 			config: etc.Config{
 				Trivy: etc.Trivy{
-					SkipUpdate:       false,
+					SkipDBUpdate:     false,
 					SkipJavaDBUpdate: false,
 					IgnoreUnfixed:    true,
 					DebugMode:        true,
