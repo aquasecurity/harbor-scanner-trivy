@@ -176,6 +176,10 @@ func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanO
 		args = append(args, "--skip-db-update")
 	}
 
+	if w.config.SkipJavaDBUpdate {
+		args = append([]string{"--skip-java-db-update"}, args...)
+	}
+
 	if w.config.OfflineScan {
 		args = append(args, "--offline-scan")
 	}

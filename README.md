@@ -37,6 +37,8 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 
 | Harbor           | Trivy Adapter | Trivy           |
 |------------------|---------------|-----------------|
+| -                | v0.30.20      | [trivy v0.48.1] |
+| -                | v0.30.19      | [trivy v0.47.0] |
 | -                | v0.30.18      | [trivy v0.46.1] |
 | -                | v0.30.17      | [trivy v0.46.0] |
 | -                | v0.30.16      | [trivy v0.45.0] |
@@ -84,6 +86,8 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 [harbor v2.1.6]: https://github.com/goharbor/harbor/releases/tag/v2.1.6
 [harbor v2.1.0]: https://github.com/goharbor/harbor/releases/tag/v2.1.0
 
+[trivy v0.48.1]: https://github.com/aquasecurity/trivy/releases/tag/v0.48.1
+[trivy v0.47.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.47.0
 [trivy v0.46.1]: https://github.com/aquasecurity/trivy/releases/tag/v0.46.1
 [trivy v0.46.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.46.0
 [trivy v0.45.0]: https://github.com/aquasecurity/trivy/releases/tag/v0.45.0
@@ -178,6 +182,7 @@ Configuration of the adapter is done via environment variables at startup.
 | `SCANNER_TRIVY_IGNORE_UNFIXED`          | `false`                            | The flag to display only fixed vulnerabilities                                                                                                                                                                                                                                     |
 | `SCANNER_TRIVY_IGNORE_POLICY`           | ``                                 | The path for the Trivy ignore policy OPA Rego file                                                                                                                                                                                                                                 |
 | `SCANNER_TRIVY_SKIP_UPDATE`             | `false`                            | The flag to disable [Trivy DB] downloads.                                                                                                                                                                                                                                          |
+| `SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE`     | `false`                            | The flag to disable [Trivy JAVA DB] downloads.                                                                                                                                                                                                                                          |
 | `SCANNER_TRIVY_OFFLINE_SCAN`            | `false`                            | The flag to disable external API requests to identify dependencies.                                                                                                                                                                                                                |
 | `SCANNER_TRIVY_GITHUB_TOKEN`            | N/A                                | The GitHub access token to download [Trivy DB] (see [GitHub rate limiting][gh-rate-limit])                                                                                                                                                                                         |
 | `SCANNER_TRIVY_INSECURE`                | `false`                            | The flag to skip verifying registry certificate                                                                                                                                                                                                                                    |

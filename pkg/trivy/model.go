@@ -24,6 +24,7 @@ type Metadata struct {
 type VersionInfo struct {
 	Version         string    `json:"Version,omitempty"`
 	VulnerabilityDB *Metadata `json:"VulnerabilityDB"`
+	JavaDB          *Metadata `json:"JavaDB"`
 }
 
 type Layer struct {

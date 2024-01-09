@@ -3,12 +3,13 @@ BINARY := scanner-trivy
 IMAGE_TAG := dev
 IMAGE := aquasec/harbor-scanner-trivy:$(IMAGE_TAG)
 
+.PHONY: build test test-integration test-component docker-build setup dev debug run
+
 build: $(BINARY)
 
 test: build
 	GO111MODULE=on go test -v -short -race -coverprofile=coverage.txt -covermode=atomic ./...
 
-.PHONY: test-integration
 test-integration: build
 	GO111MODULE=on go test -count=1 -v -tags=integration ./test/integration/...
 
@@ -26,11 +27,18 @@ docker-build: build
 lint:
 	./bin/golangci-lint --build-tags component,integration run -v
 
-.PHONY: setup
 setup:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s v1.21.0
 
-.PHONY: run
+submodule:
+	git submodule update --init --recursive
+
+dev:
+	skaffold dev --tolerate-failures-until-deadline=true
+
+debug:
+	skaffold debug --tolerate-failures-until-deadline=true
+
 run: export SCANNER_TRIVY_CACHE_DIR = $(TMPDIR)harbor-scanner-trivy/.cache/trivy
 run: export SCANNER_TRIVY_REPORTS_DIR=$(TMPDIR)harbor-scanner-trivy/.cache/reports
 run: export SCANNER_LOG_LEVEL=debug
