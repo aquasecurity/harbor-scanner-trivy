@@ -1,5 +1,4 @@
 //go:build component
-// +build component
 
 package scanner
 

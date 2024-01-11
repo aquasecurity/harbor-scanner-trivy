@@ -107,6 +107,9 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 		Capabilities: []harbor.Capability{
 			{
 				Type: harbor.CapabilityTypeVulnerability,
+				ProducesMIMETypes: []api.MIMEType{
+					api.MimeTypeSecurityVulnerabilityReport,
+				},
 			},
 		},
 		Registry: harbor.Registry{

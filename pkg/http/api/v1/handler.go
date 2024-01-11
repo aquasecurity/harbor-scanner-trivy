@@ -99,6 +99,9 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 	if len(scanRequest.Capabilities) == 0 {
 		scanRequest.Capabilities = append(scanRequest.Capabilities, harbor.Capability{
 			Type: harbor.CapabilityTypeVulnerability,
+			ProducesMIMETypes: []api.MIMEType{
+				api.MimeTypeSecurityVulnerabilityReport,
+			},
 		})
 	}
 
