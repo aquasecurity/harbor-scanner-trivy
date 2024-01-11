@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 )
 
 // Severity represents the severity of a image/component in terms of vulnerability.
@@ -61,19 +64,15 @@ func (s *Severity) UnmarshalJSON(b []byte) error {
 }
 
 type CapabilityType string
-type MediaType string
 
 const (
 	CapabilityTypeSBOM          CapabilityType = "sbom"
 	CapabilityTypeVulnerability CapabilityType = "vulnerability"
-
-	MediaTypeSPDX      MediaType = "application/spdx+json"
-	MediaTypeCycloneDX MediaType = "application/vnd.cyclonedx+json"
 )
 
-var SupportedSBOMMediaTypes = []MediaType{
-	MediaTypeSPDX,
-	MediaTypeCycloneDX,
+var SupportedSBOMMediaTypes = []api.MediaType{
+	api.MediaTypeSPDX,
+	api.MediaTypeCycloneDX,
 }
 
 type Registry struct {
@@ -175,16 +174,22 @@ type Scanner struct {
 type Capability struct {
 	Type              CapabilityType        `json:"type"`
 	ConsumesMIMETypes []string              `json:"consumes_mime_types"`
-	ProducesMIMETypes []string              `json:"produces_mime_types"`
+	ProducesMIMETypes []api.MIMEType        `json:"produces_mime_types"`
 	Parameters        *CapabilityParameters `json:"parameters,omitempty"`
 }
 
 type CapabilityParameters struct {
-	MediaType MediaType `json:"accept_media_type,omitempty"`
+	MediaType api.MediaType `json:"accept_media_type,omitempty"`
 }
 
-// Error holds the information about an error, including metadata about its JSON structure.
-type Error struct {
-	HTTPCode int    `json:"-"`
-	Message  string `json:"message"`
+func GetScannerMetadata() Scanner {
+	version, ok := os.LookupEnv("TRIVY_VERSION")
+	if !ok {
+		version = "Unknown"
+	}
+	return Scanner{
+		Name:    "Trivy",
+		Vendor:  "Aqua Security",
+		Version: version,
+	}
 }

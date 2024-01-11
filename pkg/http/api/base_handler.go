@@ -6,8 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
-
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 )
 
 const (
@@ -16,55 +14,74 @@ const (
 )
 
 type MimeTypeParams map[string]string
+type MediaType string
+
+// Error holds the information about an error, including metadata about its JSON structure.
+type Error struct {
+	HTTPCode int    `json:"-"`
+	Message  string `json:"message"`
+}
 
 var (
 	MimeTypeVersion = map[string]string{"version": "1.0"}
 
-	CapabilityTypeVulnerability = "vulnerability"
-	CapabilityTypeSBOM          = "sbom"
-
-	MimeTypeOCIImageManifest = MimeType{
+	MimeTypeOCIImageManifest = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.oci.image.manifest.v1+json",
 	}
-	MimeTypeDockerImageManifestV2 = MimeType{
+	MimeTypeDockerImageManifestV2 = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.docker.distribution.manifest.v2+json",
 	}
-	MimeTypeScanResponse = MimeType{
+	MimeTypeScanResponse = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.scanner.adapter.scan.response+json",
 		Params:  MimeTypeVersion,
 	}
-	MimeTypeSecurityVulnerabilityReport = MimeType{
+	MimeTypeSecurityVulnerabilityReport = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.security.vulnerability.report",
 		Params:  map[string]string{"version": "1.1"},
 	}
-	MimeTypeSecuritySBOMReport = MimeType{
+	MimeTypeSecuritySBOMReport = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.security.sbom.report+json",
 		Params:  map[string]string{"version": "1.0"},
 	}
-	MimeTypeMetadata = MimeType{
+	MimeTypeMetadata = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.scanner.adapter.metadata+json",
 		Params:  MimeTypeVersion,
 	}
-	MimeTypeError = MimeType{
+	MimeTypeError = MIMEType{
 		Type:    "application",
 		Subtype: "vnd.scanner.adapter.error",
 		Params:  MimeTypeVersion,
 	}
+
+	MediaTypeSPDX      MediaType = "application/spdx+json"
+	MediaTypeCycloneDX MediaType = "application/vnd.cyclonedx+json"
 )
 
-type MimeType struct {
+type MIMEType struct {
 	Type    string
 	Subtype string
 	Params  MimeTypeParams
 }
 
-func (mt MimeType) String() string {
+func (mt MIMEType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(mt.String())
+}
+
+func (mt *MIMEType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	return mt.Parse(s)
+}
+
+func (mt *MIMEType) String() string {
 	s := fmt.Sprintf("%s/%s", mt.Type, mt.Subtype)
 	if len(mt.Params) == 0 {
 		return s
@@ -76,14 +93,9 @@ func (mt MimeType) String() string {
 	return fmt.Sprintf("%s; %s", s, strings.Join(params, ";"))
 }
 
-func (mt *MimeType) FromAcceptHeader(value string) error {
+func (mt *MIMEType) Parse(value string) error {
 	switch value {
 	case "", "*/*", MimeTypeSecurityVulnerabilityReport.String():
-		mt.Type = MimeTypeSecurityVulnerabilityReport.Type
-		mt.Subtype = MimeTypeSecurityVulnerabilityReport.Subtype
-		mt.Params = MimeTypeSecurityVulnerabilityReport.Params
-		return nil
-	case MimeTypeSecurityVulnerabilityReport.String():
 		mt.Type = MimeTypeSecurityVulnerabilityReport.Type
 		mt.Subtype = MimeTypeSecurityVulnerabilityReport.Subtype
 		mt.Params = MimeTypeSecurityVulnerabilityReport.Params
@@ -100,7 +112,7 @@ func (mt *MimeType) FromAcceptHeader(value string) error {
 type BaseHandler struct {
 }
 
-func (h *BaseHandler) WriteJSON(res http.ResponseWriter, data interface{}, mimeType MimeType, statusCode int) {
+func (h *BaseHandler) WriteJSON(res http.ResponseWriter, data interface{}, mimeType MIMEType, statusCode int) {
 	res.Header().Set(HeaderContentType, mimeType.String())
 	res.WriteHeader(statusCode)
 
@@ -112,9 +124,9 @@ func (h *BaseHandler) WriteJSON(res http.ResponseWriter, data interface{}, mimeT
 	}
 }
 
-func (h *BaseHandler) WriteJSONError(res http.ResponseWriter, err harbor.Error) {
+func (h *BaseHandler) WriteJSONError(res http.ResponseWriter, err Error) {
 	data := struct {
-		Err harbor.Error `json:"error"`
+		Err Error `json:"error"`
 	}{err}
 
 	h.WriteJSON(res, data, MimeTypeError, err.HTTPCode)

@@ -27,105 +27,106 @@ func TestTransformer_Transform(t *testing.T) {
 		fixedTime: fixedTime,
 	})
 
-	hr := tf.Transform(harbor.ScanRequest{
-		Capabilities: []harbor.Capability{
-			{
-				Type: harbor.CapabilityTypeVulnerability,
+	hr := tf.Transform("",
+		harbor.ScanRequest{
+			Capabilities: []harbor.Capability{
+				{
+					Type: harbor.CapabilityTypeVulnerability,
+				},
 			},
-		},
-		Artifact: harbor.Artifact{
-			Repository: "library/mongo",
-			Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
-		},
-	}, trivy.Report{
-		Vulnerabilities: []trivy.Vulnerability{
-			{
-				VulnerabilityID:  "CVE-0000-0001",
-				PkgName:          "PKG-01",
-				InstalledVersion: "PKG-01-VER",
-				FixedVersion:     "PKG-01-FIX-VER",
-				Severity:         "CRITICAL",
-				Description:      "CVE-0000-0001.DESC",
-				References: []string{
-					"http://cve.com?id=CVE-0000-0001",
-					"http://vendor.com?id=CVE-0000-0001",
-				},
-				Layer: &trivy.Layer{
-					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
-				},
-				CVSS: map[string]trivy.CVSSInfo{
-					"nvd": {
-						V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
-						V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
-						V2Score:  float32Ptr(1.9),
-						V3Score:  float32Ptr(4.7),
+			Artifact: harbor.Artifact{
+				Repository: "library/mongo",
+				Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
+			},
+		}, trivy.Report{
+			Vulnerabilities: []trivy.Vulnerability{
+				{
+					VulnerabilityID:  "CVE-0000-0001",
+					PkgName:          "PKG-01",
+					InstalledVersion: "PKG-01-VER",
+					FixedVersion:     "PKG-01-FIX-VER",
+					Severity:         "CRITICAL",
+					Description:      "CVE-0000-0001.DESC",
+					References: []string{
+						"http://cve.com?id=CVE-0000-0001",
+						"http://vendor.com?id=CVE-0000-0001",
+					},
+					Layer: &trivy.Layer{
+						Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb10",
+					},
+					CVSS: map[string]trivy.CVSSInfo{
+						"nvd": {
+							V2Vector: "AV:L/AC:M/Au:N/C:P/I:N/A:N",
+							V3Vector: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+							V2Score:  float32Ptr(1.9),
+							V3Score:  float32Ptr(4.7),
+						},
+					},
+					CweIDs: []string{
+						"CWE-20",
+						"CWE-1289",
 					},
 				},
-				CweIDs: []string{
-					"CWE-20",
-					"CWE-1289",
+				{
+					VulnerabilityID:  "CVE-0000-0002",
+					PkgName:          "PKG-02",
+					InstalledVersion: "PKG-02-VER",
+					FixedVersion:     "",
+					Severity:         "HIGH",
+					Description:      "CVE-0000-0002.DESC",
+					References: []string{
+						"http://cve.com?id=CVE-0000-0002",
+					},
+					Layer: &trivy.Layer{
+						Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
+					},
+				},
+				{
+					VulnerabilityID:  "CVE-0000-0003",
+					PkgName:          "PKG-03",
+					InstalledVersion: "PKG-03-VER",
+					FixedVersion:     "PKG-03-FIX-VER",
+					Severity:         "MEDIUM",
+					Description:      "CVE-0000-0003.DESC",
+					References: []string{
+						"http://cve.com?id=CVE-0000-0003",
+					},
+					Layer: &trivy.Layer{
+						Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
+					},
+					PrimaryURL: "https://avd.aquasec.com/nvd/cve-0000-0003/",
+				},
+				{
+					VulnerabilityID:  "CVE-0000-0004",
+					PkgName:          "PKG-04",
+					InstalledVersion: "PKG-04-VER",
+					FixedVersion:     "PKG-04-FIX-VER",
+					Severity:         "LOW",
+					Description:      "CVE-0000-0004.DESC",
+					References: []string{
+						"http://cve.com?id=CVE-0000-0004",
+					},
+					Layer: &trivy.Layer{
+						Digest: "UNKNOWN",
+					},
+				},
+				{
+					VulnerabilityID:  "CVE-0000-0005",
+					PkgName:          "PKG-05",
+					InstalledVersion: "PKG-05-VER",
+					Severity:         "~~~UNKNOWN~~~",
+					Layer: &trivy.Layer{
+						Digest: "",
+					},
+				},
+				{
+					VulnerabilityID:  "CVE-0000-0006",
+					PkgName:          "PKG-06",
+					InstalledVersion: "PKG-06-VER",
+					Severity:         "UNKNOWN",
 				},
 			},
-			{
-				VulnerabilityID:  "CVE-0000-0002",
-				PkgName:          "PKG-02",
-				InstalledVersion: "PKG-02-VER",
-				FixedVersion:     "",
-				Severity:         "HIGH",
-				Description:      "CVE-0000-0002.DESC",
-				References: []string{
-					"http://cve.com?id=CVE-0000-0002",
-				},
-				Layer: &trivy.Layer{
-					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb11",
-				},
-			},
-			{
-				VulnerabilityID:  "CVE-0000-0003",
-				PkgName:          "PKG-03",
-				InstalledVersion: "PKG-03-VER",
-				FixedVersion:     "PKG-03-FIX-VER",
-				Severity:         "MEDIUM",
-				Description:      "CVE-0000-0003.DESC",
-				References: []string{
-					"http://cve.com?id=CVE-0000-0003",
-				},
-				Layer: &trivy.Layer{
-					Digest: "sha256:5216338b40a7b96416b8b9858974bbe4acc3096ee60acbc4dfb1ee02aecceb12",
-				},
-				PrimaryURL: "https://avd.aquasec.com/nvd/cve-0000-0003/",
-			},
-			{
-				VulnerabilityID:  "CVE-0000-0004",
-				PkgName:          "PKG-04",
-				InstalledVersion: "PKG-04-VER",
-				FixedVersion:     "PKG-04-FIX-VER",
-				Severity:         "LOW",
-				Description:      "CVE-0000-0004.DESC",
-				References: []string{
-					"http://cve.com?id=CVE-0000-0004",
-				},
-				Layer: &trivy.Layer{
-					Digest: "UNKNOWN",
-				},
-			},
-			{
-				VulnerabilityID:  "CVE-0000-0005",
-				PkgName:          "PKG-05",
-				InstalledVersion: "PKG-05-VER",
-				Severity:         "~~~UNKNOWN~~~",
-				Layer: &trivy.Layer{
-					Digest: "",
-				},
-			},
-			{
-				VulnerabilityID:  "CVE-0000-0006",
-				PkgName:          "PKG-06",
-				InstalledVersion: "PKG-06-VER",
-				Severity:         "UNKNOWN",
-			},
-		},
-	})
+		})
 	assert.Equal(t, harbor.ScanReport{
 		GeneratedAt: fixedTime,
 		Artifact: harbor.Artifact{

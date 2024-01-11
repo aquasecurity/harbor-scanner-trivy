@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/caarlos0/env/v6"
 )
 
@@ -106,16 +105,4 @@ func GetConfig() (Config, error) {
 	}
 
 	return cfg, nil
-}
-
-func GetScannerMetadata() harbor.Scanner {
-	version, ok := os.LookupEnv("TRIVY_VERSION")
-	if !ok {
-		version = "Unknown"
-	}
-	return harbor.Scanner{
-		Name:    "Trivy",
-		Vendor:  "Aqua Security",
-		Version: version,
-	}
 }

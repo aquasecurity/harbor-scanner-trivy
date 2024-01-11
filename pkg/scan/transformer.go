@@ -1,12 +1,13 @@
 package scan
 
 import (
-	"github.com/samber/lo"
 	"log/slog"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/samber/lo"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 )
 
@@ -26,7 +27,7 @@ func (c *SystemClock) Now() time.Time {
 // Transformer wraps the Transform method.
 // Transform transforms Trivy's scan report into Harbor's packages vulnerabilities report.
 type Transformer interface {
-	Transform(req harbor.ScanRequest, source trivy.Report) harbor.ScanReport
+	Transform(mediaType api.MediaType, req harbor.ScanRequest, source trivy.Report) harbor.ScanReport
 }
 
 type transformer struct {
@@ -40,15 +41,15 @@ func NewTransformer(clock Clock) Transformer {
 	}
 }
 
-func (t *transformer) Transform(req harbor.ScanRequest, source trivy.Report) harbor.ScanReport {
+func (t *transformer) Transform(mediaType api.MediaType, req harbor.ScanRequest, source trivy.Report) harbor.ScanReport {
 	report := harbor.ScanReport{
 		GeneratedAt: t.clock.Now(),
-		Scanner:     etc.GetScannerMetadata(),
+		Scanner:     harbor.GetScannerMetadata(),
 		Artifact:    req.Artifact,
 	}
 
-	switch lo.FromPtr(req.Capabilities[0].Parameters).MediaType {
-	case harbor.MediaTypeSPDX, harbor.MediaTypeCycloneDX:
+	switch mediaType {
+	case api.MediaTypeSPDX, api.MediaTypeCycloneDX:
 		report.MediaType = string(req.Capabilities[0].Parameters.MediaType)
 		report.SBOM = source.SBOM
 	default:

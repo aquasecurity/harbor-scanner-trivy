@@ -8,7 +8,7 @@ import (
 
 type Store interface {
 	Create(ctx context.Context, scanJob job.ScanJob) error
-	Get(ctx context.Context, scanJobID string) (*job.ScanJob, error)
-	UpdateStatus(ctx context.Context, scanJobID string, newStatus job.ScanJobStatus, error ...string) error
-	UpdateReport(ctx context.Context, scanJobID string, report harbor.ScanReport) error
+	Get(ctx context.Context, scanJobKey job.ScanJobKey) (*job.ScanJob, error)
+	UpdateStatus(ctx context.Context, scanJobKey job.ScanJobKey, newStatus job.ScanJobStatus, error ...string) error
+	UpdateReport(ctx context.Context, scanJobKey job.ScanJobKey, report harbor.ScanReport) error
 }

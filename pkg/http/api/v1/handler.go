@@ -82,7 +82,7 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 	var scanRequest harbor.ScanRequest
 	if err := json.NewDecoder(req.Body).Decode(&scanRequest); err != nil {
 		slog.Error("Error while unmarshalling scan request", slog.String("err", err.Error()))
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  fmt.Sprintf("unmarshalling scan request: %s", err.Error()),
 		})
@@ -102,49 +102,49 @@ func (h *requestHandler) AcceptScanRequest(res http.ResponseWriter, req *http.Re
 		})
 	}
 
-	scanJob, err := h.enqueuer.Enqueue(req.Context(), scanRequest)
+	scanJobID, err := h.enqueuer.Enqueue(req.Context(), scanRequest)
 	if err != nil {
 		slog.Error("Error while enqueuing scan job", slog.String("err", err.Error()))
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  fmt.Sprintf("enqueuing scan job: %s", err.Error()),
 		})
 		return
 	}
 
-	scanResponse := harbor.ScanResponse{ID: scanJob.ID}
+	scanResponse := harbor.ScanResponse{ID: scanJobID}
 
 	h.WriteJSON(res, scanResponse, api.MimeTypeScanResponse, http.StatusAccepted)
 }
 
-func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Error {
+func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *api.Error {
 	if err := h.validateCapabilities(req.Capabilities); err != nil {
 		return err
 	}
 
 	if req.Registry.URL == "" {
-		return &harbor.Error{
+		return &api.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "missing registry.url",
 		}
 	}
 
 	if _, err := url.ParseRequestURI(req.Registry.URL); err != nil {
-		return &harbor.Error{
+		return &api.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "invalid registry.url",
 		}
 	}
 
 	if req.Artifact.Repository == "" {
-		return &harbor.Error{
+		return &api.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "missing artifact.repository",
 		}
 	}
 
 	if req.Artifact.Digest == "" {
-		return &harbor.Error{
+		return &api.Error{
 			HTTPCode: http.StatusUnprocessableEntity,
 			Message:  "missing artifact.digest",
 		}
@@ -153,10 +153,10 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *harbor.Err
 	return nil
 }
 
-func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) *harbor.Error {
+func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) *api.Error {
 	for _, c := range capabilities {
 		if c.Type != harbor.CapabilityTypeVulnerability && c.Type != harbor.CapabilityTypeSBOM {
-			return &harbor.Error{
+			return &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "invalid scan type",
 			}
@@ -164,7 +164,7 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 
 		if c.Type == harbor.CapabilityTypeSBOM &&
 			!slices.Contains(harbor.SupportedSBOMMediaTypes, c.Parameters.MediaType) {
-			return &harbor.Error{
+			return &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "invalid SBOM media type",
 			}
@@ -174,10 +174,10 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 }
 
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
-	var reportMimeType api.MimeType
+	var reportMIMEType api.MIMEType
 
-	if err := reportMimeType.FromAcceptHeader(req.Header.Get(api.HeaderAccept)); err != nil {
-		h.WriteJSONError(res, harbor.Error{
+	if err := reportMIMEType.Parse(req.Header.Get(api.HeaderAccept)); err != nil {
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusUnsupportedMediaType,
 			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
 		})
@@ -188,19 +188,23 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
 		slog.Error("Error while parsing `scan_request_id` path variable")
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  "missing scan_request_id",
 		})
 		return
 	}
 
-	reqLog := slog.With(slog.String("scan_job_id", scanJobID))
+	reqLog := slog.With(slog.String("scan_job_id", scanJobID), slog.String("mime_type", reportMIMEType.String()))
 
-	scanJob, err := h.store.Get(req.Context(), scanJobID)
+	scanJob, err := h.store.Get(req.Context(), job.ScanJobKey{
+		ID:        scanJobID,
+		MIMEType:  reportMIMEType,
+		MediaType: "", // TODO: Harbor should pass MediaType
+	})
 	if err != nil {
 		reqLog.Error("Error while getting scan job")
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  fmt.Sprintf("getting scan job: %v", err),
 		})
@@ -209,7 +213,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	if scanJob == nil {
 		reqLog.Error("Cannot find scan job")
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusNotFound,
 			Message:  fmt.Sprintf("cannot find scan job: %v", scanJobID),
 		})
@@ -227,7 +231,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	if scanJob.Status == job.Failed {
 		scanJobLog.Error("Scan job failed", slog.String("err", scanJob.Error))
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusInternalServerError,
 			Message:  scanJob.Error,
 		})
@@ -236,14 +240,14 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 
 	if scanJob.Status != job.Finished {
 		scanJobLog.Error("Unexpected scan job status")
-		h.WriteJSONError(res, harbor.Error{
+		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusInternalServerError,
-			Message:  fmt.Sprintf("unexpected status %v of scan job %v", scanJob.Status, scanJob.ID),
+			Message:  fmt.Sprintf("unexpected status %v of scan job %v", scanJob.Status, scanJob.Key.ID),
 		})
 		return
 	}
 
-	h.WriteJSON(res, scanJob.Report, reportMimeType, http.StatusOK)
+	h.WriteJSON(res, scanJob.Report, reportMIMEType, http.StatusOK)
 }
 
 func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
@@ -285,7 +289,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 	}
 
 	metadata := &harbor.ScannerAdapterMetadata{
-		Scanner: etc.GetScannerMetadata(),
+		Scanner: harbor.GetScannerMetadata(),
 		Capabilities: []harbor.Capability{
 			{
 				Type: harbor.CapabilityTypeVulnerability,
@@ -293,8 +297,8 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 					api.MimeTypeOCIImageManifest.String(),
 					api.MimeTypeDockerImageManifestV2.String(),
 				},
-				ProducesMIMETypes: []string{
-					api.MimeTypeSecurityVulnerabilityReport.String(),
+				ProducesMIMETypes: []api.MIMEType{
+					api.MimeTypeSecurityVulnerabilityReport,
 				},
 			},
 			{
@@ -303,8 +307,8 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 					api.MimeTypeOCIImageManifest.String(),
 					api.MimeTypeDockerImageManifestV2.String(),
 				},
-				ProducesMIMETypes: []string{
-					api.MimeTypeSecuritySBOMReport.String(),
+				ProducesMIMETypes: []api.MIMEType{
+					api.MimeTypeSecuritySBOMReport,
 				},
 			},
 		},
@@ -319,11 +323,4 @@ func (h *requestHandler) GetHealthy(res http.ResponseWriter, req *http.Request) 
 
 func (h *requestHandler) GetReady(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
-}
-
-func getHeader[T ~string](header http.Header, key string, defaultValue T) T {
-	if v := header.Get(key); v != "" {
-		return T(v)
-	}
-	return defaultValue
 }

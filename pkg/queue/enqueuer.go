@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/samber/lo"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
@@ -20,7 +21,7 @@ import (
 const scanArtifactJobName = "scan_artifact"
 
 type Enqueuer interface {
-	Enqueue(ctx context.Context, request harbor.ScanRequest) (job.ScanJob, error)
+	Enqueue(ctx context.Context, request harbor.ScanRequest) (string, error)
 }
 
 type enqueuer struct {
@@ -31,8 +32,12 @@ type enqueuer struct {
 
 type Job struct {
 	Name string
-	ID   string
+	Key  job.ScanJobKey
 	Args Args
+}
+
+func (s *Job) ID() string {
+	return s.Key.String()
 }
 
 type Args struct {
@@ -47,39 +52,64 @@ func NewEnqueuer(config etc.JobQueue, rdb *redis.Client, store persistence.Store
 	}
 }
 
-func (e *enqueuer) Enqueue(ctx context.Context, request harbor.ScanRequest) (job.ScanJob, error) {
-	slog.Debug("Enqueueing scan job")
-	j := Job{
-		Name: scanArtifactJobName,
-		ID:   makeIdentifier(),
-		Args: Args{
-			ScanRequest: &request,
-		},
+func (e *enqueuer) Enqueue(ctx context.Context, request harbor.ScanRequest) (string, error) {
+	if len(request.Capabilities) == 0 {
+		return "", xerrors.Errorf("no capabilities provided")
 	}
 
-	scanJob := job.ScanJob{
-		ID:     j.ID,
-		Status: job.Queued,
+	jobID := makeIdentifier()
+
+	for _, c := range request.Capabilities {
+		mediaType := lo.FromPtr(c.Parameters).MediaType
+		for _, m := range c.ProducesMIMETypes {
+			jobKey := job.ScanJobKey{
+				ID:        jobID,
+				MIMEType:  m,
+				MediaType: mediaType,
+			}
+
+			j := Job{
+				Name: scanArtifactJobName,
+				Key:  jobKey,
+				Args: Args{
+					ScanRequest: &request,
+				},
+			}
+			scanJob := job.ScanJob{
+				Key:    jobKey,
+				Status: job.Queued,
+			}
+
+			if err := e.enqueue(ctx, j, scanJob); err != nil {
+				return "", xerrors.Errorf("enqueuing scan job: %v", err)
+			}
+		}
 	}
+
+	return jobID, nil
+}
+
+func (e *enqueuer) enqueue(ctx context.Context, j Job, scanJob job.ScanJob) error {
+	logger := slog.With(slog.String("job_id", j.Key.ID), slog.String("mime_type", j.Key.MIMEType.String()))
+	logger.Debug("Enqueueing scan job")
 
 	// Save the job status to Redis
 	if err := e.store.Create(ctx, scanJob); err != nil {
-		return job.ScanJob{}, xerrors.Errorf("creating scan job %v", err)
+		return xerrors.Errorf("creating scan job %v", err)
 	}
 
 	b, err := json.Marshal(j)
 	if err != nil {
-		return job.ScanJob{}, xerrors.Errorf("marshalling scan request: %v", err)
+		return xerrors.Errorf("marshalling scan request: %v", err)
 	}
 
 	// Publish the job to the workers
 	if err = e.rdb.Publish(ctx, e.redisJobChannel(), b).Err(); err != nil {
-		return job.ScanJob{}, xerrors.Errorf("enqueuing scan artifact job: %v", err)
+		return xerrors.Errorf("enqueuing scan artifact job: %v", err)
 	}
 
-	slog.Debug("Successfully enqueued scan job", slog.String("job_id", j.ID))
-
-	return scanJob, nil
+	logger.Debug("Successfully enqueued scan job")
+	return nil
 }
 
 func (e *enqueuer) redisJobChannel() string {
@@ -96,5 +126,5 @@ func makeIdentifier() string {
 }
 
 func redisJobChannel(namespace string) string {
-	return namespace + "jobs:" + scanArtifactJobName
+	return namespace + ":jobs:" + scanArtifactJobName
 }

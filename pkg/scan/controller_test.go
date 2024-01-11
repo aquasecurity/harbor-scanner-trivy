@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/xerrors"
 )
 
 var capabilities = []harbor.Capability{
 	{
 		Type: harbor.CapabilityTypeVulnerability,
+		ProducesMIMETypes: []api.MIMEType{
+			api.MimeTypeSecurityVulnerabilityReport,
+		},
 	},
 }
 
@@ -25,13 +30,17 @@ func TestController_Scan(t *testing.T) {
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
+	jobKey := job.ScanJobKey{
+		ID:       "job:123",
+		MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+	}
 	trivyReport := trivy.Report{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
 		name string
 
-		scanJobID              string
+		scanJobKey             job.ScanJobKey
 		scanRequest            harbor.ScanRequest
 		storeExpectation       []*mock.Expectation
 		wrapperExpectation     *mock.Expectation
@@ -40,8 +49,8 @@ func TestController_Scan(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:      fmt.Sprintf("Should update job status to %s when everything is fine", job.Finished.String()),
-			scanJobID: "job:123",
+			name:       fmt.Sprintf("Should update job status to %s when everything is fine", job.Finished.String()),
+			scanJobKey: jobKey,
 			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
 					URL:           "https://core.harbor.domain",
@@ -55,7 +64,7 @@ func TestController_Scan(t *testing.T) {
 					Method: "UpdateStatus",
 					Args: []interface{}{
 						ctx,
-						"job:123",
+						jobKey,
 						job.Pending,
 						[]string(nil),
 					},
@@ -65,7 +74,7 @@ func TestController_Scan(t *testing.T) {
 					Method: "UpdateReport",
 					Args: []interface{}{
 						ctx,
-						"job:123",
+						jobKey,
 						harborReport,
 					},
 					ReturnArgs: []interface{}{nil},
@@ -74,7 +83,7 @@ func TestController_Scan(t *testing.T) {
 					Method: "UpdateStatus",
 					Args: []interface{}{
 						ctx,
-						"job:123",
+						jobKey,
 						job.Finished,
 						[]string(nil),
 					},
@@ -102,6 +111,7 @@ func TestController_Scan(t *testing.T) {
 			transformerExpectation: &mock.Expectation{
 				Method: "Transform",
 				Args: []interface{}{
+					api.MediaType(""),
 					harbor.ScanRequest{
 						Registry: harbor.Registry{
 							URL:           "https://core.harbor.domain",
@@ -118,8 +128,8 @@ func TestController_Scan(t *testing.T) {
 			},
 		},
 		{
-			name:      fmt.Sprintf("Should update job status to %s when Trivy wrapper fails", job.Failed.String()),
-			scanJobID: "job:123",
+			name:       fmt.Sprintf("Should update job status to %s when Trivy wrapper fails", job.Failed.String()),
+			scanJobKey: jobKey,
 			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
 					URL:           "https://core.harbor.domain",
@@ -137,7 +147,7 @@ func TestController_Scan(t *testing.T) {
 					Method: "UpdateStatus",
 					Args: []interface{}{
 						ctx,
-						"job:123",
+						jobKey,
 						job.Pending,
 						[]string(nil),
 					},
@@ -147,7 +157,7 @@ func TestController_Scan(t *testing.T) {
 					Method: "UpdateStatus",
 					Args: []interface{}{
 						ctx,
-						"job:123",
+						jobKey,
 						job.Failed,
 						[]string{"running trivy wrapper: out of memory"},
 					},
@@ -185,7 +195,7 @@ func TestController_Scan(t *testing.T) {
 			mock.ApplyExpectations(t, wrapper, tc.wrapperExpectation)
 			mock.ApplyExpectations(t, transformer, tc.transformerExpectation)
 
-			err := NewController(store, wrapper, transformer).Scan(ctx, tc.scanJobID, tc.scanRequest)
+			err := NewController(store, wrapper, transformer).Scan(ctx, tc.scanJobKey, &tc.scanRequest)
 			assert.Equal(t, tc.expectedError, err)
 
 			store.AssertExpectations(t)

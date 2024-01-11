@@ -23,7 +23,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		Request       harbor.ScanRequest
-		ExpectedError *harbor.Error
+		ExpectedError *api.Error
 	}{
 		{
 			Name: "Should return error when Registry URL is blank",
@@ -32,7 +32,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 					{Type: harbor.CapabilityTypeVulnerability},
 				},
 			},
-			ExpectedError: &harbor.Error{
+			ExpectedError: &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "missing registry.url",
 			},
@@ -49,7 +49,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 					URL: "INVALID URL",
 				},
 			},
-			ExpectedError: &harbor.Error{
+			ExpectedError: &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "invalid registry.url",
 			},
@@ -66,7 +66,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 					URL: "https://core.harbor.domain",
 				},
 			},
-			ExpectedError: &harbor.Error{
+			ExpectedError: &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "missing artifact.repository",
 			},
@@ -86,7 +86,7 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 					Repository: "library/mongo",
 				},
 			},
-			ExpectedError: &harbor.Error{
+			ExpectedError: &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
 				Message:  "missing artifact.digest",
 			},
@@ -146,7 +146,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 					validScanRequest,
 				},
 				ReturnArgs: []interface{}{
-					job.ScanJob{ID: "job:123"},
+					"job:123",
 					nil,
 				},
 			},
@@ -186,7 +186,7 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 					validScanRequest,
 				},
 				ReturnArgs: []interface{}{
-					job.ScanJob{},
+					"",
 					errors.New("queue is down"),
 				},
 			},
@@ -227,6 +227,10 @@ func TestRequestHandler_AcceptScanRequest(t *testing.T) {
 
 func TestRequestHandler_GetScanReport(t *testing.T) {
 	now := time.Now()
+	scanJobKey := job.ScanJobKey{
+		ID:       "job:123",
+		MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+	}
 
 	testCases := []struct {
 		name                string
@@ -241,7 +245,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{},
@@ -262,7 +266,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					(*job.ScanJob)(nil),
@@ -283,11 +287,11 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{
-						ID:     "job:123",
+						Key:    scanJobKey,
 						Status: job.Queued,
 					},
 					nil,
@@ -301,11 +305,11 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{
-						ID:     "job:123",
+						Key:    scanJobKey,
 						Status: job.Pending,
 					},
 					nil,
@@ -319,11 +323,11 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{
-						ID:     "job:123",
+						Key:    scanJobKey,
 						Status: job.Failed,
 						Error:  "queue worker failed",
 					},
@@ -344,11 +348,11 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{
-						ID:     "job:123",
+						Key:    scanJobKey,
 						Status: 666,
 						Error:  "queue worker failed",
 					},
@@ -369,11 +373,11 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 				Method: "Get",
 				Args: []interface{}{
 					mock.Anything,
-					"job:123",
+					scanJobKey,
 				},
 				ReturnArgs: []interface{}{
 					&job.ScanJob{
-						ID:     "job:123",
+						Key:    scanJobKey,
 						Status: job.Finished,
 						Report: harbor.ScanReport{
 							GeneratedAt: now,
