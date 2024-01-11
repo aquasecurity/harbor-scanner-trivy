@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -82,6 +84,9 @@ func (mt *MIMEType) UnmarshalJSON(b []byte) error {
 }
 
 func (mt *MIMEType) String() string {
+	if mt.Type == "" || mt.Subtype == "" {
+		return ""
+	}
 	s := fmt.Sprintf("%s/%s", mt.Type, mt.Subtype)
 	if len(mt.Params) == 0 {
 		return s
@@ -106,7 +111,7 @@ func (mt *MIMEType) Parse(value string) error {
 		mt.Params = MimeTypeSecuritySBOMReport.Params
 		return nil
 	}
-	return fmt.Errorf("unsupported mime type: %s", value)
+	return xerrors.Errorf("unsupported mime type: %s", value)
 }
 
 type BaseHandler struct {

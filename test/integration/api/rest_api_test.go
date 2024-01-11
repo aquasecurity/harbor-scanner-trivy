@@ -4,8 +4,8 @@ package api
 
 import (
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -72,7 +72,7 @@ func TestRestApi(t *testing.T) {
 				Repository: "library/oracle/nosql",
 				Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
 			},
-		}).Return(job.ScanJob{ID: "job:123"}, nil)
+		}).Return("job:123", nil)
 
 		// when
 		rs, err := ts.Client().Post(ts.URL+"/api/v1/scan", "application/json", strings.NewReader(`{
@@ -101,8 +101,12 @@ func TestRestApi(t *testing.T) {
 		// given
 		now := time.Now()
 
-		store.On("Get", mock.Anything, "job:123").Return(&job.ScanJob{
-			ID:     "job:123",
+		jobKey := job.ScanJobKey{
+			ID:       "job:123",
+			MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+		}
+		store.On("Get", mock.Anything, jobKey).Return(&job.ScanJob{
+			Key:    jobKey,
 			Status: job.Finished,
 			Report: harbor.ScanReport{
 				GeneratedAt: now,
@@ -143,7 +147,7 @@ func TestRestApi(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rs.StatusCode)
 		assert.Equal(t, "application/vnd.security.vulnerability.report; version=1.1", rs.Header.Get("Content-Type"))
 
-		bodyBytes, err := ioutil.ReadAll(rs.Body)
+		bodyBytes, err := io.ReadAll(rs.Body)
 		require.NoError(t, err)
 
 		assert.JSONEq(t, fmt.Sprintf(`{
@@ -190,7 +194,7 @@ func TestRestApi(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rs.StatusCode)
 
-		bodyBytes, err := ioutil.ReadAll(rs.Body)
+		bodyBytes, err := io.ReadAll(rs.Body)
 		require.NoError(t, err)
 
 		assert.JSONEq(t, `{

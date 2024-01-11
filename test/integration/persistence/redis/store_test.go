@@ -5,6 +5,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"testing"
 	"time"
 
@@ -54,7 +55,10 @@ func TestStore(t *testing.T) {
 	store := redis.NewStore(config, pool)
 
 	t.Run("CRUD", func(t *testing.T) {
-		scanJobKey := job.ScanJobKey{ID: "123"}
+		scanJobKey := job.ScanJobKey{
+			ID:       "123",
+			MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+		}
 
 		err := store.Create(ctx, job.ScanJob{
 			Key:    scanJobKey,
