@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -57,11 +58,11 @@ func (c *Client) RequestScan(request harbor.ScanRequest) (scanResp harbor.ScanRe
 }
 
 // GetScanReport polls for ScanReport associated with the given ScanRequest ID.
-func (c *Client) GetScanReport(scanRequestID string) (report harbor.ScanReport, err error) {
-	res, err := c.doGetScanReport(scanRequestID)
+func (c *Client) GetScanReport(scanRequestID, mimeType, mediaType string) (report harbor.ScanReport, err error) {
+	res, err := c.doGetScanReport(scanRequestID, mimeType, mediaType)
 	for err == nil && res.StatusCode == http.StatusFound {
 		time.Sleep(10 * time.Second)
-		res, err = c.doGetScanReport(scanRequestID)
+		res, err = c.doGetScanReport(scanRequestID, mimeType, mediaType)
 	}
 	if err != nil {
 		return
@@ -76,13 +77,18 @@ func (c *Client) GetScanReport(scanRequestID string) (report harbor.ScanReport, 
 	return
 }
 
-func (c *Client) doGetScanReport(scanRequestID string) (*http.Response, error) {
-	url := fmt.Sprintf("%s/api/v1/scan/%s/report", c.endpointURL, scanRequestID)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (c *Client) doGetScanReport(scanRequestID, mimeType, mediaType string) (*http.Response, error) {
+	u := fmt.Sprintf("%s/api/v1/scan/%s/report", c.endpointURL, scanRequestID)
+	if mediaType != "" {
+		values := url.Values{}
+		values.Add("sbom_media_type", mediaType)
+		u += "?" + values.Encode()
+	}
+	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/vnd.security.vulnerability.report; version=1.1")
+	req.Header.Set("Accept", mimeType)
 
 	return http.DefaultTransport.RoundTrip(req)
 }
