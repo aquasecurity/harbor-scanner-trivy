@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/samber/lo"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -18,6 +19,7 @@ import (
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/queue"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -30,6 +32,8 @@ const (
 	propertyJavaDBUpdatedAt    = "harbor.scanner-adapter/vulnerability-java-database-updated-at"
 	propertyJavaDBNextUpdateAt = "harbor.scanner-adapter/vulnerability-java-database-next-update-at"
 )
+
+var decoder = schema.NewDecoder()
 
 type requestHandler struct {
 	info     etc.BuildInfo
@@ -166,14 +170,15 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 		}
 
 		if c.Type == harbor.CapabilityTypeSBOM {
-			if len(c.AdditionalAttributes.SBOMMediaTypes) == 0 {
+			params := lo.FromPtr(c.Parameters)
+			if len(params.SBOMMediaTypes) == 0 {
 				return &api.Error{
 					HTTPCode: http.StatusUnprocessableEntity,
 					Message:  "missing SBOM media type",
 				}
 			}
 
-			for _, mediaType := range c.AdditionalAttributes.SBOMMediaTypes {
+			for _, mediaType := range params.SBOMMediaTypes {
 				if !slices.Contains(harbor.SupportedSBOMMediaTypes, mediaType) {
 					return &api.Error{
 						HTTPCode: http.StatusUnprocessableEntity,
@@ -187,16 +192,6 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 }
 
 func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Request) {
-	var reportMIMEType api.MIMEType
-
-	if err := reportMIMEType.Parse(req.Header.Get(api.HeaderAccept)); err != nil {
-		h.WriteJSONError(res, api.Error{
-			HTTPCode: http.StatusUnsupportedMediaType,
-			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
-		})
-		return
-	}
-
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
@@ -207,13 +202,36 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		})
 		return
 	}
+	reqLog := slog.With(slog.String("scan_job_id", scanJobID))
 
-	reqLog := slog.With(slog.String("scan_job_id", scanJobID), slog.String("mime_type", reportMIMEType.String()))
+	var reportMIMEType api.MIMEType
+	if err := reportMIMEType.Parse(req.Header.Get(api.HeaderAccept)); err != nil {
+		reqLog.Error("Error while parsing the Accept header", slog.String("err", err.Error()))
+		h.WriteJSONError(res, api.Error{
+			HTTPCode: http.StatusUnsupportedMediaType,
+			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
+		})
+		return
+	}
+	reqLog = reqLog.With(slog.String("mime_type", reportMIMEType.String()))
+
+	// Decode the query parameters into the struct
+	var query harbor.ScanReportQuery
+	if err := decoder.Decode(&query, req.URL.Query()); err != nil {
+		reqLog.Error("Error while parsing query parameters", slog.String("err", err.Error()))
+		h.WriteJSONError(res, api.Error{
+			HTTPCode: http.StatusBadRequest,
+			Message:  fmt.Sprintf("query parameter error: %s", err),
+		})
+		return
+	} else if query.SBOMMediaType != "" {
+		reqLog = reqLog.With(slog.String("sbom_media_type", string(query.SBOMMediaType)))
+	}
 
 	scanJob, err := h.store.Get(req.Context(), job.ScanJobKey{
 		ID:        scanJobID,
 		MIMEType:  reportMIMEType,
-		MediaType: "", // TODO: Harbor should pass MediaType
+		MediaType: query.SBOMMediaType,
 	})
 	if err != nil {
 		reqLog.Error("Error while getting scan job")

@@ -37,7 +37,10 @@ type ScanJobKey struct {
 }
 
 func (s *ScanJobKey) String() string {
-	return fmt.Sprintf("%s:%s", s.ID, s.MIMEType.String()) // TODO: add MediaType
+	if s.MediaType != "" {
+		return fmt.Sprintf("%s:%s:%s", s.ID, s.MIMEType.String(), s.MediaType)
+	}
+	return fmt.Sprintf("%s:%s", s.ID, s.MIMEType.String())
 }
 
 type ScanJob struct {

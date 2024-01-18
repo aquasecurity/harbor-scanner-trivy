@@ -86,6 +86,11 @@ type Artifact struct {
 	MimeType   string `json:"mime_type,omitempty"`
 }
 
+// ScanReportQuery is a struct for the query parameters at "/scan/{scan_request_id}/report".
+type ScanReportQuery struct {
+	SBOMMediaType api.MediaType `schema:"sbom_media_type"`
+}
+
 type ScanRequest struct {
 	Registry     Registry     `json:"registry"`
 	Artifact     Artifact     `json:"artifact"`
@@ -172,10 +177,15 @@ type Scanner struct {
 }
 
 type Capability struct {
-	Type                 CapabilityType        `json:"type"`
-	ConsumesMIMETypes    []string              `json:"consumes_mime_types"`
-	ProducesMIMETypes    []api.MIMEType        `json:"produces_mime_types"`
+	Type              CapabilityType `json:"type"`
+	ConsumesMIMETypes []string       `json:"consumes_mime_types"`
+	ProducesMIMETypes []api.MIMEType `json:"produces_mime_types"`
+
+	// For /metadata
 	AdditionalAttributes *CapabilityAttributes `json:"additional_attributes,omitempty"`
+
+	// For /scan
+	Parameters *CapabilityAttributes `json:"parameters,omitempty"`
 }
 
 type CapabilityAttributes struct {

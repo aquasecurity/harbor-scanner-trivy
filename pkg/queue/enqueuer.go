@@ -62,12 +62,12 @@ func (e *enqueuer) Enqueue(ctx context.Context, request harbor.ScanRequest) (str
 
 	for _, c := range request.Capabilities {
 		if c.Type == harbor.CapabilityTypeVulnerability {
-			c.AdditionalAttributes = &harbor.CapabilityAttributes{
+			c.Parameters = &harbor.CapabilityAttributes{
 				SBOMMediaTypes: []api.MediaType{""},
 			}
 		}
 
-		for _, mediaType := range lo.FromPtr(c.AdditionalAttributes).SBOMMediaTypes {
+		for _, mediaType := range lo.FromPtr(c.Parameters).SBOMMediaTypes {
 			for _, m := range c.ProducesMIMETypes {
 				jobKey := job.ScanJobKey{
 					ID:        jobID,
