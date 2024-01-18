@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -22,9 +23,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestRestApi is an integration test for the REST API adapter.
+// TestRestAPI is an integration test for the REST API adapter.
 // Tests only happy paths. All branches are covered in the corresponding unit tests.
-func TestRestApi(t *testing.T) {
+func TestRestAPI(t *testing.T) {
 	if testing.Short() {
 		t.Skip("An integration test")
 	}
@@ -56,7 +57,7 @@ func TestRestApi(t *testing.T) {
 	ts := httptest.NewServer(app)
 	defer ts.Close()
 
-	t.Run("POST /api/v1/scan", func(t *testing.T) {
+	t.Run("POST /api/v1/scan for vulnerabilities", func(t *testing.T) {
 		// given
 		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
 			Capabilities: []harbor.Capability{
@@ -100,7 +101,67 @@ func TestRestApi(t *testing.T) {
 		assert.JSONEq(t, `{"id": "job:123"}`, string(bodyBytes))
 	})
 
-	t.Run("GET /api/v1/scan/{scan_request_id}/report", func(t *testing.T) {
+	t.Run("POST /api/v1/scan for SBOM", func(t *testing.T) {
+		// given
+		enqueuer.On("Enqueue", mock.Anything, harbor.ScanRequest{
+			Capabilities: []harbor.Capability{
+				{
+					Type: harbor.CapabilityTypeSBOM,
+					ProducesMIMETypes: []api.MIMEType{
+						api.MimeTypeSecuritySBOMReport,
+					},
+					Parameters: &harbor.CapabilityAttributes{
+						SBOMMediaTypes: []api.MediaType{api.MediaTypeSPDX},
+					},
+				},
+			},
+			Registry: harbor.Registry{
+				URL:           "https://core.harbor.domain",
+				Authorization: "Bearer JWTTOKENGOESHERE",
+			},
+			Artifact: harbor.Artifact{
+				Repository: "library/oracle/nosql",
+				Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
+			},
+		}).Return("job:123", nil)
+
+		// when
+		rs, err := ts.Client().Post(ts.URL+"/api/v1/scan", "application/json", strings.NewReader(`{
+  "registry": {
+    "url": "https://core.harbor.domain",
+    "authorization": "Bearer JWTTOKENGOESHERE"
+  },
+  "artifact": {
+    "repository": "library/oracle/nosql",
+    "digest": "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b"
+  },
+  "enabled_capabilities": [
+    {
+      "type": "sbom",
+      "produces_mime_types": [
+        "application/vnd.security.sbom.report+json; version=1.0"
+      ],
+      "parameters": {
+        "sbom_media_types": [
+          "application/spdx+json"
+        ]
+      }
+    }
+  ]
+}`))
+
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusAccepted, rs.StatusCode)
+		assert.Equal(t, "application/vnd.scanner.adapter.scan.response+json; version=1.0", rs.Header.Get("Content-Type"))
+
+		bodyBytes, err := io.ReadAll(rs.Body)
+		require.NoError(t, err)
+
+		assert.JSONEq(t, `{"id": "job:123"}`, string(bodyBytes))
+	})
+
+	t.Run("GET /api/v1/scan/{scan_request_id}/report for vulnerabilities", func(t *testing.T) {
 		// given
 		now := time.Now()
 
@@ -182,6 +243,69 @@ func TestRestApi(t *testing.T) {
     }
   ]
 }`, now.Format(time.RFC3339Nano)), string(bodyBytes))
+	})
+
+	t.Run("GET /api/v1/scan/{scan_request_id}/report for SBOM", func(t *testing.T) {
+		// given
+		now := time.Now()
+
+		jobKey := job.ScanJobKey{
+			ID:        "job:123",
+			MIMEType:  api.MimeTypeSecuritySBOMReport,
+			MediaType: api.MediaTypeSPDX,
+		}
+		store.On("Get", mock.Anything, jobKey).Return(&job.ScanJob{
+			Key:    jobKey,
+			Status: job.Finished,
+			Report: harbor.ScanReport{
+				GeneratedAt: now,
+				Artifact: harbor.Artifact{
+					Repository: "library/mongo",
+					Digest:     "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b",
+				},
+				Scanner: harbor.Scanner{
+					Name:    "Trivy",
+					Vendor:  "Aqua Security",
+					Version: "Unknown",
+				},
+				MediaType: api.MediaTypeSPDX,
+				SBOM:      "SPDX Document",
+			},
+		}, nil)
+
+		// when
+		values := url.Values{}
+		values.Add("sbom_media_type", "application/spdx+json")
+		req, err := http.NewRequest("GET", ts.URL+"/api/v1/scan/job:123/report?"+values.Encode(), nil)
+		require.NoError(t, err)
+		req.Header.Add("Accept", "application/vnd.security.sbom.report+json; version=1.0")
+		rs, err := ts.Client().Do(req)
+		require.NoError(t, err)
+
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rs.StatusCode)
+		assert.Equal(t, "application/vnd.security.sbom.report+json; version=1.0", rs.Header.Get("Content-Type"))
+
+		bodyBytes, err := io.ReadAll(rs.Body)
+		require.NoError(t, err)
+
+		expectedSBOMReport := fmt.Sprintf(`{
+    "generated_at": "%s",
+    "artifact": {
+      "repository": "library/mongo",
+      "digest": "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b"
+    },
+    "scanner": {
+      "name": "Trivy",
+      "vendor": "Aqua Security",
+      "version": "Unknown"
+    },
+    "media_type": "application/spdx+json",
+    "sbom": "SPDX Document"
+  }`, now.Format(time.RFC3339Nano))
+
+		assert.JSONEq(t, expectedSBOMReport, string(bodyBytes))
 	})
 
 	t.Run("GET /api/v1/metadata", func(t *testing.T) {
