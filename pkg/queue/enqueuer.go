@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"io"
 	"log/slog"
 
@@ -60,28 +61,35 @@ func (e *enqueuer) Enqueue(ctx context.Context, request harbor.ScanRequest) (str
 	jobID := makeIdentifier()
 
 	for _, c := range request.Capabilities {
-		mediaType := lo.FromPtr(c.Parameters).MediaType
-		for _, m := range c.ProducesMIMETypes {
-			jobKey := job.ScanJobKey{
-				ID:        jobID,
-				MIMEType:  m,
-				MediaType: mediaType,
+		if c.Type == harbor.CapabilityTypeVulnerability {
+			c.AdditionalAttributes = &harbor.CapabilityAttributes{
+				SBOMMediaTypes: []api.MediaType{""},
 			}
+		}
 
-			j := Job{
-				Name: scanArtifactJobName,
-				Key:  jobKey,
-				Args: Args{
-					ScanRequest: &request,
-				},
-			}
-			scanJob := job.ScanJob{
-				Key:    jobKey,
-				Status: job.Queued,
-			}
+		for _, mediaType := range lo.FromPtr(c.AdditionalAttributes).SBOMMediaTypes {
+			for _, m := range c.ProducesMIMETypes {
+				jobKey := job.ScanJobKey{
+					ID:        jobID,
+					MIMEType:  m,
+					MediaType: mediaType,
+				}
 
-			if err := e.enqueue(ctx, j, scanJob); err != nil {
-				return "", xerrors.Errorf("enqueuing scan job: %v", err)
+				j := Job{
+					Name: scanArtifactJobName,
+					Key:  jobKey,
+					Args: Args{
+						ScanRequest: &request,
+					},
+				}
+				scanJob := job.ScanJob{
+					Key:    jobKey,
+					Status: job.Queued,
+				}
+
+				if err := e.enqueue(ctx, j, scanJob); err != nil {
+					return "", xerrors.Errorf("enqueuing scan job: %v", err)
+				}
 			}
 		}
 	}

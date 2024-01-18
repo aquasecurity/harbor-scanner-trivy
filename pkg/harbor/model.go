@@ -125,8 +125,8 @@ type ScanReport struct {
 	Severity    Severity  `json:"severity,omitempty"`
 
 	// For SBOM
-	MediaType string `json:"media_type,omitempty"`
-	SBOM      any    `json:"sbom,omitempty"`
+	MediaType api.MediaType `json:"media_type,omitempty"`
+	SBOM      any           `json:"sbom,omitempty"`
 
 	// For vulnerabilities
 	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities,omitempty"`
@@ -172,14 +172,14 @@ type Scanner struct {
 }
 
 type Capability struct {
-	Type              CapabilityType        `json:"type"`
-	ConsumesMIMETypes []string              `json:"consumes_mime_types"`
-	ProducesMIMETypes []api.MIMEType        `json:"produces_mime_types"`
-	Parameters        *CapabilityParameters `json:"parameters,omitempty"`
+	Type                 CapabilityType        `json:"type"`
+	ConsumesMIMETypes    []string              `json:"consumes_mime_types"`
+	ProducesMIMETypes    []api.MIMEType        `json:"produces_mime_types"`
+	AdditionalAttributes *CapabilityAttributes `json:"additional_attributes,omitempty"`
 }
 
-type CapabilityParameters struct {
-	MediaType api.MediaType `json:"accept_media_type,omitempty"`
+type CapabilityAttributes struct {
+	SBOMMediaTypes []api.MediaType `json:"sbom_media_types,omitempty"`
 }
 
 func GetScannerMetadata() Scanner {

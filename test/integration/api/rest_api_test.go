@@ -225,7 +225,13 @@ func TestRestApi(t *testing.T) {
       ],
       "produces_mime_types": [
         "application/vnd.security.sbom.report+json; version=1.0"
-      ]
+      ],
+      "additional_attributes": {
+        "sbom_media_types": [
+          "application/spdx+json",
+          "application/vnd.cyclonedx+json"
+        ]
+      }
     }
   ],
 	"properties": {

@@ -50,7 +50,7 @@ func (t *transformer) Transform(mediaType api.MediaType, req harbor.ScanRequest,
 
 	switch mediaType {
 	case api.MediaTypeSPDX, api.MediaTypeCycloneDX:
-		report.MediaType = string(req.Capabilities[0].Parameters.MediaType)
+		report.MediaType = mediaType
 		report.SBOM = source.SBOM
 	default:
 		report.Vulnerabilities = t.transformVulnerabilities(source.Vulnerabilities)

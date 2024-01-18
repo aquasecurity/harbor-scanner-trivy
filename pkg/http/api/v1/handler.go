@@ -165,11 +165,21 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 			}
 		}
 
-		if c.Type == harbor.CapabilityTypeSBOM &&
-			!slices.Contains(harbor.SupportedSBOMMediaTypes, c.Parameters.MediaType) {
-			return &api.Error{
-				HTTPCode: http.StatusUnprocessableEntity,
-				Message:  "invalid SBOM media type",
+		if c.Type == harbor.CapabilityTypeSBOM {
+			if len(c.AdditionalAttributes.SBOMMediaTypes) == 0 {
+				return &api.Error{
+					HTTPCode: http.StatusUnprocessableEntity,
+					Message:  "missing SBOM media type",
+				}
+			}
+
+			for _, mediaType := range c.AdditionalAttributes.SBOMMediaTypes {
+				if !slices.Contains(harbor.SupportedSBOMMediaTypes, mediaType) {
+					return &api.Error{
+						HTTPCode: http.StatusUnprocessableEntity,
+						Message:  fmt.Sprintf("unsupported SBOM media type: %s", mediaType),
+					}
+				}
 			}
 		}
 	}
@@ -312,6 +322,12 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 				},
 				ProducesMIMETypes: []api.MIMEType{
 					api.MimeTypeSecuritySBOMReport,
+				},
+				AdditionalAttributes: &harbor.CapabilityAttributes{
+					SBOMMediaTypes: []api.MediaType{
+						api.MediaTypeSPDX,
+						api.MediaTypeCycloneDX,
+					},
 				},
 			},
 		},
