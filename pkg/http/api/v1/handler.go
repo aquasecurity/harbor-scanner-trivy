@@ -182,7 +182,7 @@ func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) 
 				if !slices.Contains(harbor.SupportedSBOMMediaTypes, mediaType) {
 					return &api.Error{
 						HTTPCode: http.StatusUnprocessableEntity,
-						Message:  fmt.Sprintf("unsupported SBOM media type: %s", mediaType),
+						Message:  fmt.Sprintf("unsupported SBOM media type: %q", mediaType),
 					}
 				}
 			}
@@ -209,7 +209,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		reqLog.Error("Error while parsing the Accept header", slog.String("err", err.Error()))
 		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusUnsupportedMediaType,
-			Message:  fmt.Sprintf("unsupported media type %s", req.Header.Get(api.HeaderAccept)),
+			Message:  fmt.Sprintf("unsupported media type: %q", req.Header.Get(api.HeaderAccept)),
 		})
 		return
 	}
