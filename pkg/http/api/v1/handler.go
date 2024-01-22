@@ -297,7 +297,7 @@ func (h *requestHandler) GetMetadata(res http.ResponseWriter, _ *http.Request) {
 		"env.SCANNER_TRIVY_DEBUG_MODE":          strconv.FormatBool(h.config.Trivy.DebugMode),
 		"env.SCANNER_TRIVY_INSECURE":            strconv.FormatBool(h.config.Trivy.Insecure),
 		"env.SCANNER_TRIVY_VULN_TYPE":           h.config.Trivy.VulnType,
-		"env.SCANNER_TRIVY_SECURITY_CHECKS":     h.config.Trivy.SecurityChecks,
+		"env.SCANNER_TRIVY_SECURITY_CHECKS":     h.config.Trivy.Scanners,
 		"env.SCANNER_TRIVY_SEVERITY":            h.config.Trivy.Severity,
 		"env.SCANNER_TRIVY_TIMEOUT":             h.config.Trivy.Timeout.String(),
 	}

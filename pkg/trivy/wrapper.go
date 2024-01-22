@@ -180,7 +180,7 @@ func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanO
 	}
 
 	if target.kind == TargetImage {
-		args = append(args, "--scanners", w.config.SecurityChecks)
+		args = append(args, "--scanners", w.config.Scanners)
 	}
 
 	if w.config.IgnoreUnfixed {

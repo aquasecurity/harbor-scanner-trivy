@@ -109,7 +109,7 @@ func TestWrapper_Scan(t *testing.T) {
 			ReportsDir:       reportsDir,
 			DebugMode:        true,
 			VulnType:         "os,library",
-			SecurityChecks:   "vuln",
+			Scanners:         "vuln",
 			Severity:         "CRITICAL,MEDIUM",
 			IgnoreUnfixed:    true,
 			IgnorePolicy:     "/home/scanner/opa/policy.rego",
@@ -196,7 +196,7 @@ func TestWrapper_Scan(t *testing.T) {
 		config := etc.Trivy{
 			CacheDir:         cacheDir,
 			ReportsDir:       reportsDir,
-			SecurityChecks:   "vuln",
+			Scanners:         "vuln",
 			VulnType:         "library",
 			Severity:         "CRITICAL",
 			SkipDBUpdate:     true,
