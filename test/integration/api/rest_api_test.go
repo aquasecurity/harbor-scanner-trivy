@@ -29,7 +29,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
@@ -153,8 +152,8 @@ func TestRestAPI(t *testing.T) {
 							"https://avd.aquasec.com/nvd/cve-2020-28928",
 						},
 						Layer: &harbor.Layer{
-							Digest: "sha256:26d14edc4f17638cda363ea80b29c55e83058fc0dff1129b38ea3e8231217f7d",
-							DiffID: "sha256:e484d53633e7e5ebaabbe277838af1f26c388cbcebfa32e29fae72dd4086d54d",
+							Digest: "sha256:396c31837116ac290458afcb928f68b6cc1c7bdd6963fc72f52f365a2a89c1b5",
+							DiffID: "sha256:9fb3aa2f8b8023a4bebbf92aa567caf88e38e969ada9f0ac12643b2847391635",
 						},
 					},
 					{
@@ -168,8 +167,8 @@ func TestRestAPI(t *testing.T) {
 							"https://avd.aquasec.com/nvd/cve-2020-28928",
 						},
 						Layer: &harbor.Layer{
-							Digest: "sha256:26d14edc4f17638cda363ea80b29c55e83058fc0dff1129b38ea3e8231217f7d",
-							DiffID: "sha256:e484d53633e7e5ebaabbe277838af1f26c388cbcebfa32e29fae72dd4086d54d",
+							Digest: "sha256:396c31837116ac290458afcb928f68b6cc1c7bdd6963fc72f52f365a2a89c1b5",
+							DiffID: "sha256:9fb3aa2f8b8023a4bebbf92aa567caf88e38e969ada9f0ac12643b2847391635",
 						},
 					},
 				},
@@ -544,7 +543,7 @@ func setupTestImage(t *testing.T, reg *url.URL) name.Digest {
 	require.NoError(t, err)
 	err = crane.Copy(src, dst.String(), crane.WithPlatform(&ggcr.Platform{
 		OS:           "linux",
-		Architecture: runtime.GOARCH,
+		Architecture: "amd64",
 	}))
 	require.NoError(t, err)
 
