@@ -12,11 +12,11 @@ import (
 
 func TestGetPool(t *testing.T) {
 
-	t.Run("Should return error when configured to connect to secure redis", func(t *testing.T) {
+	t.Run("Should not return error when configured to connect to secure redis", func(t *testing.T) {
 		_, err := NewClient(etc.RedisPool{
 			URL: "rediss://hostname:6379",
 		})
-		assert.EqualError(t, err, "invalid redis URL scheme: rediss")
+		assert.NoError(t, err)
 	})
 
 	t.Run("Should return error when configured with unsupported url scheme", func(t *testing.T) {
