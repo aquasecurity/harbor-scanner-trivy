@@ -164,6 +164,13 @@ func (h *requestHandler) ValidateScanRequest(req harbor.ScanRequest) *api.Error 
 
 func (h *requestHandler) validateCapabilities(capabilities []harbor.Capability) *api.Error {
 	for _, c := range capabilities {
+		if len(c.ProducesMIMETypes) == 0 {
+			return &api.Error{
+				HTTPCode: http.StatusBadRequest,
+				Message:  `"enabled_capabilities.produces_mime_types" is missing"`,
+			}
+		}
+
 		if c.Type != harbor.CapabilityTypeVulnerability && c.Type != harbor.CapabilityTypeSBOM {
 			return &api.Error{
 				HTTPCode: http.StatusUnprocessableEntity,
@@ -197,10 +204,10 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
-		slog.Error("`scan_request_id` is missing")
+		slog.Error("scan request id is missing")
 		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
-			Message:  "missing scan_request_id",
+			Message:  "missing scan request id",
 		})
 		return
 	}
@@ -227,10 +234,10 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		})
 		return
 	} else if reportMIMEType.Equal(api.MimeTypeSecuritySBOMReport) && query.SBOMMediaType == "" {
-		slog.Error("`sbom_media_type` is missing")
+		slog.Error("SBOM media type is missing")
 		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
-			Message:  "missing sbom_media_type",
+			Message:  "missing SBOM media type",
 		})
 		return
 	} else if query.SBOMMediaType != "" {

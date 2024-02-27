@@ -31,7 +31,12 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 			Name: "Should return error when Registry URL is blank",
 			Request: harbor.ScanRequest{
 				Capabilities: []harbor.Capability{
-					{Type: harbor.CapabilityTypeVulnerability},
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
+					},
 				},
 			},
 			ExpectedError: &api.Error{
@@ -45,6 +50,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 				Capabilities: []harbor.Capability{
 					{
 						Type: harbor.CapabilityTypeVulnerability,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 					},
 				},
 				Registry: harbor.Registry{
@@ -62,6 +70,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 				Capabilities: []harbor.Capability{
 					{
 						Type: harbor.CapabilityTypeVulnerability,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 					},
 				},
 				Registry: harbor.Registry{
@@ -79,6 +90,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 				Capabilities: []harbor.Capability{
 					{
 						Type: harbor.CapabilityTypeVulnerability,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 					},
 				},
 				Registry: harbor.Registry{
@@ -94,11 +108,28 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 			},
 		},
 		{
+			Name: "Should return error without produces MIME type ",
+			Request: harbor.ScanRequest{
+				Capabilities: []harbor.Capability{
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+					},
+				},
+			},
+			ExpectedError: &api.Error{
+				HTTPCode: http.StatusBadRequest,
+				Message:  `"enabled_capabilities.produces_mime_types" is missing"`,
+			},
+		},
+		{
 			Name: "Should return error with unsupported scan type",
 			Request: harbor.ScanRequest{
 				Capabilities: []harbor.Capability{
 					{
 						Type: "unknown",
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 					},
 				},
 			},
@@ -113,6 +144,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 				Capabilities: []harbor.Capability{
 					{
 						Type: harbor.CapabilityTypeSBOM,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 						Parameters: &harbor.CapabilityAttributes{
 							SBOMMediaTypes: nil,
 						},
@@ -130,6 +164,9 @@ func TestRequestHandler_ValidateScanRequest(t *testing.T) {
 				Capabilities: []harbor.Capability{
 					{
 						Type: harbor.CapabilityTypeSBOM,
+						ProducesMIMETypes: []api.MIMEType{
+							api.MimeTypeSecurityVulnerabilityReport,
+						},
 						Parameters: &harbor.CapabilityAttributes{
 							SBOMMediaTypes: []api.MediaType{
 								"application/unsupported",
@@ -528,7 +565,7 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
 			expectedResponse: apiError{
 				Err: api.Error{
-					Message: "missing sbom_media_type",
+					Message: "missing SBOM media type",
 				},
 			},
 		},
