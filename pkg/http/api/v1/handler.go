@@ -65,7 +65,9 @@ func NewAPIHandler(info etc.BuildInfo, config etc.Config, enqueuer queue.Enqueue
 	probeRouter.Methods(http.MethodGet).Path("/healthy").HandlerFunc(handler.GetHealthy)
 	probeRouter.Methods(http.MethodGet).Path("/ready").HandlerFunc(handler.GetReady)
 
-	router.Methods(http.MethodGet).Path("/metrics").Handler(promhttp.Handler())
+	if config.API.MetricsEnabled {
+		router.Methods(http.MethodGet).Path("/metrics").Handler(promhttp.Handler())
+	}
 
 	return router
 }

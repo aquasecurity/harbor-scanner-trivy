@@ -59,10 +59,11 @@ func TestGetConfig(t *testing.T) {
 			},
 			expectedConfig: Config{
 				API: API{
-					Addr:         ":8080",
-					ReadTimeout:  parseDuration(t, "15s"),
-					WriteTimeout: parseDuration(t, "15s"),
-					IdleTimeout:  parseDuration(t, "60s"),
+					Addr:           ":8080",
+					ReadTimeout:    parseDuration(t, "15s"),
+					WriteTimeout:   parseDuration(t, "15s"),
+					IdleTimeout:    parseDuration(t, "60s"),
+					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
 					DebugMode:   true,
@@ -98,10 +99,11 @@ func TestGetConfig(t *testing.T) {
 			name: "Should return default config",
 			expectedConfig: Config{
 				API: API{
-					Addr:         ":8080",
-					ReadTimeout:  parseDuration(t, "15s"),
-					WriteTimeout: parseDuration(t, "15s"),
-					IdleTimeout:  parseDuration(t, "60s"),
+					Addr:           ":8080",
+					ReadTimeout:    parseDuration(t, "15s"),
+					WriteTimeout:   parseDuration(t, "15s"),
+					IdleTimeout:    parseDuration(t, "60s"),
+					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
 					DebugMode:   false,
@@ -165,10 +167,11 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_JOB_QUEUE_REDIS_NAMESPACE":    "job-queue.ns",
 				"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY": "3",
 
-				"SCANNER_REDIS_URL":               "redis://harbor-harbor-redis:6379",
-				"SCANNER_REDIS_POOL_MAX_ACTIVE":   "3",
-				"SCANNER_REDIS_POOL_MAX_IDLE":     "7",
-				"SCANNER_REDIS_POOL_IDLE_TIMEOUT": "3m",
+				"SCANNER_REDIS_URL":                  "redis://harbor-harbor-redis:6379",
+				"SCANNER_REDIS_POOL_MAX_ACTIVE":      "3",
+				"SCANNER_REDIS_POOL_MAX_IDLE":        "7",
+				"SCANNER_REDIS_POOL_IDLE_TIMEOUT":    "3m",
+				"SCANNER_API_SERVER_METRICS_ENABLED": "false",
 			},
 			expectedConfig: Config{
 				API: API{
@@ -179,9 +182,10 @@ func TestGetConfig(t *testing.T) {
 						"/certs/tls1.crt",
 						"/certs/tls2.crt",
 					},
-					ReadTimeout:  parseDuration(t, "1h"),
-					WriteTimeout: parseDuration(t, "2m"),
-					IdleTimeout:  parseDuration(t, "3m10s"),
+					ReadTimeout:    parseDuration(t, "1h"),
+					WriteTimeout:   parseDuration(t, "2m"),
+					IdleTimeout:    parseDuration(t, "3m10s"),
+					MetricsEnabled: false,
 				},
 				Trivy: Trivy{
 					CacheDir:         "/home/scanner/trivy-cache",
