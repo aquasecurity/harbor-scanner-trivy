@@ -1,11 +1,11 @@
 //go:build integration
-// +build integration
 
 package redis
 
 import (
 	"context"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"testing"
 	"time"
 
@@ -55,28 +55,31 @@ func TestStore(t *testing.T) {
 	store := redis.NewStore(config, pool)
 
 	t.Run("CRUD", func(t *testing.T) {
-		scanJobID := "123"
+		scanJobKey := job.ScanJobKey{
+			ID:       "123",
+			MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+		}
 
 		err := store.Create(ctx, job.ScanJob{
-			ID:     scanJobID,
+			Key:    scanJobKey,
 			Status: job.Queued,
 		})
 		require.NoError(t, err, "saving scan job should not fail")
 
-		j, err := store.Get(ctx, scanJobID)
+		j, err := store.Get(ctx, scanJobKey)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
-			ID:     scanJobID,
+			Key:    scanJobKey,
 			Status: job.Queued,
 		}, j)
 
-		err = store.UpdateStatus(ctx, scanJobID, job.Pending)
+		err = store.UpdateStatus(ctx, scanJobKey, job.Pending)
 		require.NoError(t, err, "updating scan job status should not fail")
 
-		j, err = store.Get(ctx, scanJobID)
+		j, err = store.Get(ctx, scanJobKey)
 		require.NoError(t, err, "getting scan job should not fail")
 		assert.Equal(t, &job.ScanJob{
-			ID:     scanJobID,
+			Key:    scanJobKey,
 			Status: job.Pending,
 		}, j)
 
@@ -89,20 +92,20 @@ func TestStore(t *testing.T) {
 			},
 		}
 
-		err = store.UpdateReport(ctx, scanJobID, scanReport)
+		err = store.UpdateReport(ctx, scanJobKey, scanReport)
 		require.NoError(t, err, "updating scan job reports should not fail")
 
-		j, err = store.Get(ctx, scanJobID)
+		j, err = store.Get(ctx, scanJobKey)
 		require.NoError(t, err, "retrieving scan job should not fail")
 		require.NotNil(t, j, "retrieved scan job must not be nil")
 		assert.Equal(t, scanReport, j.Report)
 
-		err = store.UpdateStatus(ctx, scanJobID, job.Finished)
+		err = store.UpdateStatus(ctx, scanJobKey, job.Finished)
 		require.NoError(t, err)
 
 		time.Sleep(parseDuration(t, "12s"))
 
-		j, err = store.Get(ctx, scanJobID)
+		j, err = store.Get(ctx, scanJobKey)
 		require.NoError(t, err, "retrieve scan job should not fail")
 		require.Nil(t, j, "retrieved scan job should be nil, i.e. expired")
 	})

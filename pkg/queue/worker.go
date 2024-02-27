@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/samber/lo"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
@@ -83,16 +82,16 @@ func (w *worker) scanArtifact(ctx context.Context, msg *redis.Message) error {
 	}
 
 	// Lock the job so that other workers won't process it.
-	nx, err := w.rdb.SetNX(ctx, redisLockKey(w.namespace, job.ID), "", 5*time.Minute).Result()
+	nx, err := w.rdb.SetNX(ctx, redisLockKey(w.namespace, job.ID()), "", 5*time.Minute).Result()
 	if err != nil {
 		return xerrors.Errorf("redis lock: %w", err)
 	} else if !nx {
-		slog.Debug("Skip the locked job", slog.String("scan_job_id", job.ID))
+		slog.Debug("Skip the locked job", slog.String("scan_job_id", job.Key.ID))
 		return nil
 	}
 
-	slog.Debug("Executing enqueued scan job", slog.String("scan_job_id", job.ID))
-	return w.controller.Scan(ctx, job.ID, lo.FromPtr(job.Args.ScanRequest))
+	slog.Debug("Executing enqueued scan job", slog.String("scan_job_id", job.Key.ID))
+	return w.controller.Scan(ctx, job.Key, job.Args.ScanRequest)
 }
 
 func redisLockKey(namespace, jobID string) string {

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,15 +66,15 @@ func TestGetConfig(t *testing.T) {
 					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
-					DebugMode:      true,
-					CacheDir:       "/home/scanner/.cache/trivy",
-					ReportsDir:     "/home/scanner/.cache/reports",
-					VulnType:       "os,library",
-					SecurityChecks: "vuln",
-					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Insecure:       false,
-					GitHubToken:    "",
-					Timeout:        parseDuration(t, "5m0s"),
+					DebugMode:   true,
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os,library",
+					Scanners:    "vuln",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
+					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -107,15 +106,15 @@ func TestGetConfig(t *testing.T) {
 					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
-					DebugMode:      false,
-					CacheDir:       "/home/scanner/.cache/trivy",
-					ReportsDir:     "/home/scanner/.cache/reports",
-					VulnType:       "os,library",
-					SecurityChecks: "vuln",
-					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Insecure:       false,
-					GitHubToken:    "",
-					Timeout:        parseDuration(t, "5m0s"),
+					DebugMode:   false,
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os,library",
+					Scanners:    "vuln",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
+					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -179,7 +178,10 @@ func TestGetConfig(t *testing.T) {
 					Addr:           ":4200",
 					TLSCertificate: "/certs/tls.crt",
 					TLSKey:         "/certs/tls.key",
-					ClientCAs:      []string{"/certs/tls1.crt", "/certs/tls2.crt"},
+					ClientCAs: []string{
+						"/certs/tls1.crt",
+						"/certs/tls2.crt",
+					},
 					ReadTimeout:    parseDuration(t, "1h"),
 					WriteTimeout:   parseDuration(t, "2m"),
 					IdleTimeout:    parseDuration(t, "3m10s"),
@@ -190,10 +192,10 @@ func TestGetConfig(t *testing.T) {
 					ReportsDir:       "/home/scanner/trivy-reports",
 					DebugMode:        true,
 					VulnType:         "os,library",
-					SecurityChecks:   "vuln",
+					Scanners:         "vuln",
 					Severity:         "CRITICAL",
 					IgnoreUnfixed:    true,
-					SkipUpdate:       true,
+					SkipDBUpdate:     true,
 					SkipJavaDBUpdate: false,
 					OfflineScan:      true,
 					Insecure:         true,
@@ -227,30 +229,6 @@ func TestGetConfig(t *testing.T) {
 			config, err := GetConfig()
 			assert.Equal(t, tc.expectedError, err)
 			assert.Equal(t, tc.expectedConfig, config)
-		})
-	}
-}
-
-func TestGetScannerMetadata(t *testing.T) {
-	testCases := []struct {
-		name            string
-		envs            Envs
-		expectedScanner harbor.Scanner
-	}{
-		{
-			name:            "Should return version set via env",
-			envs:            Envs{"TRIVY_VERSION": "0.1.6"},
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.6"},
-		},
-		{
-			name:            "Should return unknown version when it is not set via env",
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "Unknown"},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			setEnvs(t, tc.envs)
-			assert.Equal(t, tc.expectedScanner, GetScannerMetadata())
 		})
 	}
 }

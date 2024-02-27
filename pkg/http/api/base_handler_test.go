@@ -5,24 +5,30 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMimeType_String(t *testing.T) {
 	testCases := []struct {
 		Name           string
-		MimeType       MimeType
+		MimeType       MIMEType
 		ExpectedString string
 	}{
 		{
-			Name:           "A",
-			MimeType:       MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.request+json"},
+			Name: "A",
+			MimeType: MIMEType{
+				Type:    "application",
+				Subtype: "vnd.scanner.adapter.scan.request+json",
+			},
 			ExpectedString: "application/vnd.scanner.adapter.scan.request+json",
 		},
 		{
-			Name:           "B",
-			MimeType:       MimeType{Type: "application", Subtype: "vnd.scanner.adapter.scan.request+json", Params: map[string]string{"version": "1.0"}},
+			Name: "B",
+			MimeType: MIMEType{
+				Type:    "application",
+				Subtype: "vnd.scanner.adapter.scan.request+json",
+				Params:  map[string]string{"version": "1.0"},
+			},
 			ExpectedString: "application/vnd.scanner.adapter.scan.request+json; version=1.0",
 		},
 	}
@@ -40,7 +46,7 @@ func TestBaseHandler_WriteJSONError(t *testing.T) {
 	handler := &BaseHandler{}
 
 	// when
-	handler.WriteJSONError(recorder, harbor.Error{
+	handler.WriteJSONError(recorder, Error{
 		HTTPCode: http.StatusBadRequest,
 		Message:  "Invalid request",
 	})

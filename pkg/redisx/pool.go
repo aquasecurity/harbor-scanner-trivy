@@ -36,8 +36,8 @@ func NewClient(config etc.RedisPool) (*redis.Client, error) {
 
 // redis://user:password@host:port/db-number
 func newInstancePool(config etc.RedisPool) (*redis.Client, error) {
-	// TODO: Ask the Harbor team about why they use "idle_timeout_seconds" instead of "idle_timeout".
-	config.URL = strings.ReplaceAll(config.URL, "idle_timeout_seconds", "idle_timeout")
+	// `idle_timeout_seconds` is used in Harbor for backward compatibility.
+	config.URL = strings.ReplaceAll(config.URL, "idle_timeout_seconds=", "idle_timeout=")
 
 	slog.Debug("Constructing connection pool for Redis", slog.String("url", config.URL))
 	options, err := redis.ParseURL(config.URL)

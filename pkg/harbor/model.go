@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 )
 
 // Severity represents the severity of a image/component in terms of vulnerability.
@@ -60,6 +63,18 @@ func (s *Severity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type CapabilityType string
+
+const (
+	CapabilityTypeSBOM          CapabilityType = "sbom"
+	CapabilityTypeVulnerability CapabilityType = "vulnerability"
+)
+
+var SupportedSBOMMediaTypes = []api.MediaType{
+	api.MediaTypeSPDX,
+	api.MediaTypeCycloneDX,
+}
+
 type Registry struct {
 	URL           string `json:"url"`
 	Authorization string `json:"authorization"`
@@ -71,14 +86,20 @@ type Artifact struct {
 	MimeType   string `json:"mime_type,omitempty"`
 }
 
+// ScanReportQuery is a struct for the query parameters at "/scan/{scan_request_id}/report".
+type ScanReportQuery struct {
+	SBOMMediaType api.MediaType `schema:"sbom_media_type"`
+}
+
 type ScanRequest struct {
-	Registry Registry `json:"registry"`
-	Artifact Artifact `json:"artifact"`
+	Registry     Registry     `json:"registry"`
+	Artifact     Artifact     `json:"artifact"`
+	Capabilities []Capability `json:"enabled_capabilities"`
 }
 
 // GetImageRef returns Docker image reference for this ScanRequest.
 // Example: core.harbor.domain/scanners/mysql@sha256:3b00a364fb74246ca119d16111eb62f7302b2ff66d51e373c2bb209f8a1f3b9e
-func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err error) {
+func (c ScanRequest) GetImageRef() (imageRef string, nonSSL bool, err error) {
 	registryURL, err := url.Parse(c.Registry.URL)
 	if err != nil {
 		err = fmt.Errorf("parsing registry URL: %w", err)
@@ -94,7 +115,7 @@ func (c ScanRequest) GetImageRef() (imageRef string, insecureRegistry bool, err 
 	}
 
 	imageRef = fmt.Sprintf("%s:%s/%s@%s", registryURL.Hostname(), port, c.Artifact.Repository, c.Artifact.Digest)
-	insecureRegistry = "http" == registryURL.Scheme
+	nonSSL = "http" == registryURL.Scheme
 	return
 }
 
@@ -103,11 +124,17 @@ type ScanResponse struct {
 }
 
 type ScanReport struct {
-	GeneratedAt     time.Time           `json:"generated_at"`
-	Artifact        Artifact            `json:"artifact"`
-	Scanner         Scanner             `json:"scanner"`
-	Severity        Severity            `json:"severity"`
-	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities"`
+	GeneratedAt time.Time `json:"generated_at"`
+	Artifact    Artifact  `json:"artifact"`
+	Scanner     Scanner   `json:"scanner"`
+	Severity    Severity  `json:"severity,omitempty"`
+
+	// For SBOM
+	MediaType api.MediaType `json:"media_type,omitempty"`
+	SBOM      any           `json:"sbom,omitempty"`
+
+	// For vulnerabilities
+	Vulnerabilities []VulnerabilityItem `json:"vulnerabilities,omitempty"`
 }
 
 type Layer struct {
@@ -124,17 +151,17 @@ type CVSSDetails struct {
 
 // VulnerabilityItem is an item in the vulnerability result returned by vulnerability details API.
 type VulnerabilityItem struct {
-	ID               string                 `json:"id"`
-	Pkg              string                 `json:"package"`
-	Version          string                 `json:"version"`
-	FixVersion       string                 `json:"fix_version,omitempty"`
-	Severity         Severity               `json:"severity"`
-	Description      string                 `json:"description"`
-	Links            []string               `json:"links"`
-	Layer            *Layer                 `json:"layer"` // Not defined by Scanners API
-	PreferredCVSS    *CVSSDetails           `json:"preferred_cvss,omitempty"`
-	CweIDs           []string               `json:"cwe_ids,omitempty"`
-	VendorAttributes map[string]interface{} `json:"vendor_attributes,omitempty"`
+	ID               string         `json:"id"`
+	Pkg              string         `json:"package"`
+	Version          string         `json:"version"`
+	FixVersion       string         `json:"fix_version,omitempty"`
+	Severity         Severity       `json:"severity"`
+	Description      string         `json:"description"`
+	Links            []string       `json:"links"`
+	Layer            *Layer         `json:"layer"` // Not defined by Scanners API
+	PreferredCVSS    *CVSSDetails   `json:"preferred_cvss,omitempty"`
+	CweIDs           []string       `json:"cwe_ids,omitempty"`
+	VendorAttributes map[string]any `json:"vendor_attributes,omitempty"`
 }
 
 type ScannerAdapterMetadata struct {
@@ -150,12 +177,29 @@ type Scanner struct {
 }
 
 type Capability struct {
-	ConsumesMIMETypes []string `json:"consumes_mime_types"`
-	ProducesMIMETypes []string `json:"produces_mime_types"`
+	Type              CapabilityType `json:"type"`
+	ConsumesMIMETypes []string       `json:"consumes_mime_types"`
+	ProducesMIMETypes []api.MIMEType `json:"produces_mime_types"`
+
+	// For /metadata
+	AdditionalAttributes *CapabilityAttributes `json:"additional_attributes,omitempty"`
+
+	// For /scan
+	Parameters *CapabilityAttributes `json:"parameters,omitempty"`
 }
 
-// Error holds the information about an error, including metadata about its JSON structure.
-type Error struct {
-	HTTPCode int    `json:"-"`
-	Message  string `json:"message"`
+type CapabilityAttributes struct {
+	SBOMMediaTypes []api.MediaType `json:"sbom_media_types,omitempty"`
+}
+
+func GetScannerMetadata() Scanner {
+	version, ok := os.LookupEnv("TRIVY_VERSION")
+	if !ok {
+		version = "Unknown"
+	}
+	return Scanner{
+		Name:    "Trivy",
+		Vendor:  "Aqua Security",
+		Version: version,
+	}
 }

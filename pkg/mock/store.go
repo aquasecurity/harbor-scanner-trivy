@@ -20,17 +20,17 @@ func (s *Store) Create(ctx context.Context, scanJob job.ScanJob) error {
 	return args.Error(0)
 }
 
-func (s *Store) Get(ctx context.Context, scanJobID string) (*job.ScanJob, error) {
-	args := s.Called(ctx, scanJobID)
+func (s *Store) Get(ctx context.Context, scanJobKey job.ScanJobKey) (*job.ScanJob, error) {
+	args := s.Called(ctx, scanJobKey)
 	return args.Get(0).(*job.ScanJob), args.Error(1)
 }
 
-func (s *Store) UpdateStatus(ctx context.Context, scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
-	args := s.Called(ctx, scanJobID, newStatus, error)
+func (s *Store) UpdateStatus(ctx context.Context, scanJobKey job.ScanJobKey, newStatus job.ScanJobStatus, error ...string) error {
+	args := s.Called(ctx, scanJobKey, newStatus, error)
 	return args.Error(0)
 }
 
-func (s *Store) UpdateReport(ctx context.Context, scanJobID string, report harbor.ScanReport) error {
-	args := s.Called(ctx, scanJobID, report)
+func (s *Store) UpdateReport(ctx context.Context, scanJobKey job.ScanJobKey, report harbor.ScanReport) error {
+	args := s.Called(ctx, scanJobKey, report)
 	return args.Error(0)
 }

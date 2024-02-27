@@ -62,8 +62,9 @@ func TestScanRequest_GetImageRef(t *testing.T) {
 				Registry: Registry{
 					URL: "https://core.harbor.domain:8443",
 				},
-				Artifact: Artifact{Repository: "library/nginx",
-					Digest: "test:DEF",
+				Artifact: Artifact{
+					Repository: "library/nginx",
+					Digest:     "test:DEF",
 				},
 			},
 			expectedImageRef: "core.harbor.domain:8443/library/nginx@test:DEF",
@@ -165,4 +166,38 @@ func TestSeverity_UnmarshalJSON(t *testing.T) {
 		assert.Equal(t, tc.expectedSeverity, s.String())
 	}
 
+}
+
+func TestGetScannerMetadata(t *testing.T) {
+	tests := []struct {
+		name            string
+		envs            map[string]string
+		expectedScanner Scanner
+	}{
+		{
+			name: "Should return version set via env",
+			envs: map[string]string{"TRIVY_VERSION": "0.1.6"},
+			expectedScanner: Scanner{
+				Name:    "Trivy",
+				Vendor:  "Aqua Security",
+				Version: "0.1.6",
+			},
+		},
+		{
+			name: "Should return unknown version when it is not set via env",
+			expectedScanner: Scanner{
+				Name:    "Trivy",
+				Vendor:  "Aqua Security",
+				Version: "Unknown",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.envs {
+				t.Setenv(k, v)
+			}
+			assert.Equal(t, tt.expectedScanner, GetScannerMetadata())
+		})
+	}
 }

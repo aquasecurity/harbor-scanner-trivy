@@ -4,8 +4,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
+	"github.com/samber/lo"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 )
 
@@ -25,7 +27,7 @@ func (c *SystemClock) Now() time.Time {
 // Transformer wraps the Transform method.
 // Transform transforms Trivy's scan report into Harbor's packages vulnerabilities report.
 type Transformer interface {
-	Transform(artifact harbor.Artifact, source []trivy.Vulnerability) harbor.ScanReport
+	Transform(mediaType api.MediaType, req harbor.ScanRequest, source trivy.Report) harbor.ScanReport
 }
 
 type transformer struct {
@@ -39,11 +41,32 @@ func NewTransformer(clock Clock) Transformer {
 	}
 }
 
-func (t *transformer) Transform(artifact harbor.Artifact, source []trivy.Vulnerability) harbor.ScanReport {
-	vulnerabilities := make([]harbor.VulnerabilityItem, len(source))
+func (t *transformer) Transform(mediaType api.MediaType, req harbor.ScanRequest, source trivy.Report) harbor.ScanReport {
+	report := harbor.ScanReport{
+		GeneratedAt: t.clock.Now(),
+		Scanner:     harbor.GetScannerMetadata(),
+		Artifact:    req.Artifact,
+	}
 
-	for i, v := range source {
-		vulnerabilities[i] = harbor.VulnerabilityItem{
+	switch mediaType {
+	case api.MediaTypeSPDX, api.MediaTypeCycloneDX:
+		report.MediaType = mediaType
+		report.SBOM = source.SBOM
+	default:
+		report.Vulnerabilities = t.transformVulnerabilities(source.Vulnerabilities)
+		report.Severity = t.toHighestSeverity(report.Vulnerabilities)
+	}
+
+	return report
+}
+
+func (t *transformer) transformVulnerabilities(source []trivy.Vulnerability) []harbor.VulnerabilityItem {
+	if len(source) == 0 {
+		return nil
+	}
+
+	return lo.Map(source, func(v trivy.Vulnerability, _ int) harbor.VulnerabilityItem {
+		return harbor.VulnerabilityItem{
 			ID:               v.VulnerabilityID,
 			Pkg:              v.PkgName,
 			Version:          v.InstalledVersion,
@@ -55,15 +78,7 @@ func (t *transformer) Transform(artifact harbor.Artifact, source []trivy.Vulnera
 			CweIDs:           v.CweIDs,
 			VendorAttributes: t.toVendorAttributes(v.CVSS),
 		}
-	}
-
-	return harbor.ScanReport{
-		GeneratedAt:     t.clock.Now(),
-		Scanner:         etc.GetScannerMetadata(),
-		Artifact:        artifact,
-		Severity:        t.toHighestSeverity(vulnerabilities),
-		Vulnerabilities: vulnerabilities,
-	}
+	})
 }
 
 func (t *transformer) toLinks(primaryURL string, references []string) []string {
@@ -113,19 +128,9 @@ func (t *transformer) toVendorAttributes(info map[string]trivy.CVSSInfo) map[str
 	return attributes
 }
 
-func (t *transformer) toHighestSeverity(vlns []harbor.VulnerabilityItem) (highest harbor.Severity) {
-	highest = harbor.SevUnknown
-
-	for _, vln := range vlns {
-		if vln.Severity > highest {
-			highest = vln.Severity
-
-			if highest == harbor.SevCritical {
-				break
-			}
-		}
-
-	}
-
-	return
+func (t *transformer) toHighestSeverity(vulns []harbor.VulnerabilityItem) harbor.Severity {
+	highest := lo.MaxBy(vulns, func(a, b harbor.VulnerabilityItem) bool {
+		return a.Severity > b.Severity
+	})
+	return highest.Severity
 }

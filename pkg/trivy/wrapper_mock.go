@@ -17,7 +17,7 @@ func NewMockWrapper() *MockWrapper {
 	return &MockWrapper{}
 }
 
-func (w *MockWrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
-	args := w.Called(imageRef)
-	return args.Get(0).([]Vulnerability), args.Error(1)
+func (w *MockWrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
+	args := w.Called(imageRef, opt)
+	return args.Get(0).(Report), args.Error(1)
 }
