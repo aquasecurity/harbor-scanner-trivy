@@ -114,6 +114,18 @@ func (mt *MIMEType) Parse(value string) error {
 	return xerrors.Errorf("unsupported mime type: %s", value)
 }
 
+func (mt *MIMEType) Equal(other MIMEType) bool {
+	if mt.Type != other.Type || mt.Subtype != other.Subtype || len(mt.Params) != len(other.Params) {
+		return false
+	}
+	for k, v := range mt.Params {
+		if other.Params[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
 type BaseHandler struct {
 }
 

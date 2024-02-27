@@ -197,7 +197,7 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 	vars := mux.Vars(req)
 	scanJobID, ok := vars[pathVarScanRequestID]
 	if !ok {
-		slog.Error("Error while parsing `scan_request_id` path variable")
+		slog.Error("`scan_request_id` is missing")
 		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  "missing scan_request_id",
@@ -224,6 +224,13 @@ func (h *requestHandler) GetScanReport(res http.ResponseWriter, req *http.Reques
 		h.WriteJSONError(res, api.Error{
 			HTTPCode: http.StatusBadRequest,
 			Message:  fmt.Sprintf("query parameter error: %s", err),
+		})
+		return
+	} else if reportMIMEType.Equal(api.MimeTypeSecuritySBOMReport) && query.SBOMMediaType == "" {
+		slog.Error("`sbom_media_type` is missing")
+		h.WriteJSONError(res, api.Error{
+			HTTPCode: http.StatusBadRequest,
+			Message:  "missing sbom_media_type",
 		})
 		return
 	} else if query.SBOMMediaType != "" {

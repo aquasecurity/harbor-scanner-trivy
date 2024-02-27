@@ -522,6 +522,17 @@ func TestRequestHandler_GetScanReport(t *testing.T) {
 			},
 		},
 		{
+			name:                "Should return error when sbom_media_type is missing",
+			acceptHeader:        "application/vnd.security.sbom.report+json; version=1.0",
+			expectedStatus:      http.StatusBadRequest,
+			expectedContentType: "application/vnd.scanner.adapter.error; version=1.0",
+			expectedResponse: apiError{
+				Err: api.Error{
+					Message: "missing sbom_media_type",
+				},
+			},
+		},
+		{
 			name:         "Should respond with SBOM report",
 			acceptHeader: "application/vnd.security.sbom.report+json; version=1.0",
 			query: url.Values{
