@@ -13,6 +13,7 @@ import (
 	"net/url"
 
 	"github.com/docker/docker/api/types"
+	apiregistry "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/opencontainers/go-digest"
 )
@@ -24,7 +25,7 @@ type RegistryConfig struct {
 }
 
 func (c RegistryConfig) GetRegistryAuth() (auth string, err error) {
-	authConfig := types.AuthConfig{
+	authConfig := apiregistry.AuthConfig{
 		Username: c.Username,
 		Password: c.Password,
 	}
