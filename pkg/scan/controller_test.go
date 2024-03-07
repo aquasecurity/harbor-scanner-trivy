@@ -13,7 +13,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestContoller_Scan(t *testing.T) {
+func TestController_Scan(t *testing.T) {
 	ctx := context.Background()
 	artifact := harbor.Artifact{
 		Repository: "library/mongo",
