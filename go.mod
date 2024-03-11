@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/docker v25.0.4+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/opencontainers/go-digest v1.0.0
