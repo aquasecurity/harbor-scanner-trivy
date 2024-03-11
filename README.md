@@ -130,9 +130,7 @@ helm repo add harbor https://helm.goharbor.io
 ```
 helm install harbor harbor/harbor \
   --create-namespace \
-  --namespace harbor \
-  --set clair.enabled=false \
-  --set trivy.enabled=true
+  --namespace harbor
 ```
 
 The adapter service is automatically registered under the **Interrogation Service** in the Harbor interface and
