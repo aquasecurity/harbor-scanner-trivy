@@ -2,9 +2,11 @@ package redisx
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"log/slog"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -25,7 +27,7 @@ func NewClient(config etc.RedisPool) (*redis.Client, error) {
 	}
 
 	switch configURL.Scheme {
-	case "redis":
+	case "redis", "rediss":
 		return newInstancePool(config)
 	case "redis+sentinel":
 		return newSentinelPool(configURL, config)
@@ -36,7 +38,7 @@ func NewClient(config etc.RedisPool) (*redis.Client, error) {
 
 // redis://user:password@host:port/db-number
 func newInstancePool(config etc.RedisPool) (*redis.Client, error) {
-	// TODO: Ask the Harbor team about why they use "idle_timeout_seconds" instead of "idle_timeout".
+	// redigo uses "idle_timeout_seconds" for the idle timeout configuration
 	config.URL = strings.ReplaceAll(config.URL, "idle_timeout_seconds", "idle_timeout")
 
 	slog.Debug("Constructing connection pool for Redis", slog.String("url", config.URL))
@@ -51,6 +53,17 @@ func newInstancePool(config etc.RedisPool) (*redis.Client, error) {
 	options.OnConnect = func(ctx context.Context, cn *redis.Conn) error {
 		slog.Debug("Connecting to Redis", slog.String("connection", cn.String()))
 		return nil
+	}
+
+	if options.TLSConfig != nil && config.CACert != "" {
+		// Load the CA certificate
+		caCert, err := os.ReadFile(config.CACert)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to read CA certificate: %s", err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		options.TLSConfig.RootCAs = caCertPool
 	}
 
 	return redis.NewClient(options), nil

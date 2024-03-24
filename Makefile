@@ -39,8 +39,8 @@ dev:
 debug:
 	skaffold debug --tolerate-failures-until-deadline=true
 
-run: export SCANNER_TRIVY_CACHE_DIR = $(TMPDIR)harbor-scanner-trivy/.cache/trivy
-run: export SCANNER_TRIVY_REPORTS_DIR=$(TMPDIR)harbor-scanner-trivy/.cache/reports
+run: export SCANNER_TRIVY_CACHE_DIR = $(TMPDIR)/harbor-scanner-trivy/.cache/trivy
+run: export SCANNER_TRIVY_REPORTS_DIR=$(TMPDIR)/harbor-scanner-trivy/.cache/reports
 run: export SCANNER_LOG_LEVEL=debug
 run:
 	@mkdir -p $(SCANNER_TRIVY_CACHE_DIR) $(SCANNER_TRIVY_REPORTS_DIR)
