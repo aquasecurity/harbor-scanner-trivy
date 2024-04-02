@@ -74,6 +74,7 @@ type RedisPool struct {
 	ConnectionTimeout time.Duration `env:"SCANNER_REDIS_POOL_CONNECTION_TIMEOUT" envDefault:"1s"`
 	ReadTimeout       time.Duration `env:"SCANNER_REDIS_POOL_READ_TIMEOUT" envDefault:"1s"`
 	WriteTimeout      time.Duration `env:"SCANNER_REDIS_POOL_WRITE_TIMEOUT" envDefault:"1s"`
+	CACert            string        `env:"SCANNER_REDIS_CA_CERT" envDefault:""` // For private certs
 }
 
 func LogLevel() slog.Level {
