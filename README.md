@@ -37,6 +37,7 @@ The following matrix indicates the version of Trivy and Trivy adapter installed 
 
 | Harbor           | Trivy Adapter | Trivy           |
 |------------------|---------------|-----------------|
+| -                | v0.30.23      | [trivy v0.50.1] |
 | -                | v0.30.22      | [trivy v0.49.1] |
 | -                | v0.30.21      | [trivy v0.48.3] |
 | -                | v0.30.20      | [trivy v0.48.1] |
@@ -130,9 +131,7 @@ helm repo add harbor https://helm.goharbor.io
 ```
 helm install harbor harbor/harbor \
   --create-namespace \
-  --namespace harbor \
-  --set clair.enabled=false \
-  --set trivy.enabled=true
+  --namespace harbor
 ```
 
 The adapter service is automatically registered under the **Interrogation Service** in the Harbor interface and

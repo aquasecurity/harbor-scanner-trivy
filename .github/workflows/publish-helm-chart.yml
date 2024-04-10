@@ -25,7 +25,7 @@ jobs:
           ref: "${{ github.event.inputs.ref }}"
           fetch-depth: 1
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
         with:
           version: v3.7.0
       - name: Download Chart Releaser
