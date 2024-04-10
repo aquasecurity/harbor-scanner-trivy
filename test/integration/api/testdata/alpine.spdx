@@ -1,0 +1,54 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: alpine:3.10
+DocumentNamespace: http://aquasecurity.github.io/trivy/container_image/alpine:3.10-9ccc324d-c036-4006-903a-e54e9f4870df
+Creator: Organization: aquasecurity
+Creator: Tool: trivy-0.48.3
+Created: 2024-01-22T07:11:06Z
+
+##### Package: alpine:3.10
+
+PackageName: alpine:3.10
+SPDXID: SPDXRef-ContainerImage-10b3db0c66f04c2a
+PackageDownloadLocation: NONE
+PrimaryPackagePurpose: CONTAINER
+FilesAnalyzed: false
+ExternalRef: PACKAGE-MANAGER purl pkg:oci/alpine@sha256%3A451eee8bedcb2f029756dc3e9d73bab0e7943c1ac55cff3a4861c52a0fdd3e98?arch=arm64&repository_url=index.docker.io%2Flibrary%2Falpine
+PackageAttributionText: SchemaVersion: 2
+PackageAttributionText: ImageID: sha256:19a85ffa0ee14b7c64ca5104dc4e1c5021fa04bd6b4a692074691ce154f5d074
+PackageAttributionText: RepoDigest: alpine@sha256:451eee8bedcb2f029756dc3e9d73bab0e7943c1ac55cff3a4861c52a0fdd3e98
+PackageAttributionText: DiffID: sha256:e484d53633e7e5ebaabbe277838af1f26c388cbcebfa32e29fae72dd4086d54d
+PackageAttributionText: RepoTag: alpine:3.10
+
+##### Package: alpine
+
+PackageName: alpine
+SPDXID: SPDXRef-OperatingSystem-db974625db6b7f00
+PackageVersion: 3.10.9
+PackageDownloadLocation: NONE
+PrimaryPackagePurpose: OPERATING-SYSTEM
+FilesAnalyzed: false
+
+##### Package: libssl1.1
+
+PackageName: libssl1.1
+SPDXID: SPDXRef-Package-920f584e116c0a71
+PackageVersion: 1.1.1c-r0
+PackageSupplier: NOASSERTION
+PackageDownloadLocation: NONE
+PrimaryPackagePurpose: LIBRARY
+FilesAnalyzed: false
+PackageChecksum: SHA1: 1985c7fffc5a6ea3a2944670681c850707991d38
+PackageSourceInfo: built package from: openssl 1.1.1c-r0
+PackageLicenseConcluded: OpenSSL
+PackageLicenseDeclared: OpenSSL
+ExternalRef: PACKAGE-MANAGER purl pkg:apk/alpine/libssl1.1@1.1.1c-r0?arch=aarch64&distro=3.10.9
+PackageAttributionText: PkgID: libssl1.1@1.1.1c-r0
+PackageAttributionText: LayerDiffID: sha256:e484d53633e7e5ebaabbe277838af1f26c388cbcebfa32e29fae72dd4086d54d
+
+##### Relationships
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-ContainerImage-10b3db0c66f04c2a
+Relationship: SPDXRef-ContainerImage-10b3db0c66f04c2a CONTAINS SPDXRef-OperatingSystem-db974625db6b7f00
+Relationship: SPDXRef-OperatingSystem-db974625db6b7f00 CONTAINS SPDXRef-Package-920f584e116c0a71

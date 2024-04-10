@@ -21,7 +21,10 @@ type store struct {
 }
 
 func NewStore(cfg etc.RedisStore, rdb *redis.Client) persistence.Store {
-	return &store{cfg: cfg, rdb: rdb}
+	return &store{
+		cfg: cfg,
+		rdb: rdb,
+	}
 }
 
 func (s *store) Create(ctx context.Context, scanJob job.ScanJob) error {
@@ -30,10 +33,10 @@ func (s *store) Create(ctx context.Context, scanJob job.ScanJob) error {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := s.keyForScanJob(scanJob.ID)
+	key := s.keyForScanJob(scanJob.Key)
 
-	slog.Debug("Saving scan job",
-		slog.String("scan_job_id", scanJob.ID),
+	logger := storeLogger(scanJob.Key)
+	logger.Debug("Saving scan job",
 		slog.String("scan_job_status", scanJob.Status.String()),
 		slog.String("redis_key", key),
 		slog.Duration("expire", s.cfg.ScanJobTTL),
@@ -52,10 +55,10 @@ func (s *store) update(ctx context.Context, scanJob job.ScanJob) error {
 		return xerrors.Errorf("marshalling scan job: %w", err)
 	}
 
-	key := s.keyForScanJob(scanJob.ID)
+	key := s.keyForScanJob(scanJob.Key)
 
-	slog.Debug("Updating scan job",
-		slog.String("scan_job_id", scanJob.ID),
+	logger := storeLogger(scanJob.Key)
+	logger.Debug("Updating scan job",
 		slog.String("scan_job_status", scanJob.Status.String()),
 		slog.String("redis_key", key),
 		slog.Duration("expire", s.cfg.ScanJobTTL),
@@ -68,8 +71,8 @@ func (s *store) update(ctx context.Context, scanJob job.ScanJob) error {
 	return nil
 }
 
-func (s *store) Get(ctx context.Context, scanJobID string) (*job.ScanJob, error) {
-	key := s.keyForScanJob(scanJobID)
+func (s *store) Get(ctx context.Context, scanJobKey job.ScanJobKey) (*job.ScanJob, error) {
+	key := s.keyForScanJob(scanJobKey)
 	value, err := s.rdb.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, nil
@@ -85,14 +88,13 @@ func (s *store) Get(ctx context.Context, scanJobID string) (*job.ScanJob, error)
 	return &scanJob, nil
 }
 
-func (s *store) UpdateStatus(ctx context.Context, scanJobID string, newStatus job.ScanJobStatus, error ...string) error {
-	slog.Debug("Updating status for scan job", slog.String("scan_job_id", scanJobID),
-		slog.String("new_status", newStatus.String()),
-	)
+func (s *store) UpdateStatus(ctx context.Context, scanJobKey job.ScanJobKey, newStatus job.ScanJobStatus, error ...string) error {
+	logger := storeLogger(scanJobKey)
+	logger.Debug("Updating status for scan job", slog.String("new_status", newStatus.String()))
 
-	scanJob, err := s.Get(ctx, scanJobID)
+	scanJob, err := s.Get(ctx, scanJobKey)
 	if scanJob == nil {
-		return xerrors.Errorf("scan job %s not found", scanJobID)
+		return xerrors.Errorf("scan job (%s) not found", scanJobKey)
 	} else if err != nil {
 		return err
 	}
@@ -105,10 +107,11 @@ func (s *store) UpdateStatus(ctx context.Context, scanJobID string, newStatus jo
 	return s.update(ctx, *scanJob)
 }
 
-func (s *store) UpdateReport(ctx context.Context, scanJobID string, report harbor.ScanReport) error {
-	slog.Debug("Updating reports for scan job", slog.String("scan_job_id", scanJobID))
+func (s *store) UpdateReport(ctx context.Context, scanJobKey job.ScanJobKey, report harbor.ScanReport) error {
+	logger := storeLogger(scanJobKey)
+	logger.Debug("Updating reports for scan job")
 
-	scanJob, err := s.Get(ctx, scanJobID)
+	scanJob, err := s.Get(ctx, scanJobKey)
 	if err != nil {
 		return err
 	}
@@ -117,6 +120,12 @@ func (s *store) UpdateReport(ctx context.Context, scanJobID string, report harbo
 	return s.update(ctx, *scanJob)
 }
 
-func (s *store) keyForScanJob(scanJobID string) string {
-	return fmt.Sprintf("%s:scan-job:%s", s.cfg.Namespace, scanJobID)
+func (s *store) keyForScanJob(scanJobKey job.ScanJobKey) string {
+	return fmt.Sprintf("%s:scan-job:%s", s.cfg.Namespace, scanJobKey.String())
+}
+
+func storeLogger(scanJobKey job.ScanJobKey) *slog.Logger {
+	return slog.With(
+		slog.String("scan_job_id", scanJobKey.ID),
+		slog.String("mime_type", scanJobKey.MIMEType.String()))
 }

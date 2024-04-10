@@ -5,6 +5,7 @@ package component
 import (
 	"context"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"net/url"
 	"path/filepath"
 	"testing"
@@ -147,52 +148,80 @@ func TestComponent(t *testing.T) {
 		Password: registryPassword,
 	}
 
-	testCases := []struct {
-		repository string
-		tag        string
-	}{
-		{
-			repository: "alpine",
-			tag:        "3.14",
-		},
+	const (
+		repository = "alpine"
+		tag        = "3.14"
+	)
+	imageRef := fmt.Sprintf("%s:%s", repository, tag)
+
+	// 0. Download a test image from DockerHub, tag it and push to the test registry.
+	artifactDigest, err := docker.ReplicateImage(imageRef, config)
+	require.NoError(t, err)
+
+	artifact := harbor.Artifact{
+		Repository: repository,
+		Digest:     artifactDigest.String(),
 	}
 
-	for _, cc := range testCases {
-		imageRef := fmt.Sprintf("%s:%s", cc.repository, cc.tag)
-		t.Run(fmt.Sprintf("Should scan %s", imageRef), func(t *testing.T) {
+	t.Run("scan image for vulnerabilities", func(t *testing.T) {
+		c := scanner.NewClient(adapterURL)
 
-			// 1. Download a test image from DockerHub, tag it and push to the test registry.
-			artifactDigest, err := docker.ReplicateImage(imageRef, config)
-			require.NoError(t, err)
-
-			artifact := harbor.Artifact{
-				Repository: cc.repository,
-				Digest:     artifactDigest.String(),
-			}
-
-			c := scanner.NewClient(adapterURL)
-			// 2. Send ScanRequest to Scanner Adapter.
-			resp, err := c.RequestScan(harbor.ScanRequest{
-				Registry: harbor.Registry{
-					URL:           registryInternalURL,
-					Authorization: config.GetBasicAuthorization(),
-				},
-				Artifact: artifact,
-			})
-			require.NoError(t, err)
-
-			// 3. Poll Scanner Adapter for ScanReport.
-			report, err := c.GetScanReport(resp.ID)
-			require.NoError(t, err)
-
-			assert.Equal(t, artifact, report.Artifact)
-			assert.Equal(t, trivyScanner, report.Scanner)
-			// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
-			for _, v := range report.Vulnerabilities {
-				t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
-			}
+		// 1. Send ScanRequest to Scanner Adapter.
+		resp, err := c.RequestScan(harbor.ScanRequest{
+			Registry: harbor.Registry{
+				URL:           registryInternalURL,
+				Authorization: config.GetBasicAuthorization(),
+			},
+			Artifact: artifact,
 		})
-	}
+		require.NoError(t, err)
+
+		// 2. Poll Scanner Adapter for ScanReport.
+		report, err := c.GetScanReport(resp.ID, api.MimeTypeSecurityVulnerabilityReport.String(), "")
+		require.NoError(t, err)
+
+		assert.Equal(t, artifact, report.Artifact)
+		assert.Equal(t, trivyScanner, report.Scanner)
+		// TODO Adding asserts on CVEs is tricky as we do not have any control over upstream vulnerabilities database used by Trivy.
+		for _, v := range report.Vulnerabilities {
+			t.Logf("ID %s, Package: %s, Version: %s, Severity: %s", v.ID, v.Pkg, v.Version, v.Severity)
+		}
+	})
+
+	t.Run("scan image for SBOM", func(t *testing.T) {
+		c := scanner.NewClient(adapterURL)
+		// 1. Send ScanRequest to Scanner Adapter.
+		resp, err := c.RequestScan(harbor.ScanRequest{
+			Registry: harbor.Registry{
+				URL:           registryInternalURL,
+				Authorization: config.GetBasicAuthorization(),
+			},
+			Artifact: artifact,
+			Capabilities: []harbor.Capability{
+				{
+					Type: harbor.CapabilityTypeSBOM,
+					ProducesMIMETypes: []api.MIMEType{
+						api.MimeTypeSecuritySBOMReport,
+					},
+					Parameters: &harbor.CapabilityAttributes{
+						SBOMMediaTypes: []api.MediaType{
+							api.MediaTypeSPDX,
+						},
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		// 2. Poll Scanner Adapter for ScanReport.
+		report, err := c.GetScanReport(resp.ID, api.MimeTypeSecuritySBOMReport.String(), string(api.MediaTypeSPDX))
+		require.NoError(t, err)
+
+		assert.Equal(t, artifact, report.Artifact)
+		assert.Equal(t, trivyScanner, report.Scanner)
+		assert.Equal(t, api.MediaTypeSPDX, report.MediaType)
+		assert.NotEmpty(t, report.SBOM)
+	})
 
 	if t.Failed() {
 		time.Sleep(15 * time.Second)
