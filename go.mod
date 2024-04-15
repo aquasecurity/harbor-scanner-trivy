@@ -10,7 +10,7 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/google/go-containerregistry v0.14.0
 	github.com/gorilla/mux v1.8.1
-	github.com/gorilla/schema v1.2.1
+	github.com/gorilla/schema v1.3.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/redis/go-redis/v9 v9.5.1
