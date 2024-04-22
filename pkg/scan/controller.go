@@ -1,19 +1,22 @@
 package scan
 
 import (
+	"context"
 	"encoding/base64"
+	"github.com/samber/lo"
+	"golang.org/x/xerrors"
+	"log/slog"
 	"strings"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/xerrors"
 )
 
 type Controller interface {
-	Scan(scanJobID string, request harbor.ScanRequest) error
+	Scan(ctx context.Context, scanJobKey job.ScanJobKey, request *harbor.ScanRequest) error
 }
 
 type controller struct {
@@ -30,31 +33,29 @@ func NewController(store persistence.Store, wrapper trivy.Wrapper, transformer T
 	}
 }
 
-func (c *controller) Scan(scanJobID string, request harbor.ScanRequest) error {
-	err := c.scan(scanJobID, request)
-	if err != nil {
-		log.WithError(err).Error("Scan failed")
-		err = c.store.UpdateStatus(scanJobID, job.Failed, err.Error())
-		if err != nil {
+func (c *controller) Scan(ctx context.Context, scanJobKey job.ScanJobKey, request *harbor.ScanRequest) error {
+	if err := c.scan(ctx, scanJobKey, request); err != nil {
+		slog.Error("Scan failed", slog.String("err", err.Error()))
+		if err = c.store.UpdateStatus(ctx, scanJobKey, job.Failed, err.Error()); err != nil {
 			return xerrors.Errorf("updating scan job as failed: %v", err)
 		}
 	}
 	return nil
 }
 
-func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) {
+func (c *controller) scan(ctx context.Context, scanJobKey job.ScanJobKey, req *harbor.ScanRequest) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
 		}
 	}()
 
-	err = c.store.UpdateStatus(scanJobID, job.Pending)
+	err = c.store.UpdateStatus(ctx, scanJobKey, job.Pending)
 	if err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
 
-	imageRef, insecureRegistry, err := req.GetImageRef()
+	imageRef, nonSSL, err := req.GetImageRef()
 	if err != nil {
 		return err
 	}
@@ -64,18 +65,25 @@ func (c *controller) scan(scanJobID string, req harbor.ScanRequest) (err error) 
 		return err
 	}
 
-	scanReport, err := c.wrapper.Scan(trivy.ImageRef{Name: imageRef, Auth: auth, Insecure: insecureRegistry})
+	ref := trivy.ImageRef{
+		Name:   imageRef,
+		Auth:   auth,
+		NonSSL: nonSSL,
+	}
+
+	scanReport, err := c.wrapper.Scan(ref, trivy.ScanOption{
+		Format: determineFormat(scanJobKey.MediaType),
+	})
 	if err != nil {
 		return xerrors.Errorf("running trivy wrapper: %v", err)
 	}
 
-	err = c.store.UpdateReport(scanJobID, c.transformer.Transform(req.Artifact, scanReport))
-	if err != nil {
+	harborScanReport := c.transformer.Transform(scanJobKey.MediaType, lo.FromPtr(req), scanReport)
+	if err = c.store.UpdateReport(ctx, scanJobKey, harborScanReport); err != nil {
 		return xerrors.Errorf("saving scan report: %v", err)
 	}
 
-	err = c.store.UpdateStatus(scanJobID, job.Finished)
-	if err != nil {
+	if err = c.store.UpdateStatus(ctx, scanJobKey, job.Finished); err != nil {
 		return xerrors.Errorf("updating scan job status: %v", err)
 	}
 
@@ -115,4 +123,15 @@ func (c *controller) decodeBasicAuth(value string) (auth trivy.RegistryAuth, err
 		Password: tokens[1],
 	}
 	return
+}
+
+func determineFormat(m api.MediaType) trivy.Format {
+	switch m {
+	case api.MediaTypeSPDX:
+		return trivy.FormatSPDX
+	case api.MediaTypeCycloneDX:
+		return trivy.FormatCycloneDX
+	default:
+		return trivy.FormatJSON
+	}
 }

@@ -1,10 +1,13 @@
 package mock
 
 import (
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
 )
+
+const Anything = mock.Anything
 
 // Expectation represents an expectation of a method being called and its return values.
 type Expectation struct {
@@ -13,7 +16,7 @@ type Expectation struct {
 	ReturnArgs []interface{}
 }
 
-// ApplyExpectation applies the specified expectations on a given mock.
+// ApplyExpectations applies the specified expectations on a given mock.
 func ApplyExpectations(t *testing.T, mock interface{}, expectations ...*Expectation) {
 	t.Helper()
 	if len(expectations) == 0 || expectations[0] == nil {

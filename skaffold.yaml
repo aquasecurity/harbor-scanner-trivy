@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: harbor-scanner-trivy
+build:
+  local:
+    push: false # Use kind, minikube, Docker Desktop, Rancher Desktop, etc.
+    useDockerCLI: true
+  artifacts:
+    - image: aquasecurity/harbor-scanner-trivy
+      docker:
+        dockerfile: Dockerfile.dev
+deploy:
+  helm:
+    releases:
+      - name: my-harbor
+        chartPath: ./harbor-helm # remoteChart doesn't work for some reason
+        valuesFiles:
+          - ./harbor-helm/values.yaml
+        setValueTemplates:
+          trivy.image.repository: "{{.IMAGE_REPO_aquasecurity_harbor_scanner_trivy}}"
+          trivy.image.tag: "{{.IMAGE_TAG_aquasecurity_harbor_scanner_trivy}}"

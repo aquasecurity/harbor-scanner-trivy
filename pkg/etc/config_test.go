@@ -1,12 +1,10 @@
 package etc
 
 import (
-	"os"
+	"log/slog"
 	"testing"
 	"time"
 
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,32 +15,32 @@ func TestGetLogLevel(t *testing.T) {
 	testCases := []struct {
 		Name             string
 		Envs             Envs
-		ExpectedLogLevel logrus.Level
+		ExpectedLogLevel slog.Level
 	}{
 		{
 			Name:             "Should return default log level when env is not set",
-			ExpectedLogLevel: logrus.InfoLevel,
+			ExpectedLogLevel: slog.LevelInfo,
 		},
 		{
 			Name: "Should return default log level when env has invalid value",
 			Envs: Envs{
 				"SCANNER_LOG_LEVEL": "unknown_level",
 			},
-			ExpectedLogLevel: logrus.InfoLevel,
+			ExpectedLogLevel: slog.LevelInfo,
 		},
 		{
 			Name: "Should return log level set as env",
 			Envs: Envs{
-				"SCANNER_LOG_LEVEL": "trace",
+				"SCANNER_LOG_LEVEL": "debug",
 			},
-			ExpectedLogLevel: logrus.TraceLevel,
+			ExpectedLogLevel: slog.LevelDebug,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			setenvs(t, tc.Envs)
-			assert.Equal(t, tc.ExpectedLogLevel, GetLogLevel())
+			setEnvs(t, tc.Envs)
+			assert.Equal(t, tc.ExpectedLogLevel, LogLevel())
 		})
 	}
 }
@@ -61,21 +59,22 @@ func TestGetConfig(t *testing.T) {
 			},
 			expectedConfig: Config{
 				API: API{
-					Addr:         ":8080",
-					ReadTimeout:  parseDuration(t, "15s"),
-					WriteTimeout: parseDuration(t, "15s"),
-					IdleTimeout:  parseDuration(t, "60s"),
+					Addr:           ":8080",
+					ReadTimeout:    parseDuration(t, "15s"),
+					WriteTimeout:   parseDuration(t, "15s"),
+					IdleTimeout:    parseDuration(t, "60s"),
+					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
-					DebugMode:      true,
-					CacheDir:       "/home/scanner/.cache/trivy",
-					ReportsDir:     "/home/scanner/.cache/reports",
-					VulnType:       "os,library",
-					SecurityChecks: "vuln",
-					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Insecure:       false,
-					GitHubToken:    "",
-					Timeout:        parseDuration(t, "5m0s"),
+					DebugMode:   true,
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os,library",
+					Scanners:    "vuln",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
+					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -100,21 +99,22 @@ func TestGetConfig(t *testing.T) {
 			name: "Should return default config",
 			expectedConfig: Config{
 				API: API{
-					Addr:         ":8080",
-					ReadTimeout:  parseDuration(t, "15s"),
-					WriteTimeout: parseDuration(t, "15s"),
-					IdleTimeout:  parseDuration(t, "60s"),
+					Addr:           ":8080",
+					ReadTimeout:    parseDuration(t, "15s"),
+					WriteTimeout:   parseDuration(t, "15s"),
+					IdleTimeout:    parseDuration(t, "60s"),
+					MetricsEnabled: true,
 				},
 				Trivy: Trivy{
-					DebugMode:      false,
-					CacheDir:       "/home/scanner/.cache/trivy",
-					ReportsDir:     "/home/scanner/.cache/reports",
-					VulnType:       "os,library",
-					SecurityChecks: "vuln",
-					Severity:       "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
-					Insecure:       false,
-					GitHubToken:    "",
-					Timeout:        parseDuration(t, "5m0s"),
+					DebugMode:   false,
+					CacheDir:    "/home/scanner/.cache/trivy",
+					ReportsDir:  "/home/scanner/.cache/reports",
+					VulnType:    "os,library",
+					Scanners:    "vuln",
+					Severity:    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+					Insecure:    false,
+					GitHubToken: "",
+					Timeout:     parseDuration(t, "5m0s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://localhost:6379",
@@ -167,34 +167,40 @@ func TestGetConfig(t *testing.T) {
 				"SCANNER_JOB_QUEUE_REDIS_NAMESPACE":    "job-queue.ns",
 				"SCANNER_JOB_QUEUE_WORKER_CONCURRENCY": "3",
 
-				"SCANNER_REDIS_URL":               "redis://harbor-harbor-redis:6379",
-				"SCANNER_REDIS_POOL_MAX_ACTIVE":   "3",
-				"SCANNER_REDIS_POOL_MAX_IDLE":     "7",
-				"SCANNER_REDIS_POOL_IDLE_TIMEOUT": "3m",
+				"SCANNER_REDIS_URL":                  "redis://harbor-harbor-redis:6379",
+				"SCANNER_REDIS_POOL_MAX_ACTIVE":      "3",
+				"SCANNER_REDIS_POOL_MAX_IDLE":        "7",
+				"SCANNER_REDIS_POOL_IDLE_TIMEOUT":    "3m",
+				"SCANNER_API_SERVER_METRICS_ENABLED": "false",
 			},
 			expectedConfig: Config{
 				API: API{
 					Addr:           ":4200",
 					TLSCertificate: "/certs/tls.crt",
 					TLSKey:         "/certs/tls.key",
-					ClientCAs:      []string{"/certs/tls1.crt", "/certs/tls2.crt"},
+					ClientCAs: []string{
+						"/certs/tls1.crt",
+						"/certs/tls2.crt",
+					},
 					ReadTimeout:    parseDuration(t, "1h"),
 					WriteTimeout:   parseDuration(t, "2m"),
 					IdleTimeout:    parseDuration(t, "3m10s"),
+					MetricsEnabled: false,
 				},
 				Trivy: Trivy{
-					CacheDir:       "/home/scanner/trivy-cache",
-					ReportsDir:     "/home/scanner/trivy-reports",
-					DebugMode:      true,
-					VulnType:       "os,library",
-					SecurityChecks: "vuln",
-					Severity:       "CRITICAL",
-					IgnoreUnfixed:  true,
-					SkipUpdate:     true,
-					OfflineScan:    true,
-					Insecure:       true,
-					GitHubToken:    "<GITHUB_TOKEN>",
-					Timeout:        parseDuration(t, "15m30s"),
+					CacheDir:         "/home/scanner/trivy-cache",
+					ReportsDir:       "/home/scanner/trivy-reports",
+					DebugMode:        true,
+					VulnType:         "os,library",
+					Scanners:         "vuln",
+					Severity:         "CRITICAL",
+					IgnoreUnfixed:    true,
+					SkipDBUpdate:     true,
+					SkipJavaDBUpdate: false,
+					OfflineScan:      true,
+					Insecure:         true,
+					GitHubToken:      "<GITHUB_TOKEN>",
+					Timeout:          parseDuration(t, "15m30s"),
 				},
 				RedisPool: RedisPool{
 					URL:               "redis://harbor-harbor-redis:6379",
@@ -219,7 +225,7 @@ func TestGetConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			setenvs(t, tc.envs)
+			setEnvs(t, tc.envs)
 			config, err := GetConfig()
 			assert.Equal(t, tc.expectedError, err)
 			assert.Equal(t, tc.expectedConfig, config)
@@ -227,36 +233,9 @@ func TestGetConfig(t *testing.T) {
 	}
 }
 
-func TestGetScannerMetadata(t *testing.T) {
-	testCases := []struct {
-		name            string
-		envs            Envs
-		expectedScanner harbor.Scanner
-	}{
-		{
-			name:            "Should return version set via env",
-			envs:            Envs{"TRIVY_VERSION": "0.1.6"},
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "0.1.6"},
-		},
-		{
-			name:            "Should return unknown version when it is not set via env",
-			expectedScanner: harbor.Scanner{Name: "Trivy", Vendor: "Aqua Security", Version: "Unknown"},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			setenvs(t, tc.envs)
-			assert.Equal(t, tc.expectedScanner, GetScannerMetadata())
-		})
-	}
-}
-
-func setenvs(t *testing.T, envs Envs) {
-	t.Helper()
-	os.Clearenv()
+func setEnvs(t *testing.T, envs Envs) {
 	for k, v := range envs {
-		err := os.Setenv(k, v)
-		require.NoError(t, err)
+		t.Setenv(k, v)
 	}
 }
 

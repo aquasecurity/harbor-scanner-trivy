@@ -77,6 +77,8 @@ spec:
               value: {{ .Values.scanner.trivy.timeout | quote }}
             - name: "SCANNER_TRIVY_SKIP_UPDATE"
               value: {{ .Values.scanner.trivy.skipUpdate | quote }}
+            - name: "SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE"
+              value: {{ .Values.scanner.trivy.skipJavaDBUpdate | quote }}
             - name: "SCANNER_TRIVY_OFFLINE_SCAN"
               value: {{ .Values.scanner.trivy.offlineScan | quote }}
             - name: "SCANNER_TRIVY_GITHUB_TOKEN"

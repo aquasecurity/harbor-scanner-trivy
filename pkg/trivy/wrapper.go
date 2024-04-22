@@ -4,22 +4,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/ext"
-	log "github.com/sirupsen/logrus"
 )
+
+type Format string
 
 const (
 	trivyCmd = "trivy"
+
+	FormatJSON      Format = "json"
+	FormatSPDX      Format = "spdx-json"
+	FormatCycloneDX Format = "cyclonedx"
 )
 
 type ImageRef struct {
-	Name     string
-	Auth     RegistryAuth
-	Insecure bool
+	Name   string
+	Auth   RegistryAuth
+	NonSSL bool
+}
+
+type ScanOption struct {
+	Format Format
 }
 
 // RegistryAuth wraps registry credentials.
@@ -39,7 +52,7 @@ type BearerAuth struct {
 }
 
 type Wrapper interface {
-	Scan(imageRef ImageRef) ([]Vulnerability, error)
+	Scan(imageRef ImageRef, opt ScanOption) (Report, error)
 	GetVersion() (VersionInfo, error)
 }
 
@@ -55,116 +68,165 @@ func NewWrapper(config etc.Trivy, ambassador ext.Ambassador) Wrapper {
 	}
 }
 
-func (w *wrapper) Scan(imageRef ImageRef) ([]Vulnerability, error) {
-	log.WithField("image_ref", imageRef.Name).Debug("Started scanning")
+func (w *wrapper) Scan(imageRef ImageRef, opt ScanOption) (Report, error) {
+	logger := slog.With(slog.String("image_ref", imageRef.Name))
+	logger.Debug("Started scanning")
 
-	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
+	target, err := newTarget(imageRef, w.config, w.ambassador)
 	if err != nil {
-		return nil, err
+		return Report{}, xerrors.Errorf("creating scan target: %w", err)
 	}
-	log.WithField("path", reportFile.Name()).Debug("Saving scan report to tmp file")
 	defer func() {
-		log.WithField("path", reportFile.Name()).Debug("Removing scan report tmp file")
-		err := w.ambassador.Remove(reportFile.Name())
-		if err != nil {
-			log.WithError(err).Warn("Error while removing scan report tmp file")
+		if err = target.Clean(); err != nil {
+			logger.Warn("Error while removing sbom tmp file", slog.String("err", err.Error()))
 		}
 	}()
 
-	cmd, err := w.prepareScanCmd(imageRef, reportFile.Name())
+	reportFile, err := w.ambassador.TempFile(w.config.ReportsDir, "scan_report_*.json")
 	if err != nil {
-		return nil, err
+		return Report{}, xerrors.Errorf("creating scan report tmp file: %w", err)
+	}
+	logger.Debug("Saving scan report to tmp file", slog.String("path", reportFile.Name()))
+	defer func() {
+		if err = reportFile.Close(); err != nil {
+			logger.Warn("Error while closing scan report tmp file", slog.String("err", err.Error()))
+		}
+		logger.Debug("Removing scan report tmp file", slog.String("path", reportFile.Name()))
+		if err = os.Remove(reportFile.Name()); err != nil {
+			logger.Warn("Error while removing scan report tmp file", slog.String("err", err.Error()))
+		}
+	}()
+
+	cmd, err := w.prepareScanCmd(target, reportFile.Name(), opt)
+	if err != nil {
+		return Report{}, xerrors.Errorf("preparing scan command: %w", err)
 	}
 
-	log.WithFields(log.Fields{"path": cmd.Path, "args": cmd.Args}).Trace("Exec command with args")
+	logger.Debug("Exec command with args", slog.String("path", cmd.Path),
+		slog.String("args", strings.Join(cmd.Args, " ")))
 
 	stdout, err := w.ambassador.RunCmd(cmd)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"image_ref": imageRef.Name,
-			"exit_code": cmd.ProcessState.ExitCode(),
-			"std_out":   string(stdout),
-		}).Error("Running trivy failed")
-		return nil, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
+		logger.Error("Running trivy failed",
+			slog.String("exit_code", fmt.Sprintf("%d", cmd.ProcessState.ExitCode())),
+			slog.String("std_out", string(stdout)),
+		)
+		return Report{}, fmt.Errorf("running trivy: %v: %v", err, string(stdout))
 	}
 
-	log.WithFields(log.Fields{
-		"image_ref": imageRef.Name,
-		"exit_code": cmd.ProcessState.ExitCode(),
-		"std_out":   string(stdout),
-	}).Debug("Running trivy finished")
+	logger.Debug("Running trivy finished",
+		slog.String("exit_code", fmt.Sprintf("%d", cmd.ProcessState.ExitCode())),
+		slog.String("std_out", string(stdout)),
+	)
 
-	return w.parseVulnerabilities(reportFile)
+	return w.parseReport(opt.Format, reportFile)
 }
 
-func (w *wrapper) parseVulnerabilities(reportFile io.Reader) ([]Vulnerability, error) {
+func (w *wrapper) parseReport(format Format, reportFile io.Reader) (Report, error) {
+	switch format {
+	case FormatJSON:
+		return w.parseJSONReport(reportFile)
+	case FormatSPDX, FormatCycloneDX:
+		return w.parseSBOM(reportFile)
+	}
+	return Report{}, xerrors.Errorf("unsupported format %s", format)
+}
+
+func (w *wrapper) parseJSONReport(reportFile io.Reader) (Report, error) {
 	var scanReport ScanReport
-	err := json.NewDecoder(reportFile).Decode(&scanReport)
-	if err != nil {
-		return nil, fmt.Errorf("decoding scan report from file: %w", err)
+	if err := json.NewDecoder(reportFile).Decode(&scanReport); err != nil {
+		return Report{}, xerrors.Errorf("report json decode error: %w", err)
 	}
 
 	if scanReport.SchemaVersion != SchemaVersion {
-		return nil, fmt.Errorf("unsupported schema %d, expected %d", scanReport.SchemaVersion, SchemaVersion)
+		return Report{}, xerrors.Errorf("unsupported schema %d, expected %d", scanReport.SchemaVersion, SchemaVersion)
 	}
 
 	var vulnerabilities []Vulnerability
 	for _, scanResult := range scanReport.Results {
-		log.WithField("target", scanResult.Target).Trace("Parsing vulnerabilities")
+		slog.Debug("Parsing vulnerabilities", slog.String("target", scanResult.Target))
 		vulnerabilities = append(vulnerabilities, scanResult.Vulnerabilities...)
 	}
 
-	return vulnerabilities, nil
+	return Report{
+		Vulnerabilities: vulnerabilities,
+	}, nil
 }
 
-func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cmd, error) {
+func (w *wrapper) parseSBOM(reportFile io.Reader) (Report, error) {
+	var doc any
+	if err := json.NewDecoder(reportFile).Decode(&doc); err != nil {
+		return Report{}, xerrors.Errorf("sbom json decode error: %w", err)
+	}
+	return Report{SBOM: doc}, nil
+}
+
+func (w *wrapper) prepareScanCmd(target ScanTarget, outputFile string, opt ScanOption) (*exec.Cmd, error) {
 	args := []string{
+		string(target.kind), // subcommand
 		"--no-progress",
-		"--severity", w.config.Severity,
-		"--vuln-type", w.config.VulnType,
-		"--scanners", w.config.SecurityChecks,
-		"--format", "json",
-		"--output", outputFile,
-		imageRef.Name,
+		"--severity",
+		w.config.Severity,
+		"--vuln-type",
+		w.config.VulnType,
+		"--format",
+		string(opt.Format),
+		"--output",
+		outputFile,
+		"--cache-dir",
+		w.config.CacheDir,
+		"--timeout",
+		w.config.Timeout.String(),
+	}
+
+	if target.kind == TargetImage {
+		args = append(args, "--scanners", w.config.Scanners)
 	}
 
 	if w.config.IgnoreUnfixed {
-		args = append([]string{"--ignore-unfixed"}, args...)
+		args = append(args, "--ignore-unfixed")
 	}
 
-	if w.config.SkipUpdate {
-		args = append([]string{"--skip-db-update"}, args...)
+	if w.config.SkipDBUpdate {
+		args = append(args, "--skip-db-update")
+	}
+
+	if w.config.SkipJavaDBUpdate {
+		args = append(args, "--skip-java-db-update")
 	}
 
 	if w.config.OfflineScan {
-		args = append([]string{"--offline-scan"}, args...)
+		args = append(args, "--offline-scan")
 	}
 
 	if w.config.IgnorePolicy != "" {
-		args = append([]string{"--ignore-policy", w.config.IgnorePolicy}, args...)
+		args = append(args, "--ignore-policy", w.config.IgnorePolicy)
 	}
+
+	if w.config.DebugMode {
+		args = append(args, "--debug")
+	}
+
+	if w.config.Insecure || target.NonSSL() {
+		args = append(args, "--insecure")
+	}
+
+	targetName, err := target.Name()
+	if err != nil {
+		return nil, xerrors.Errorf("get target name: %w", err)
+	}
+	args = append(args, targetName)
 
 	name, err := w.ambassador.LookPath(trivyCmd)
 	if err != nil {
 		return nil, err
 	}
 
-	globalArgs := []string{"--cache-dir", w.config.CacheDir}
-
-	if w.config.DebugMode {
-		globalArgs = append(globalArgs, "--debug")
-	}
-	globalArgs = append(globalArgs, "image")
-
-	args = append(globalArgs, args...)
-
 	cmd := exec.Command(name, args...)
 
 	cmd.Env = w.ambassador.Environ()
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("TRIVY_TIMEOUT=%s", w.config.Timeout.String()))
-
-	switch a := imageRef.Auth.(type) {
+	switch a := target.Auth().(type) {
 	case NoAuth:
 	case BasicAuth:
 		cmd.Env = append(cmd.Env,
@@ -177,16 +239,8 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 		return nil, fmt.Errorf("invalid auth type %T", a)
 	}
 
-	if imageRef.Insecure {
-		cmd.Env = append(cmd.Env, "TRIVY_NON_SSL=true")
-	}
-
 	if strings.TrimSpace(w.config.GitHubToken) != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", w.config.GitHubToken))
-	}
-
-	if w.config.Insecure {
-		cmd.Env = append(cmd.Env, "TRIVY_INSECURE=true")
 	}
 
 	return cmd, nil
@@ -214,9 +268,11 @@ func (w *wrapper) GetVersion() (VersionInfo, error) {
 
 func (w *wrapper) prepareVersionCmd() (*exec.Cmd, error) {
 	args := []string{
-		"--cache-dir", w.config.CacheDir,
+		"--cache-dir",
+		w.config.CacheDir,
 		"version",
-		"--format", "json",
+		"--format",
+		"json",
 	}
 
 	name, err := w.ambassador.LookPath(trivyCmd)

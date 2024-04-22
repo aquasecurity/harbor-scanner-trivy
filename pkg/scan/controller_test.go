@@ -1,29 +1,46 @@
 package scan
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/mock"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/trivy"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/xerrors"
 )
 
+var capabilities = []harbor.Capability{
+	{
+		Type: harbor.CapabilityTypeVulnerability,
+		ProducesMIMETypes: []api.MIMEType{
+			api.MimeTypeSecurityVulnerabilityReport,
+		},
+	},
+}
+
 func TestController_Scan(t *testing.T) {
+	ctx := context.Background()
 	artifact := harbor.Artifact{
 		Repository: "library/mongo",
 		Digest:     "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
 	}
-	trivyReport := []trivy.Vulnerability{}
+	jobKey := job.ScanJobKey{
+		ID:       "job:123",
+		MIMEType: api.MimeTypeSecurityVulnerabilityReport,
+	}
+	trivyReport := trivy.Report{}
 	harborReport := harbor.ScanReport{}
 
 	testCases := []struct {
 		name string
 
-		scanJobID              string
+		scanJobKey             job.ScanJobKey
 		scanRequest            harbor.ScanRequest
 		storeExpectation       []*mock.Expectation
 		wrapperExpectation     *mock.Expectation
@@ -32,29 +49,44 @@ func TestController_Scan(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:      fmt.Sprintf("Should update job status to %s when everything is fine", job.Finished.String()),
-			scanJobID: "job:123",
+			name:       fmt.Sprintf("Should update job status to %s when everything is fine", job.Finished.String()),
+			scanJobKey: jobKey,
 			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
 					URL:           "https://core.harbor.domain",
 					Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
 				},
-				Artifact: artifact,
+				Artifact:     artifact,
+				Capabilities: capabilities,
 			},
 			storeExpectation: []*mock.Expectation{
 				{
-					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					Method: "UpdateStatus",
+					Args: []interface{}{
+						ctx,
+						jobKey,
+						job.Pending,
+						[]string(nil),
+					},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
-					Method:     "UpdateReport",
-					Args:       []interface{}{"job:123", harborReport},
+					Method: "UpdateReport",
+					Args: []interface{}{
+						ctx,
+						jobKey,
+						harborReport,
+					},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
-					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Finished, []string(nil)},
+					Method: "UpdateStatus",
+					Args: []interface{}{
+						ctx,
+						jobKey,
+						job.Finished,
+						[]string(nil),
+					},
 					ReturnArgs: []interface{}{nil},
 				},
 			},
@@ -62,10 +94,14 @@ func TestController_Scan(t *testing.T) {
 				Method: "Scan",
 				Args: []interface{}{
 					trivy.ImageRef{
-						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
-						Insecure: false,
+						Name: "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Auth: trivy.BasicAuth{
+							Username: "user",
+							Password: "password",
+						},
+						NonSSL: false,
 					},
+					trivy.ScanOption{Format: "json"},
 				},
 				ReturnArgs: []interface{}{
 					trivyReport,
@@ -75,7 +111,15 @@ func TestController_Scan(t *testing.T) {
 			transformerExpectation: &mock.Expectation{
 				Method: "Transform",
 				Args: []interface{}{
-					artifact,
+					api.MediaType(""),
+					harbor.ScanRequest{
+						Registry: harbor.Registry{
+							URL:           "https://core.harbor.domain",
+							Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
+						},
+						Artifact:     artifact,
+						Capabilities: capabilities,
+					},
 					trivyReport,
 				},
 				ReturnArgs: []interface{}{
@@ -84,24 +128,39 @@ func TestController_Scan(t *testing.T) {
 			},
 		},
 		{
-			name:      fmt.Sprintf("Should update job status to %s when Trivy wrapper fails", job.Failed.String()),
-			scanJobID: "job:123",
+			name:       fmt.Sprintf("Should update job status to %s when Trivy wrapper fails", job.Failed.String()),
+			scanJobKey: jobKey,
 			scanRequest: harbor.ScanRequest{
 				Registry: harbor.Registry{
 					URL:           "https://core.harbor.domain",
 					Authorization: "Basic dXNlcjpwYXNzd29yZA==", // user:password
 				},
 				Artifact: artifact,
+				Capabilities: []harbor.Capability{
+					{
+						Type: harbor.CapabilityTypeVulnerability,
+					},
+				},
 			},
 			storeExpectation: []*mock.Expectation{
 				{
-					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Pending, []string(nil)},
+					Method: "UpdateStatus",
+					Args: []interface{}{
+						ctx,
+						jobKey,
+						job.Pending,
+						[]string(nil),
+					},
 					ReturnArgs: []interface{}{nil},
 				},
 				{
-					Method:     "UpdateStatus",
-					Args:       []interface{}{"job:123", job.Failed, []string{"running trivy wrapper: out of memory"}},
+					Method: "UpdateStatus",
+					Args: []interface{}{
+						ctx,
+						jobKey,
+						job.Failed,
+						[]string{"running trivy wrapper: out of memory"},
+					},
 					ReturnArgs: []interface{}{nil},
 				},
 			},
@@ -109,13 +168,17 @@ func TestController_Scan(t *testing.T) {
 				Method: "Scan",
 				Args: []interface{}{
 					trivy.ImageRef{
-						Name:     "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
-						Auth:     trivy.BasicAuth{Username: "user", Password: "password"},
-						Insecure: false,
+						Name: "core.harbor.domain:443/library/mongo@sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e",
+						Auth: trivy.BasicAuth{
+							Username: "user",
+							Password: "password",
+						},
+						NonSSL: false,
 					},
+					trivy.ScanOption{Format: "json"},
 				},
 				ReturnArgs: []interface{}{
-					[]trivy.Vulnerability{},
+					trivy.Report{},
 					xerrors.New("out of memory"),
 				},
 			},
@@ -132,7 +195,7 @@ func TestController_Scan(t *testing.T) {
 			mock.ApplyExpectations(t, wrapper, tc.wrapperExpectation)
 			mock.ApplyExpectations(t, transformer, tc.transformerExpectation)
 
-			err := NewController(store, wrapper, transformer).Scan(tc.scanJobID, tc.scanRequest)
+			err := NewController(store, wrapper, transformer).Scan(ctx, tc.scanJobKey, &tc.scanRequest)
 			assert.Equal(t, tc.expectedError, err)
 
 			store.AssertExpectations(t)

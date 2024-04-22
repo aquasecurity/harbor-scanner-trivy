@@ -1,64 +1,138 @@
 package queue
 
 import (
+	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
+	"io"
+	"log/slog"
+
+	"github.com/redis/go-redis/v9"
+	"github.com/samber/lo"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/etc"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/job"
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/persistence"
-	"github.com/gocraft/work"
-	"github.com/gomodule/redigo/redis"
-	log "github.com/sirupsen/logrus"
 )
 
-const (
-	scanArtifactJobName = "scan_artifact"
-	scanRequestJobArg   = "scan_request"
-)
+const scanArtifactJobName = "scan_artifact"
 
 type Enqueuer interface {
-	Enqueue(request harbor.ScanRequest) (job.ScanJob, error)
+	Enqueue(ctx context.Context, request harbor.ScanRequest) (string, error)
 }
 
 type enqueuer struct {
-	enqueuer *work.Enqueuer
-	store    persistence.Store
+	namespace string
+	rdb       *redis.Client
+	store     persistence.Store
 }
 
-func NewEnqueuer(config etc.JobQueue, redisPool *redis.Pool, store persistence.Store) Enqueuer {
+type Job struct {
+	Name string
+	Key  job.ScanJobKey
+	Args Args
+}
+
+func (s *Job) ID() string {
+	return s.Key.String()
+}
+
+type Args struct {
+	ScanRequest *harbor.ScanRequest `json:",omitempty"`
+}
+
+func NewEnqueuer(config etc.JobQueue, rdb *redis.Client, store persistence.Store) Enqueuer {
 	return &enqueuer{
-		enqueuer: work.NewEnqueuer(config.Namespace, redisPool),
-		store:    store,
+		namespace: config.Namespace,
+		rdb:       rdb,
+		store:     store,
 	}
 }
 
-func (e *enqueuer) Enqueue(request harbor.ScanRequest) (job.ScanJob, error) {
-	log.Debug("Enqueueing scan job")
+func (e *enqueuer) Enqueue(ctx context.Context, request harbor.ScanRequest) (string, error) {
+	if len(request.Capabilities) == 0 {
+		return "", xerrors.Errorf("no capabilities provided")
+	}
 
-	b, err := json.Marshal(request)
+	jobID := makeIdentifier()
+
+	for _, c := range request.Capabilities {
+		if c.Type == harbor.CapabilityTypeVulnerability {
+			c.Parameters = &harbor.CapabilityAttributes{
+				SBOMMediaTypes: []api.MediaType{""},
+			}
+		}
+
+		for _, mediaType := range lo.FromPtr(c.Parameters).SBOMMediaTypes {
+			for _, m := range c.ProducesMIMETypes {
+				jobKey := job.ScanJobKey{
+					ID:        jobID,
+					MIMEType:  m,
+					MediaType: mediaType,
+				}
+
+				j := Job{
+					Name: scanArtifactJobName,
+					Key:  jobKey,
+					Args: Args{
+						ScanRequest: &request,
+					},
+				}
+				scanJob := job.ScanJob{
+					Key:    jobKey,
+					Status: job.Queued,
+				}
+
+				if err := e.enqueue(ctx, j, scanJob); err != nil {
+					return "", xerrors.Errorf("enqueuing scan job: %v", err)
+				}
+			}
+		}
+	}
+
+	return jobID, nil
+}
+
+func (e *enqueuer) enqueue(ctx context.Context, j Job, scanJob job.ScanJob) error {
+	logger := slog.With(slog.String("job_id", j.Key.ID), slog.String("mime_type", j.Key.MIMEType.String()))
+	logger.Debug("Enqueueing scan job")
+
+	// Save the job status to Redis
+	if err := e.store.Create(ctx, scanJob); err != nil {
+		return xerrors.Errorf("creating scan job %v", err)
+	}
+
+	b, err := json.Marshal(j)
 	if err != nil {
-		return job.ScanJob{}, fmt.Errorf("marshalling scan request: %v", err)
+		return xerrors.Errorf("marshalling scan request: %v", err)
 	}
 
-	j, err := e.enqueuer.Enqueue(scanArtifactJobName, work.Q{
-		scanRequestJobArg: string(b),
-	})
+	// Publish the job to the workers
+	if err = e.rdb.Publish(ctx, e.redisJobChannel(), b).Err(); err != nil {
+		return xerrors.Errorf("enqueuing scan artifact job: %v", err)
+	}
+
+	logger.Debug("Successfully enqueued scan job")
+	return nil
+}
+
+func (e *enqueuer) redisJobChannel() string {
+	return redisJobChannel(e.namespace)
+}
+
+func makeIdentifier() string {
+	b := make([]byte, 12)
+	_, err := io.ReadFull(rand.Reader, b)
 	if err != nil {
-		return job.ScanJob{}, fmt.Errorf("enqueuing scan artifact job: %v", err)
+		return ""
 	}
-	log.Debug("Successfully enqueued scan job")
+	return fmt.Sprintf("%x", b)
+}
 
-	scanJob := job.ScanJob{
-		ID:     j.ID,
-		Status: job.Queued,
-	}
-
-	err = e.store.Create(scanJob)
-	if err != nil {
-		return job.ScanJob{}, fmt.Errorf("creating scan job %v", err)
-	}
-
-	return scanJob, nil
+func redisJobChannel(namespace string) string {
+	return namespace + ":jobs:" + scanArtifactJobName
 }
