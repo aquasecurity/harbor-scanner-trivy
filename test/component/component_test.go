@@ -5,11 +5,12 @@ package component
 import (
 	"context"
 	"fmt"
-	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 	"net/url"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/aquasecurity/harbor-scanner-trivy/pkg/http/api"
 
 	"github.com/aquasecurity/harbor-scanner-trivy/pkg/harbor"
 	"github.com/aquasecurity/harbor-scanner-trivy/test/component/docker"
@@ -25,7 +26,7 @@ var (
 	trivyScanner = harbor.Scanner{
 		Name:    "Trivy",
 		Vendor:  "Aqua Security",
-		Version: "0.50.1",
+		Version: "0.50.4",
 	}
 )
 
