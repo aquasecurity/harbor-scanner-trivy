@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 name: harbor-scanner-trivy
 version: 0.31.1
@@ -7,5 +8,6 @@ keywords:
   - scanner
   - harbor
   - vulnerability
+name: harbor-scanner-trivy
 sources:
-- https://github.com/aquasecurity/harbor-scanner-trivy
+  - https://github.com/aquasecurity/harbor-scanner-trivy
