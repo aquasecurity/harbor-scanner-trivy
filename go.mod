@@ -1,6 +1,6 @@
 module github.com/aquasecurity/harbor-scanner-trivy
 
-go 1.21
+go 1.22
 
 require (
 	github.com/alicebob/miniredis/v2 v2.32.1
