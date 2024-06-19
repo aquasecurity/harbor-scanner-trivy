@@ -3,7 +3,7 @@ module github.com/aquasecurity/harbor-scanner-trivy
 go 1.22
 
 require (
-	github.com/alicebob/miniredis/v2 v2.32.1
+	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/aquasecurity/bolt-fixtures v0.0.0-20200903104109-d34e7f983986
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/docker/docker v26.1.3+incompatible
