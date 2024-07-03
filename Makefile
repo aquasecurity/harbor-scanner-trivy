@@ -1,11 +1,12 @@
 SOURCES := $(shell find . -name '*.go')
 BINARY := scanner-trivy
-IMAGE_TAG := dev
+IMAGE_TAG := 0.30.23-dev
 IMAGE := aquasec/harbor-scanner-trivy:$(IMAGE_TAG)
 
 .PHONY: build test test-integration test-component docker-build setup dev debug run
 
-build: $(BINARY)
+build:
+	hack/build_binary.sh
 
 test: build
 	GO111MODULE=on go test -v -short -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -18,7 +19,7 @@ test-component: docker-build
 	GO111MODULE=on go test -count=1 -v -tags=component ./test/component/...
 
 $(BINARY): $(SOURCES)
-	GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
+    GOOS=linux GO111MODULE=on CGO_ENABLED=0 go build -o $(BINARY) cmd/scanner-trivy/main.go
 
 .PHONY: docker-build
 docker-build: build

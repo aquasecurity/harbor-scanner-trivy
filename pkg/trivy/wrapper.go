@@ -137,7 +137,12 @@ func (w *wrapper) prepareScanCmd(imageRef ImageRef, outputFile string) (*exec.Cm
 	if w.config.SkipJavaDBUpdate {
 		args = append([]string{"--skip-java-db-update"}, args...)
 	}
-
+	if w.config.DBRepository != "" {
+		args = append([]string{"--db-repository"}, args...)
+	}
+	if w.config.JavaDBRepository != "" {
+		args = append([]string{"--java-db-repository"}, args...)
+	}
 	if w.config.OfflineScan {
 		args = append([]string{"--offline-scan"}, args...)
 	}

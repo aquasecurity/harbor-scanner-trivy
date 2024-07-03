@@ -75,6 +75,10 @@ spec:
               value: {{ .Values.scanner.trivy.skipUpdate | quote }}
             - name: "SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE"
               value: {{ .Values.scanner.trivy.skipJavaDBUpdate | quote }}
+            - name: "SCANNER_TRIVY_DB_REPOSITORY"
+              value: {{ .Values.scanner.trivy.dbRepository  | quote }}
+            - name: "SCANNER_TRIVY_JAVA_DB_REPOSITORY"
+              value: {{ .Values.scanner.trivy.javaDBRepository  | quote }}
             - name: "SCANNER_TRIVY_OFFLINE_SCAN"
               value: {{ .Values.scanner.trivy.offlineScan | quote }}
             - name: "SCANNER_TRIVY_GITHUB_TOKEN"

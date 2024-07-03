@@ -35,6 +35,8 @@ type Trivy struct {
 	IgnorePolicy     string        `env:"SCANNER_TRIVY_IGNORE_POLICY"`
 	SkipUpdate       bool          `env:"SCANNER_TRIVY_SKIP_UPDATE" envDefault:"false"`
 	SkipJavaDBUpdate bool          `env:"SCANNER_TRIVY_SKIP_JAVA_DB_UPDATE" envDefault:"false"`
+	DBRepository     string        `env:"SCANNER_TRIVY_DB_REPOSITORY" envDefault:"ghcr.io/aquasecurity/trivy-db"`
+	JavaDBRepository string        `env:"SCANNER_TRIVY_JAVA_DB_REPOSITORY" envDefault:"ghcr.io/aquasecurity/trivy-java-db"`
 	OfflineScan      bool          `env:"SCANNER_TRIVY_OFFLINE_SCAN" envDefault:"false"`
 	GitHubToken      string        `env:"SCANNER_TRIVY_GITHUB_TOKEN"`
 	Insecure         bool          `env:"SCANNER_TRIVY_INSECURE" envDefault:"false"`
