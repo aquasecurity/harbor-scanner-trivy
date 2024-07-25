@@ -8,12 +8,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types"
+	"io"
+	"net/url"
+
+	"github.com/docker/docker/api/types/image"
 	apiregistry "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/opencontainers/go-digest"
-	"io"
-	"net/url"
 )
 
 type RegistryConfig struct {
@@ -47,7 +48,7 @@ func ReplicateImage(imageRef string, dest RegistryConfig) (d digest.Digest, err 
 	if err != nil {
 		return
 	}
-	pullOut, err := cli.ImagePull(ctx, imageRef, types.ImagePullOptions{})
+	pullOut, err := cli.ImagePull(ctx, imageRef, image.PullOptions{})
 	defer func() {
 		_ = pullOut.Close()
 	}()
@@ -68,7 +69,7 @@ func ReplicateImage(imageRef string, dest RegistryConfig) (d digest.Digest, err 
 	if err != nil {
 		return
 	}
-	pushOut, err := cli.ImagePush(ctx, targetImageRef, types.ImagePushOptions{RegistryAuth: auth})
+	pushOut, err := cli.ImagePush(ctx, targetImageRef, image.PushOptions{RegistryAuth: auth})
 	if err != nil {
 		return
 	}
