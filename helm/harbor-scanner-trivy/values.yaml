@@ -4,7 +4,7 @@ fullnameOverride: ""
 image:
   registry: docker.io
   repository: aquasec/harbor-scanner-trivy
-  tag: 0.31.3
+  tag: 0.31.4
   pullPolicy: IfNotPresent
 
 replicaCount: 1
