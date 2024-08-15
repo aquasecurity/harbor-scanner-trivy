@@ -6,11 +6,11 @@ require (
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/aquasecurity/bolt-fixtures v0.0.0-20200903104109-d34e7f983986
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v27.0.3+incompatible
+	github.com/docker/docker v27.1.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/google/go-containerregistry v0.14.0
 	github.com/gorilla/mux v1.8.1
-	github.com/gorilla/schema v1.4.0
+	github.com/gorilla/schema v1.4.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/redis/go-redis/v9 v9.6.1
