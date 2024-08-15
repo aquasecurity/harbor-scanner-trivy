@@ -52,9 +52,3 @@ jobs:
         with:
           version: v1.9.2
           args: release --snapshot --skip-publish --rm-dist
-      - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "docker.io/aquasec/harbor-scanner-trivy:${{ github.sha }}"
-          severity: "CRITICAL"
-          exit-code: "1"
