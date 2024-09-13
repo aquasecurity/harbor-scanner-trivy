@@ -5,6 +5,8 @@
 ![Docker Pulls / Aqua][docker-pulls-aqua]
 ![Docker Pulls / Harbor][docker-pulls-harbor]
 
+# IMPORTANT: This repository is no longer maintained.  Future development in this project will happen in the repository: https://github.com/goharbor/harbor-scanner-trivy
+
 # Harbor Scanner Adapter for Trivy
 
 The Harbor [Scanner Adapter][harbor-pluggable-scanners] for [Trivy] is a service that translates the [Harbor] scanning
