@@ -6,6 +6,7 @@ image:
   repository: aquasec/harbor-scanner-trivy
   tag: 0.31.4
   pullPolicy: IfNotPresent
+  pullSecret: ""
 
 replicaCount: 1
 
